@@ -85,7 +85,7 @@
   .letterhead img{ height:52px; width:auto; flex:none; }
   .letterhead .doc-title-main{ font-size:19px; font-weight:700; letter-spacing:.01em; color:#1A1A1A; }
   .letterhead .doc-title-sub{ font-size:11.5px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:#666; margin-top:2px; }
-  tr.meta-row td{ padding:0; border-left:none; border-right:none; }
+  tr.meta-row td{ padding:0; }
   .meta-flex{ display:flex; flex-wrap:wrap; gap:6px 32px; align-items:baseline; padding:8px 16px; }
   .meta-item{ display:flex; align-items:baseline; gap:8px; }
   .meta-item b{ font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:#666; }
@@ -456,7 +456,8 @@
   function signatureRowEditable(){
     return '<tr class="sig-row"><td colspan="3"><div class="sig-block">'
       + '<canvas id="sig-canvas" width="640" height="200" class="sig-canvas"></canvas>'
-      + '<div class="sig-actions"><button type="button" class="ghost-btn" id="sig-clear-btn">Limpiar firma</button></div>'
+      + '<input type="file" id="sig-file-input" accept="image/*" hidden/>'
+      + '<div class="sig-actions"><button type="button" class="ghost-btn" id="sig-upload-btn">Adjuntar imagen</button><button type="button" class="ghost-btn" id="sig-clear-btn">Limpiar firma</button></div>'
       + '<div class="sig-caption">Firma técnico responsable</div>'
       + '</div></td></tr>';
   }
@@ -499,6 +500,33 @@
         scheduleSave();
       });
     }
+
+    var uploadBtn = document.getElementById('sig-upload-btn');
+    var fileInput = document.getElementById('sig-file-input');
+    if(uploadBtn && fileInput){
+      uploadBtn.addEventListener('click', function(){ fileInput.click(); });
+      fileInput.addEventListener('change', function(e){
+        var file = e.target.files && e.target.files[0];
+        if(file) loadSignatureFile(canvas, ctx, file);
+        fileInput.value = '';
+      });
+    }
+  }
+
+  function loadSignatureFile(canvas, ctx, file){
+    var reader = new FileReader();
+    reader.onload = function(e){
+      var img = new Image();
+      img.onload = function(){
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        var scale = Math.min(canvas.width/img.width, canvas.height/img.height);
+        var w = img.width*scale, h = img.height*scale;
+        ctx.drawImage(img, (canvas.width-w)/2, (canvas.height-h)/2, w, h);
+        captureSignature(canvas);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
   }
 
   function captureSignature(canvas){
