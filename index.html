@@ -230,6 +230,7 @@
       <span id="summary-updated">Sin cambios guardados aún</span>
     </div>
     <div class="spacer"></div>
+    <button class="btn" id="download-btn">Descargar</button>
     <button class="btn" id="print-btn">Imprimir / PDF</button>
     <button class="btn primary" id="save-btn">Guardar</button>
   </div>
@@ -812,6 +813,40 @@
     }, 30);
   }
 
+  function buildSnapshotHtml(st){
+    var styleEl = document.querySelector('style');
+    var styleText = styleEl ? styleEl.textContent : '';
+    var bodyHtml = colgroupHtml() + headerRowsStaticHtml(st) + SECTIONS.map(function(s){ return sectionRowsStatic(s, st.values); }).join('') + signatureRowStatic(st);
+    var appendixHtml = photoAppendixHtml(st);
+    return '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">'
+      + '<meta name="viewport" content="width=device-width, initial-scale=1">'
+      + '<title>Pauta de Chequeo Diario — '+esc(fmtDateLong(st.date))+'</title>'
+      + '<style>'+styleText+'body{background:#EEF1F1;padding:18px;} .snap-wrap{max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:14px;}</style>'
+      + '</head><body><div class="snap-wrap">'
+      + '<div class="sheet-wrap"><table class="sheet">'+bodyHtml+'</table></div>'
+      + appendixHtml
+      + '</div></body></html>';
+  }
+
+  function downloadSnapshot(st){
+    var html = buildSnapshotHtml(st);
+    var filename = 'pauta-'+st.date+'.html';
+    try{
+      var blob = new Blob([html], { type: 'text/html' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 1500);
+    }catch(err){}
+  }
+
+  document.getElementById('download-btn').addEventListener('click', function(){
+    downloadSnapshot(state);
+  });
+
   // ---------- persistence (browser local storage) ----------
   function serializable(){
     return { date: state.date, technician: state.technician || '', status: state.status, updatedAt: state.updatedAt, signature: state.signature || null, values: state.values };
@@ -883,7 +918,7 @@
         + '<span class="pill '+pillClass+'">'+pillTxt+'</span>'
         + '</div>'
         + '<div class="hist-detail" id="detail-'+esc(e.date)+'" hidden><div class="sheet-wrap"><table class="sheet"></table></div></div>'
-        + '<div class="hist-actions"><button class="ghost-btn" data-toggle="'+esc(e.date)+'">Ver detalle</button><button class="ghost-btn" data-edit="'+esc(e.date)+'">Editar este día</button><button class="ghost-btn" data-print="'+esc(e.date)+'">Imprimir / PDF</button></div>'
+        + '<div class="hist-actions"><button class="ghost-btn" data-toggle="'+esc(e.date)+'">Ver detalle</button><button class="ghost-btn" data-edit="'+esc(e.date)+'">Editar este día</button><button class="ghost-btn" data-download="'+esc(e.date)+'">Descargar</button><button class="ghost-btn" data-print="'+esc(e.date)+'">Imprimir / PDF</button></div>'
         + '</div>';
     }).join('');
 
@@ -915,6 +950,13 @@
         var d = btn.getAttribute('data-print');
         var st = Object.assign(newState(d), histEntries[d], { values: Object.assign(defaultValues(), histEntries[d].values||{}) });
         printState(st);
+      });
+    });
+    el.querySelectorAll('[data-download]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var d = btn.getAttribute('data-download');
+        var st = Object.assign(newState(d), histEntries[d], { values: Object.assign(defaultValues(), histEntries[d].values||{}) });
+        downloadSnapshot(st);
       });
     });
   }
