@@ -114,18 +114,21 @@
   .dfield b{ font-weight:600; color:#555; font-size:11px; text-transform:uppercase; letter-spacing:.03em; }
   .dfield select, .dfield input[type="text"]{ font:inherit; font-family:var(--font); font-size:12.5px; border:1px solid #C7C7C7; border-radius:3px; padding:3px 6px; background:#fff; color:#1A1A1A; }
   .dfield input[type="number"]{ font-family:var(--font-mono); font-size:12.5px; border:1px solid #C7C7C7; border-radius:3px; padding:3px 6px; width:64px; background:#fff; color:#1A1A1A; }
-  .dfield input.green{ background:#92D050; border-color:#6FA83A; font-weight:600; }
+  .dfield input.yellow{ background:#FFEB3B; border-color:#D4C400; font-weight:600; }
   .dfield .unit{ font-size:10.5px; color:#777; }
   .obs-input{ width:100%; min-height:30px; resize:vertical; border:1px solid #C7C7C7; border-radius:3px; padding:5px 7px; font:inherit; font-family:var(--font); font-size:12.5px; color:#1A1A1A; background:#fff; }
   .static-txt{ font-size:12.5px; color:#333; }
   .static-txt.empty{ color:#A0A0A0; font-style:italic; }
+  .static-txt.hl{ background:#FFEB3B; padding:1px 6px; border-radius:2px; font-weight:600; display:inline-block; }
 
   .transfo-grps{ display:flex; flex-wrap:wrap; gap:10px 20px; }
   .transfo-grp{ display:flex; align-items:center; gap:6px; }
   .transfo-grp b{ font-size:11.5px; font-weight:700; color:#555; margin-right:2px; }
   .phase{ display:flex; flex-direction:column; align-items:center; gap:2px; }
   .phase span{ font-size:10px; font-weight:700; background:#FFEB3B; padding:1px 6px; border-radius:2px; color:#1A1A1A; }
-  .phase input{ width:46px; text-align:center; font-family:var(--font-mono); font-size:12.5px; border:1px solid #C7C7C7; border-radius:3px; padding:3px 2px; background:#fff; color:#1A1A1A; }
+  .phase input{ width:46px; text-align:center; font-family:var(--font-mono); font-size:12.5px; border:1px solid #D4C400; border-radius:3px; padding:3px 2px; background:#FFEB3B; color:#1A1A1A; font-weight:600; }
+  .phase .static-txt{ background:#FFEB3B; padding:1px 6px; border-radius:2px; display:inline-block; font-weight:600; }
+  .phase .static-txt.empty{ background:transparent; padding:0; font-weight:400; }
 
   /* ---- Signature block ---- */
   tr.sig-row td{ border:none; padding:16px 16px 14px; }
@@ -151,6 +154,7 @@
   #print-root{ display:none; }
 
   @media print{
+    *{ -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; color-adjust:exact !important; }
     body{ background:#fff !important; padding:0 !important; margin:0 !important; }
     .app-title, .toolbar, .summary, .info-banner, #view-hoy, #view-historial{ display:none !important; }
     #print-root{ display:block !important; }
@@ -234,11 +238,11 @@
         {key:'g2', label:'G2', kind:'select', options:['Vacío','1/4','1/2','3/4','Full']}
       ]},
       { id:'gen_consumo', label:'Registrar consumo petróleo', type:'check', fields:[
-        {key:'g1', label:'G1', kind:'number', unit:'Lt', green:true},
-        {key:'g2', label:'G2', kind:'number', unit:'Lt', green:true}
+        {key:'g1', label:'G1', kind:'number', unit:'Lt', yellow:true},
+        {key:'g2', label:'G2', kind:'number', unit:'Lt', yellow:true}
       ]},
       { id:'gen_enterrado', label:'Revisión estanque combustible enterrado', type:'check', fields:[
-        {key:'nivel', label:'Nivel', kind:'number', unit:'Lt'}
+        {key:'nivel', label:'Nivel', kind:'number', unit:'Lt', yellow:true}
       ]},
       { id:'gen_partida', label:'Realizar partida de generador', note:'Martes A.M.', type:'check', naKey:'estado', fields:[
         {key:'estado', label:'', kind:'select', options:['No aplica']}
@@ -248,8 +252,8 @@
         {key:'g2', label:'G2', kind:'select', options:['OK','Stop','Falla','En mantención']}
       ]},
       { id:'gen_horometro', label:'Horómetro', type:'check', fields:[
-        {key:'g1', label:'G1', kind:'number', unit:'hrs', green:true},
-        {key:'g2', label:'G2', kind:'number', unit:'hrs', green:true}
+        {key:'g1', label:'G1', kind:'number', unit:'hrs', yellow:true},
+        {key:'g2', label:'G2', kind:'number', unit:'hrs', yellow:true}
       ]}
     ]},
     { id:'cctv', title:'Sala CCTV', items:[
@@ -270,7 +274,7 @@
     { id:'electricidad', title:'Electricidad', items:[
       {id:'elec_carga', label:'Medición de carga Hospital (A)', type:'transfo'},
       {id:'elec_consumo', label:'Registrar consumo en empalme', type:'check', fields:[
-        {key:'valor', label:'Consumo', kind:'number', unit:'KWh'}
+        {key:'valor', label:'Consumo', kind:'number', unit:'KWh', yellow:true}
       ]}
     ]},
     { id:'voceo', title:'Sistema de Voceo', items:[
@@ -377,7 +381,7 @@
       return '<span class="dfield">'+labelHtml+'<select data-item="'+itemId+'" data-field="'+f.key+'">'+optsHtml+'</select></span>';
     }
     if(f.kind==='number'){
-      return '<span class="dfield">'+labelHtml+'<input type="number" inputmode="decimal" class="'+(f.green?'green':'')+'" placeholder="0" data-item="'+itemId+'" data-field="'+f.key+'" value="'+esc(val)+'"/>'+(f.unit?'<span class="unit">'+esc(f.unit)+'</span>':'')+'</span>';
+      return '<span class="dfield">'+labelHtml+'<input type="number" inputmode="decimal" class="'+(f.yellow?'yellow':'')+'" placeholder="0" data-item="'+itemId+'" data-field="'+f.key+'" value="'+esc(val)+'"/>'+(f.unit?'<span class="unit">'+esc(f.unit)+'</span>':'')+'</span>';
     }
     return '<span class="dfield">'+labelHtml+'<input type="text" data-item="'+itemId+'" data-field="'+f.key+'" value="'+esc(val)+'"/></span>';
   }
@@ -518,7 +522,8 @@
   function fieldStaticHtml(f, val){
     val = (val===undefined||val===null||val==='') ? '' : val;
     var labelHtml = f.label ? '<b>'+esc(f.label)+'</b>' : '';
-    return '<span class="dfield">'+labelHtml+'<span class="static-txt'+(val===''?' empty':'')+'">'+(val===''?'—':esc(val)+(f.unit?' '+esc(f.unit):''))+'</span></span>';
+    var hlClass = (f.yellow && val!=='') ? ' hl' : '';
+    return '<span class="dfield">'+labelHtml+'<span class="static-txt'+(val===''?' empty':hlClass)+'">'+(val===''?'—':esc(val)+(f.unit?' '+esc(f.unit):''))+'</span></span>';
   }
 
   function transfoStaticHtml(v){
