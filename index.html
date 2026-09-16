@@ -241,7 +241,7 @@
         {key:'nivel', label:'Nivel', kind:'number', unit:'Lt'}
       ]},
       { id:'gen_partida', label:'Realizar partida de generador', note:'Martes A.M.', type:'check', naKey:'estado', fields:[
-        {key:'estado', label:'Estado', kind:'select', options:['No aplica']}
+        {key:'estado', label:'', kind:'select', options:['No aplica']}
       ]},
       { id:'gen_estado', label:'Estado generadores', type:'check', fields:[
         {key:'g1', label:'G1', kind:'select', options:['OK','Stop','Falla','En mantención']},
@@ -369,16 +369,17 @@
   // ---------- editable sheet rendering ----------
   function fieldEditableHtml(itemId, f, val){
     val = (val===undefined||val===null) ? '' : val;
+    var labelHtml = f.label ? '<b>'+esc(f.label)+'</b>' : '';
     if(f.kind==='select'){
       var optsHtml = '<option value="">—</option>' + f.options.map(function(o){
         return '<option value="'+esc(o)+'" '+(val===o?'selected':'')+'>'+esc(o)+'</option>';
       }).join('');
-      return '<span class="dfield"><b>'+esc(f.label)+'</b><select data-item="'+itemId+'" data-field="'+f.key+'">'+optsHtml+'</select></span>';
+      return '<span class="dfield">'+labelHtml+'<select data-item="'+itemId+'" data-field="'+f.key+'">'+optsHtml+'</select></span>';
     }
     if(f.kind==='number'){
-      return '<span class="dfield"><b>'+esc(f.label)+'</b><input type="number" inputmode="decimal" class="'+(f.green?'green':'')+'" placeholder="0" data-item="'+itemId+'" data-field="'+f.key+'" value="'+esc(val)+'"/>'+(f.unit?'<span class="unit">'+esc(f.unit)+'</span>':'')+'</span>';
+      return '<span class="dfield">'+labelHtml+'<input type="number" inputmode="decimal" class="'+(f.green?'green':'')+'" placeholder="0" data-item="'+itemId+'" data-field="'+f.key+'" value="'+esc(val)+'"/>'+(f.unit?'<span class="unit">'+esc(f.unit)+'</span>':'')+'</span>';
     }
-    return '<span class="dfield"><b>'+esc(f.label)+'</b><input type="text" data-item="'+itemId+'" data-field="'+f.key+'" value="'+esc(val)+'"/></span>';
+    return '<span class="dfield">'+labelHtml+'<input type="text" data-item="'+itemId+'" data-field="'+f.key+'" value="'+esc(val)+'"/></span>';
   }
 
   function transfoEditableHtml(item, v){
@@ -516,7 +517,8 @@
   // ---------- static (print / history) rendering — compact single-column, matches paper original ----------
   function fieldStaticHtml(f, val){
     val = (val===undefined||val===null||val==='') ? '' : val;
-    return '<span class="dfield"><b>'+esc(f.label)+'</b><span class="static-txt'+(val===''?' empty':'')+'">'+(val===''?'—':esc(val)+(f.unit?' '+esc(f.unit):''))+'</span></span>';
+    var labelHtml = f.label ? '<b>'+esc(f.label)+'</b>' : '';
+    return '<span class="dfield">'+labelHtml+'<span class="static-txt'+(val===''?' empty':'')+'">'+(val===''?'—':esc(val)+(f.unit?' '+esc(f.unit):''))+'</span></span>';
   }
 
   function transfoStaticHtml(v){
