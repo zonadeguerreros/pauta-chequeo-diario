@@ -85,10 +85,14 @@
   .letterhead img{ height:52px; width:auto; flex:none; }
   .letterhead .doc-title-main{ font-size:19px; font-weight:700; letter-spacing:.01em; color:#1A1A1A; }
   .letterhead .doc-title-sub{ font-size:11.5px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:#666; margin-top:2px; }
-  tr.meta-row td.meta-lbl{ font-weight:600; font-size:11.5px; text-transform:uppercase; letter-spacing:.05em; color:#666; background:#FAFAFA; width:110px; }
-  tr.meta-row td.meta-val input{ width:100%; border:none; background:transparent; font:inherit; font-size:14px; color:#1A1A1A; font-family:var(--font); }
-  tr.meta-row td.meta-val input[type="date"]{ font-family:var(--font-mono); }
-  tr.meta-row td.meta-val input:focus{ outline:none; }
+  tr.meta-row td{ padding:0; border-left:none; border-right:none; }
+  .meta-flex{ display:flex; flex-wrap:wrap; gap:6px 32px; align-items:baseline; padding:8px 16px; }
+  .meta-item{ display:flex; align-items:baseline; gap:8px; }
+  .meta-item b{ font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:#666; }
+  .meta-item input{ border:none; border-bottom:1px solid #C7C7C7; background:transparent; font:inherit; font-size:13px; color:#1A1A1A; font-family:var(--font); padding:1px 2px; }
+  .meta-item input[type="date"]{ font-family:var(--font-mono); }
+  .meta-item input:focus{ outline:none; border-bottom-color:#888; }
+  .meta-item .meta-static{ font-size:13px; color:#1A1A1A; font-weight:500; }
 
   tr.colhead-row td{ background:#F8F8F8; font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:#555; text-align:center; }
   tr.colhead-row td.col-desc-hd{ text-align:left; }
@@ -132,16 +136,6 @@
   .sig-img{ max-width:440px; max-height:150px; }
   .sig-box{ min-height:60px; }
 
-  /* ---- Faithful print/static grid (10 cols: desc, check, 8 data) ---- */
-  col.scol-desc{ width:28%; } col.scol-chk{ width:52px; } col.scol-d{ width:auto; }
-  td.sdat{ text-align:center; vertical-align:middle; }
-  td.sdat-text{ font-weight:600; font-size:10.5px; color:#444; text-align:center; }
-  .sdat-lbl{ display:block; font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.02em; color:#666; }
-  .sdat-val{ display:block; font-family:var(--font-mono); font-size:11.5px; margin-top:1px; }
-  .sdat-val.empty{ color:#A0A0A0; font-style:italic; font-family:var(--font); font-size:11px; }
-  td.sdat-yellow .sdat-lbl{ background:#FFEB3B; display:inline-block; padding:0 5px; border-radius:2px; color:#1A1A1A; }
-  td.sdat-wide{ text-align:left; }
-
   #view-historial{ display:flex; flex-direction:column; gap:10px; }
   .hist-card{ background:var(--surface); border:1px solid var(--line); border-radius:8px; overflow:hidden; }
   .hist-head{ display:flex; align-items:center; gap:12px; padding:11px 14px; cursor:pointer; flex-wrap:wrap; }
@@ -157,13 +151,37 @@
   #print-root{ display:none; }
 
   @media print{
-    body{ background:#fff !important; padding:0 !important; }
+    body{ background:#fff !important; padding:0 !important; margin:0 !important; }
     .app-title, .toolbar, .summary, .info-banner, #view-hoy, #view-historial{ display:none !important; }
     #print-root{ display:block !important; }
-    #print-root .sheet-wrap{ border:none; box-shadow:none; border-radius:0; }
-    table.sheet{ min-width:0; font-size:11.5px; }
-    table.sheet td{ padding:5px 7px; }
-    @page{ size: landscape; margin:10mm; }
+    #print-root .sheet-wrap{ border:none; box-shadow:none; border-radius:0; overflow:visible; }
+    table.sheet{ min-width:0; font-size:9px; }
+    table.sheet td{ padding:2.5px 6px; }
+    tr.title-row td{ padding:5px 10px; }
+    .letterhead{ gap:10px; }
+    .letterhead img{ height:28px; }
+    .letterhead .doc-title-main{ font-size:14px; }
+    .letterhead .doc-title-sub{ font-size:8px; }
+    .meta-flex{ padding:4px 10px; gap:4px 24px; }
+    .meta-item b, .meta-item .meta-static{ font-size:9px; }
+    tr.section-row td{ font-size:9px; padding:3px 8px; }
+    tr.colhead-row td{ font-size:7.5px; padding:2px 6px; }
+    tr.subhead-row td{ font-size:8px; padding:2px 8px; }
+    td.desc{ font-size:9px; }
+    td.desc .note{ font-size:7.5px; padding:0 5px; }
+    .dfields{ gap:2px 10px; }
+    .dfield, .dfield b, .static-txt{ font-size:8px; }
+    .transfo-grps{ gap:4px 10px; }
+    .phase span, .transfo-grp b{ font-size:8px; }
+    .chk-mark{ font-size:10px; }
+    tr.sig-row td{ padding:5px 10px 3px; }
+    .sig-block{ max-width:260px; gap:2px; }
+    .sig-canvas{ display:none; }
+    .sig-img{ max-width:260px; max-height:40px; }
+    .sig-box{ min-height:20px; }
+    .sig-line{ height:24px; max-width:260px; }
+    .sig-caption{ font-size:7px; padding-top:2px; max-width:260px; }
+    @page{ size: portrait; margin:8mm; }
   }
 
   [hidden]{ display:none !important; }
@@ -402,8 +420,10 @@
 
   function headerRowsHtml(){
     return '<tr class="title-row"><td colspan="3"><div class="letterhead">'+LOGO_HTML+'<div><div class="doc-title-main">PAUTA DE CHEQUEO DIARIO</div><div class="doc-title-sub">Electricidad</div></div></div></td></tr>'
-      + '<tr class="meta-row"><td class="meta-lbl">Técnico</td><td class="meta-val" colspan="2"><input id="tech-input" type="text" placeholder="Nombre y apellido" autocomplete="off"/></td></tr>'
-      + '<tr class="meta-row"><td class="meta-lbl">Fecha</td><td class="meta-val" colspan="2"><input id="date-input" type="date"/></td></tr>'
+      + '<tr class="meta-row"><td colspan="3"><div class="meta-flex">'
+      + '<span class="meta-item"><b>Técnico</b><input id="tech-input" type="text" placeholder="Nombre y apellido" autocomplete="off"/></span>'
+      + '<span class="meta-item"><b>Fecha</b><input id="date-input" type="date"/></span>'
+      + '</div></td></tr>'
       + '<tr class="colhead-row"><td class="col-desc-hd"></td><td>Check</td><td>Observaciones</td></tr>';
   }
 
@@ -476,35 +496,22 @@
     updateSummary();
   }
 
-  // ---------- static (print / history) rendering — faithful 10-column grid ----------
-  var STATIC_COLS = 10;
-
-  function colgroupStatic(){
-    return '<colgroup><col class="scol-desc"/><col class="scol-chk"/>'
-      + '<col class="scol-d"/><col class="scol-d"/><col class="scol-d"/><col class="scol-d"/>'
-      + '<col class="scol-d"/><col class="scol-d"/><col class="scol-d"/><col class="scol-d"/></colgroup>';
-  }
-
-  function padStaticCells(cells){
-    var out = cells.slice(0,8);
-    while(out.length < 8) out.push('<td class="sdat"></td>');
-    return out.join('');
-  }
-
-  function labeledStaticCell(label, val, unit){
+  // ---------- static (print / history) rendering — compact single-column, matches paper original ----------
+  function fieldStaticHtml(f, val){
     val = (val===undefined||val===null||val==='') ? '' : val;
-    return '<td class="sdat"><span class="sdat-lbl">'+esc(label)+'</span>'
-      + '<span class="sdat-val'+(val===''?' empty':'')+'">'+(val===''?'—':esc(val)+(unit?(' '+esc(unit)):''))+'</span></td>';
+    return '<span class="dfield"><b>'+esc(f.label)+'</b><span class="static-txt'+(val===''?' empty':'')+'">'+(val===''?'—':esc(val)+(f.unit?' '+esc(f.unit):''))+'</span></span>';
   }
 
-  function phaseStaticCell(label, val, yellow){
-    val = (val===undefined||val===null||val==='') ? '' : val;
-    return '<td class="sdat'+(yellow?' sdat-yellow':'')+'"><span class="sdat-lbl">'+esc(label)+'</span>'
-      + '<span class="sdat-val'+(val===''?' empty':'')+'">'+(val===''?'—':esc(val))+'</span></td>';
-  }
-
-  function textStaticCell(text){
-    return '<td class="sdat sdat-text">'+esc(text)+'</td>';
+  function transfoStaticHtml(v){
+    v = v || {};
+    function grp(prefix,label){
+      var parts = ['r','s','t'].map(function(ph){
+        var k = prefix+ph, val = v[k];
+        return '<span class="phase"><span>'+ph.toUpperCase()+'</span><span class="static-txt'+(!val?' empty':'')+'" style="padding-top:3px;">'+(val?esc(val):'—')+'</span></span>';
+      }).join('');
+      return '<span class="transfo-grp"><b>'+label+'</b>'+parts+'</span>';
+    }
+    return '<div class="transfo-grps">'+grp('t1','Trafo 1')+grp('t2','Trafo 2')+'</div>';
   }
 
   function itemRowStatic(item, values){
@@ -513,54 +520,45 @@
     var noteHtml = item.note ? '<span class="note">'+esc(item.note)+'</span>' : '';
     var rows = '';
     if(item.sub){
-      rows += '<tr class="subhead-row"><td class="desc" colspan="'+STATIC_COLS+'">'+esc(item.sub)+'</td></tr>';
+      rows += '<tr class="subhead-row"><td class="desc">'+esc(item.sub)+'</td><td class="chk"></td><td class="datos"></td></tr>';
     }
-    var hasCheck = item.type !== 'transfo';
-    var dataHtml;
-    if(item.type==='checkobs'){
+    var datosHtml, hasCheck = true;
+    if(item.type==='transfo'){
+      hasCheck = false;
+      datosHtml = transfoStaticHtml(v);
+    } else if(item.type==='checkobs'){
       var obs = v.obs || '';
-      dataHtml = '<td class="sdat sdat-wide" colspan="8"><span class="sdat-val'+(obs?'':' empty')+'" style="font-family:var(--font);font-size:12px;">'+(obs?esc(obs):'Sin observaciones')+'</span></td>';
-    } else if(item.type==='transfo'){
-      dataHtml = padStaticCells([
-        textStaticCell('Trafo 1'),
-        phaseStaticCell('R', v.t1r, true),
-        phaseStaticCell('S', v.t1s, true),
-        phaseStaticCell('T', v.t1t, true),
-        textStaticCell('Trafo 2'),
-        phaseStaticCell('R', v.t2r, true),
-        phaseStaticCell('S', v.t2s, true),
-        phaseStaticCell('T', v.t2t, true)
-      ]);
-    } else if(item.fields && item.fields.length){
-      dataHtml = padStaticCells(item.fields.map(function(f){ return labeledStaticCell(f.label, v[f.key], f.unit); }));
+      datosHtml = '<span class="static-txt'+(obs?'':' empty')+'">'+(obs?esc(obs):'Sin observaciones')+'</span>';
     } else {
-      dataHtml = padStaticCells([]);
+      datosHtml = (item.fields||[]).length ? '<div class="dfields">'+item.fields.map(function(f){ return fieldStaticHtml(f, v[f.key]); }).join('')+'</div>' : '—';
     }
     rows += '<tr class="item-row'+(hasCheck && checked ? ' is-checked' : '')+'">'
       + '<td class="desc">'+esc(item.label)+noteHtml+'</td>'
       + '<td class="chk">'+(hasCheck ? '<span class="chk-mark">'+(checked?'✔':'')+'</span>' : '')+'</td>'
-      + dataHtml
+      + '<td class="datos">'+datosHtml+'</td>'
       + '</tr>';
     return rows;
   }
 
   function sectionRowsStatic(section, values){
-    return '<tr class="section-row"><td colspan="'+STATIC_COLS+'">'+esc(section.title)+'</td></tr>'
+    return '<tr class="section-row"><td colspan="3">'+esc(section.title)+'</td></tr>'
       + section.items.map(function(it){ return itemRowStatic(it, values); }).join('');
   }
 
   function headerRowsStaticHtml(st){
-    return '<tr class="title-row"><td colspan="'+STATIC_COLS+'"><div class="letterhead">'+LOGO_HTML+'<div><div class="doc-title-main">PAUTA DE CHEQUEO DIARIO</div><div class="doc-title-sub">Electricidad</div></div></div></td></tr>'
-      + '<tr class="meta-row"><td class="meta-lbl">Técnico</td><td class="meta-val" colspan="9">'+esc(st.technician || '—')+'</td></tr>'
-      + '<tr class="meta-row"><td class="meta-lbl">Fecha</td><td class="meta-val" colspan="9">'+esc(fmtDateLong(st.date))+'</td></tr>'
-      + '<tr class="colhead-row"><td class="col-desc-hd"></td><td>Check</td><td colspan="8">Observaciones</td></tr>';
+    return '<tr class="title-row"><td colspan="3"><div class="letterhead">'+LOGO_HTML+'<div><div class="doc-title-main">PAUTA DE CHEQUEO DIARIO</div><div class="doc-title-sub">Electricidad</div></div></div></td></tr>'
+      + '<tr class="meta-row"><td colspan="3"><div class="meta-flex">'
+      + '<span class="meta-item"><b>Técnico</b><span class="meta-static">'+esc(st.technician || '—')+'</span></span>'
+      + '<span class="meta-item"><b>Fecha</b><span class="meta-static">'+esc(fmtDateLong(st.date))+'</span></span>'
+      + '</div></td></tr>'
+      + '<tr class="colhead-row"><td class="col-desc-hd"></td><td>Check</td><td>Observaciones</td></tr>';
   }
 
   function signatureRowStatic(st){
     var sigHtml = st.signature
       ? '<img src="'+st.signature+'" class="sig-img"/>'
       : '<div class="sig-line"></div>';
-    return '<tr class="sig-row"><td colspan="'+STATIC_COLS+'"><div class="sig-block">'
+    return '<tr class="sig-row"><td colspan="3"><div class="sig-block">'
       + '<div class="sig-box">'+sigHtml+'</div>'
       + '<div class="sig-caption">Firma técnico responsable'
       + (st.technician ? ' — '+esc(st.technician) : '')
@@ -568,7 +566,7 @@
   }
 
   function renderStaticSheet(container, st){
-    var html = colgroupStatic() + headerRowsStaticHtml(st) + SECTIONS.map(function(s){ return sectionRowsStatic(s, st.values); }).join('') + signatureRowStatic(st);
+    var html = colgroupHtml() + headerRowsStaticHtml(st) + SECTIONS.map(function(s){ return sectionRowsStatic(s, st.values); }).join('') + signatureRowStatic(st);
     container.innerHTML = html;
   }
 
