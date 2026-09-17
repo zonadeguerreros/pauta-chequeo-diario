@@ -110,7 +110,7 @@
   td.desc .note{ display:inline-block; margin-left:6px; font-size:10.5px; font-weight:600; color:var(--accent-strong); background:var(--accent-bg); padding:1px 7px; border-radius:99px; vertical-align:1px; }
   td.chk{ text-align:center; cursor:pointer; user-select:none; }
   td.chk input{ position:absolute; opacity:0; width:1px; height:1px; }
-  .chk-mark{ display:block; font-size:16px; font-weight:700; color:#1A1A1A; line-height:1; }
+  .chk-mark{ display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px; border:1.4px solid #9a9a9a; border-radius:3px; background:#fff; font-size:14px; font-weight:700; color:#1A1A1A; line-height:1; }
 
   .datos-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
   .dfields{ display:flex; flex-wrap:wrap; gap:6px 16px; align-items:center; flex:1; min-width:100px; }
@@ -193,7 +193,7 @@
   #print-root.pdf-capture .dfield, #print-root.pdf-capture .dfield b, #print-root.pdf-capture .static-txt{ font-size:8px; }
   #print-root.pdf-capture .transfo-grps{ gap:4px 10px; }
   #print-root.pdf-capture .phase span, #print-root.pdf-capture .transfo-grp b{ font-size:8px; }
-  #print-root.pdf-capture .chk-mark{ font-size:10px; }
+  #print-root.pdf-capture .chk-mark{ font-size:10px; width:12px; height:12px; border-width:1px; }
   #print-root.pdf-capture tr.sig-row td{ padding:5px 10px 3px; }
   #print-root.pdf-capture .sig-block{ max-width:260px; gap:2px; }
   #print-root.pdf-capture .sig-img{ max-width:260px; max-height:40px; }
@@ -227,7 +227,7 @@
     .dfield, .dfield b, .static-txt{ font-size:8px; }
     .transfo-grps{ gap:4px 10px; }
     .phase span, .transfo-grp b{ font-size:8px; }
-    .chk-mark{ font-size:10px; }
+    .chk-mark{ font-size:10px; width:12px; height:12px; border-width:1px; }
     tr.sig-row td{ padding:5px 10px 3px; }
     .sig-block{ max-width:260px; gap:2px; }
     .sig-canvas{ display:none; }
@@ -718,7 +718,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     { id:'generador', title:'Grupo Electrógeno', items:[
       { id:'gen_nivel_subbase', label:'Nivel estanque subbase', sub:'Revisión de niveles', type:'check', fields:[
         {key:'g1', label:'G1', kind:'select', options:['Vacío','1/4','1/2','3/4','Full']},
-        {key:'g2', label:'G2', kind:'select', options:['Vacío','1/4','1/2','3/4','Full']}
+        {key:'g2', label:'G2', kind:'select', options:['Vacío','1/4','1/2','3/4','Full']},
+        {key:'obs', label:'Obs', kind:'text'}
       ]},
       { id:'gen_consumo', label:'Registrar consumo petróleo', type:'check', fields:[
         {key:'g1', label:'G1', kind:'number', unit:'Lt', yellow:true},
@@ -822,10 +823,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   // ---------- completion ----------
   function itemComplete(item, v){
     v = v || {};
-    if(item.type === 'transfo'){
-      var keys = ['t1r','t1s','t1t','t2r','t2s','t2t'];
-      return keys.every(function(k){ return v[k]!==undefined && v[k]!==''; });
-    }
     if(item.naKey && v[item.naKey] === 'No aplica') return true;
     return !!v.checked;
   }
@@ -898,7 +895,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     }
     var datosHtml, hasCheck = true;
     if(item.type==='transfo'){
-      hasCheck = false;
       datosHtml = transfoEditableHtml(item, v);
     } else if(item.type==='checkobs'){
       datosHtml = '<textarea class="obs-input" rows="1" placeholder="Sin observaciones" data-item="'+item.id+'" data-field="obs">'+esc(v.obs||'')+'</textarea>';
@@ -1070,7 +1066,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     }
     var datosHtml, hasCheck = true;
     if(item.type==='transfo'){
-      hasCheck = false;
       datosHtml = transfoStaticHtml(v);
     } else if(item.type==='checkobs'){
       var obs = v.obs || '';
@@ -1131,7 +1126,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     var row = t.closest('tr[data-row]');
     if(row){
       var it = ALL_ITEMS.find(function(x){ return x.id===itemId; });
-      if(it && it.type!=='transfo'){
+      if(it){
         row.classList.toggle('is-checked', itemComplete(it, state.values[itemId]));
         var mark = row.querySelector('.chk-mark');
         if(mark) mark.textContent = checkGlyph(it, state.values[itemId]);
