@@ -864,6 +864,24 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   }
   initFirebase();
 
+  // Limite de espera para cualquier llamada real a Firebase (login,
+  // leer/guardar en Firestore). Si la red permite descargar el SDK pero
+  // bloquea o filtra estas llamadas puntuales, no deben dejar la app
+  // esperando para siempre: a los 8 segundos se dan por fallidas.
+  function withTimeout(promise, ms){
+    return new Promise(function(resolve, reject){
+      var settled = false;
+      var timer = setTimeout(function(){
+        if(!settled){ settled = true; reject(new Error('timeout')); }
+      }, ms);
+      promise.then(function(v){
+        if(!settled){ settled = true; clearTimeout(timer); resolve(v); }
+      }, function(e){
+        if(!settled){ settled = true; clearTimeout(timer); reject(e); }
+      });
+    });
+  }
+
   var currentUser = null, currentProfile = null, isRegisterMode = false, pautaInited = false;
 
   function showView(name){
@@ -897,6 +915,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     if(code === 'auth/user-not-found') return 'No existe una cuenta con ese correo.';
     if(code === 'auth/too-many-requests') return 'Demasiados intentos. Espera un momento e intenta de nuevo.';
     if(code === 'auth/network-request-failed') return 'Sin conexión a internet. Intenta de nuevo.';
+    if(err && err.message === 'timeout') return 'El servidor no respondió a tiempo. Revisa tu conexión e intenta de nuevo.';
     return 'Ocurrió un error: ' + ((err && err.message) || 'inténtalo de nuevo.');
   }
 
@@ -914,13 +933,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       btn.textContent = 'Espera…';
       if(isRegisterMode){
         var role = document.querySelector('input[name="auth-role"]:checked').value;
-        fbAuth.createUserWithEmailAndPassword(email, pass).then(function(cred){
-          return fbDb.collection('users').doc(cred.user.uid).set({
+        withTimeout(fbAuth.createUserWithEmailAndPassword(email, pass), 8000).then(function(cred){
+          return withTimeout(fbDb.collection('users').doc(cred.user.uid).set({
             email: email, role: role, createdAt: firebase.firestore.FieldValue.serverTimestamp()
-          });
+          }), 8000);
         }).catch(function(err){ showAuthError(authErrorMessage(err)); }).then(done);
       } else {
-        fbAuth.signInWithEmailAndPassword(email, pass).catch(function(err){ showAuthError(authErrorMessage(err)); }).then(done);
+        withTimeout(fbAuth.signInWithEmailAndPassword(email, pass), 8000).catch(function(err){ showAuthError(authErrorMessage(err)); }).then(done);
       }
     });
   });
@@ -940,8 +959,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     fbAuth.onAuthStateChanged(function(user){
       if(user){
         currentUser = user;
-        fbDb.collection('users').doc(user.uid).get().then(function(doc){
-          currentProfile = doc.exists ? doc.data() : { email: user.email, role: 'tecnico' };
+        var fallbackProfile = { email: user.email, role: 'tecnico' };
+        withTimeout(fbDb.collection('users').doc(user.uid).get(), 8000).then(function(doc){
+          return doc.exists ? doc.data() : fallbackProfile;
+        }).catch(function(){
+          return fallbackProfile;
+        }).then(function(profile){
+          currentProfile = profile;
           var roleLabel = currentProfile.role === 'jefe' ? 'Jefe supervisor' : 'Técnico';
           document.getElementById('dash-user-label').textContent = (currentProfile.email || user.email) + ' · ' + roleLabel;
           showView('dashboard');
@@ -1658,7 +1682,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     var payload = serializable();
     saveLocalCopy(payload);
     if(fbReady && fbDb){
-      return fbDb.collection('checklists').doc(payload.date).set(payload).then(function(){
+      return withTimeout(fbDb.collection('checklists').doc(payload.date).set(payload), 8000).then(function(){
         setLocalBanner('Guardado en la nube compartida — visible desde cualquier dispositivo.', false);
       }).catch(function(){
         setLocalBanner('Sin conexión a la nube: se guardó solo en este dispositivo.', true);
@@ -1687,7 +1711,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     }
 
     if(fbReady && fbDb){
-      fbDb.collection('checklists').doc(date).get().then(function(doc){
+      withTimeout(fbDb.collection('checklists').doc(date).get(), 8000).then(function(doc){
         var data = doc.exists ? doc.data() : loadLocalCopy(date);
         applyData(data);
         setLocalBanner('Conectado a la nube compartida — visible desde cualquier dispositivo.', false);
@@ -1776,7 +1800,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
 
   function startHistory(){
     if(fbReady && fbDb){
-      fbDb.collection('checklists').orderBy('date','desc').limit(90).get().then(function(snap){
+      withTimeout(fbDb.collection('checklists').orderBy('date','desc').limit(90).get(), 8000).then(function(snap){
         var entries = [];
         snap.forEach(function(doc){ entries.push(doc.data()); });
         renderHistoryList(entries);
