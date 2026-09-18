@@ -716,7 +716,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
 
   var SECTIONS = [
     { id:'generador', title:'Grupo Electrógeno', items:[
-      { id:'gen_nivel_subbase', label:'Nivel estanque subbase', sub:'Revisión de niveles', type:'check', fields:[
+      { id:'gen_revision_niveles', label:'Revisión de niveles', type:'checkobs' },
+      { id:'gen_nivel_subbase', label:'Nivel estanque subbase', type:'check', fields:[
         {key:'g1', label:'G1', kind:'select', options:['Vacío','1/4','1/2','3/4','Full']},
         {key:'g2', label:'G2', kind:'select', options:['Vacío','1/4','1/2','3/4','Full']},
         {key:'obs', label:'Obs', kind:'text'}
