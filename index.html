@@ -53,7 +53,7 @@
   .app-title{ display:flex; align-items:center; justify-content:space-between; gap:9px; }
   .brand-left{ display:flex; align-items:center; gap:9px; }
   .app-title img{ height:26px; width:auto; border-radius:3px; }
-  .app-title img.brand-corner{ height:46px; width:auto; flex:none; border-radius:0; }
+  .app-title img.brand-corner{ height:115px; width:auto; flex:none; border-radius:0; }
   .app-title span{ font-size:12.5px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-faint); }
 
   .toolbar{ display:flex; flex-wrap:wrap; align-items:center; gap:10px; }
@@ -83,8 +83,8 @@
   col.col-desc{ width:40%; } col.col-chk{ width:70px; } col.col-datos{ width:auto; }
 
   tr.title-row td{ padding:10px 16px; border:none; border-bottom:2px solid #9A9A9A; background:#fff; position:relative; }
-  .brand-corner-print{ position:absolute; top:8px; right:14px; height:50px; width:auto; }
-  .letterhead{ display:flex; align-items:center; justify-content:center; gap:16px; }
+  .brand-corner-print{ position:absolute; top:8px; right:14px; height:125px; width:auto; }
+  .letterhead{ display:flex; align-items:center; justify-content:center; gap:16px; min-height:125px; }
   .letterhead img{ height:52px; width:auto; flex:none; }
   .letterhead .doc-title-main{ font-size:19px; font-weight:700; letter-spacing:.01em; color:#1A1A1A; }
   .letterhead .doc-title-sub{ font-size:11.5px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:#666; margin-top:2px; }
@@ -175,16 +175,16 @@
   #print-root.pdf-capture{ display:block !important; position:fixed !important; top:0; left:-10000px; width:780px; background:#fff; z-index:-1; }
   #print-root.pdf-capture .sheet-wrap{ border:none; box-shadow:none; border-radius:0; overflow:visible; }
   #print-root.pdf-capture table.sheet{ min-width:0; font-size:9px; }
-  #print-root.pdf-capture table.sheet td{ padding:2.5px 6px; }
-  #print-root.pdf-capture tr.title-row td{ padding:5px 10px; }
-  #print-root.pdf-capture .brand-corner-print{ height:32px; top:5px; right:8px; }
-  #print-root.pdf-capture .letterhead{ gap:10px; }
+  #print-root.pdf-capture table.sheet td{ padding:1.5px 6px; }
+  #print-root.pdf-capture tr.title-row td{ padding:4px 10px; }
+  #print-root.pdf-capture .brand-corner-print{ height:80px; top:4px; right:8px; }
+  #print-root.pdf-capture .letterhead{ gap:10px; min-height:80px; }
   #print-root.pdf-capture .letterhead img{ height:28px; }
   #print-root.pdf-capture .letterhead .doc-title-main{ font-size:14px; }
   #print-root.pdf-capture .letterhead .doc-title-sub{ font-size:8px; }
-  #print-root.pdf-capture .meta-flex{ padding:4px 10px; gap:4px 24px; }
+  #print-root.pdf-capture .meta-flex{ padding:3px 10px; gap:4px 24px; }
   #print-root.pdf-capture .meta-item b, #print-root.pdf-capture .meta-item .meta-static{ font-size:9px; }
-  #print-root.pdf-capture tr.section-row td{ font-size:9px; padding:3px 8px; }
+  #print-root.pdf-capture tr.section-row td{ font-size:9px; padding:2px 8px; }
   #print-root.pdf-capture tr.colhead-row td{ font-size:7.5px; padding:2px 6px; }
   #print-root.pdf-capture tr.subhead-row td{ font-size:8px; padding:2px 8px; }
   #print-root.pdf-capture td.desc{ font-size:9px; }
@@ -209,16 +209,16 @@
     #print-root{ display:block !important; }
     #print-root .sheet-wrap{ border:none; box-shadow:none; border-radius:0; overflow:visible; }
     table.sheet{ min-width:0; font-size:9px; }
-    table.sheet td{ padding:2.5px 6px; }
-    tr.title-row td{ padding:5px 10px; }
-    .brand-corner-print{ height:32px; top:5px; right:8px; }
-    .letterhead{ gap:10px; }
+    table.sheet td{ padding:1.5px 6px; }
+    tr.title-row td{ padding:4px 10px; }
+    .brand-corner-print{ height:80px; top:4px; right:8px; }
+    .letterhead{ gap:10px; min-height:80px; }
     .letterhead img{ height:28px; }
     .letterhead .doc-title-main{ font-size:14px; }
     .letterhead .doc-title-sub{ font-size:8px; }
-    .meta-flex{ padding:4px 10px; gap:4px 24px; }
+    .meta-flex{ padding:3px 10px; gap:4px 24px; }
     .meta-item b, .meta-item .meta-static{ font-size:9px; }
-    tr.section-row td{ font-size:9px; padding:3px 8px; }
+    tr.section-row td{ font-size:9px; padding:2px 8px; }
     tr.colhead-row td{ font-size:7.5px; padding:2px 6px; }
     tr.subhead-row td{ font-size:8px; padding:2px 8px; }
     td.desc{ font-size:9px; }
