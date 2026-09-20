@@ -366,7 +366,7 @@
   .inf-two > div.hd{ background:#D9EAF7; font-weight:700; padding:6px 10px; }
   .inf-fuel{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
   .inf-fuel label{ display:flex; align-items:center; gap:5px; font-weight:700; }
-  .inf-fuel input{ width:170px !important; }
+  .inf-fuel input, .inf-fuel select{ width:200px !important; }
   .inf-photo-count{ font-size:11px; color:#666; }
   .inf-ro .inf-edit-only{ display:none !important; }
   .inf-ro .inf-sig-canvas{ pointer-events:none; cursor:default; }
@@ -397,7 +397,7 @@
   @media screen and (max-width: 640px){
     .inf-sheet{ padding:14px 10px; }
     .inf-two{ grid-template-columns:1fr; }
-    .inf-fuel input{ width:100% !important; }
+    .inf-fuel input, .inf-fuel select{ width:100% !important; }
     .inf-act-head{ gap:6px; }
   }
 
@@ -2239,7 +2239,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   var REP_LOGO2 = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAB2ALgDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD3+iiigAooooAKKKKACiiigAoopCQBkkADrQAtFc5qvjCxsi0dt/pMw4+U/KPx/wAK43UfEOo6kSJZykZ/5Zx/Kv8A9f8AGtI0pSMZ1oxO/vvEel2BKyXIeQfwR/Mf8BXO3fjyQkiztFUdmlOT+Q/xrjqK3jRitznlXk9j07w7ry6zakSbUuo/voOhHqPatuvHrG9m068juoGw6Hp2I7g+1eqaXqUOq2KXMB4PDL3U9waxq0+V3WxvRq8ys9y7RRRWRuFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFZHiXxHp/hbQrrVdRlCxW8ZYICN0h7Ko7kkgfjTtdsIb22ga5tYruC3mEslvJEJA67SDgEHkZ3DjJ2471x/i248P32iXOh2lhaSwXUeySSFFVVHUFSO4OCD0471UYuTsiZTUVdkXgT4qL4m8M3eqalbxW9xHePDFbwEksm1WBOe/zYJ4HH4VX1bxHfasxVn8q37RIePxPeuL8LeHB4asZ7UXJnEkxkDFNuBgADr7V0UFtPdSCO3heVz2Rc10wpqKu9zjqVXJ2jsRUV0ln4L1K4w05jtlPZjub8h/jWzB4HsIwDcXE0p77cKP8AP403ViiVRm+hwVFelp4a0WIYFkre7ux/rUn9j6UBgafbfjGDU+3iafV5HmFQar4hvvD3hjWJ7KV43e1dAUOCjEYDg9iCc5r0PWPDdpc2bGygjhuF5XYMBvY159eWcV5bTWd3FuikUpIhyOO49qpSVSJDi6ck2dL8JfGl9rvgKG61uO7kuYZnt1uEtpJDcKoUhztU8/MVPqVJ9a7RfEViZRGY79Mn78mnXCIPqxQKB7k1x/gnVoNGji0chYrEfLAB0jPp9D/P6128928szWllgzL/AKyQjKw59fVsdF+hOB15ZRcXZnZCamrotQzRXEKzQSpLE4yrowZSPYipKitraO0t1hiGFXJ56kk5JPqSSST3JqWpLCiiigAooooAKKKKACiiigAprusaM7sFVRkknAAokdY0aR2CooyzE4AFedeJPEj6pIbW1Zls1PJ6GQ+p9varhByZnUqKCLHiLxW14XtLBilv0eQcF/p6CuUtrC7lnYWVvJOh+aSNFyU/2h/h+XPB6nRPB895tnv90EB5Cfxt/gP1rurWzt7GAQ20SxRjso/zmtXOMFaJhGnKo+aRyWi+DrWWGO6u7hbhWGQkTfL+J6n9K62C2t7OIR28KRIOyLivMNVsPEvw+1q71zQjNquj3czT3ulyMWYMTlniJ5De3f34x2/hzxVpPi3Sl1DSbkSx9JI2GJIW/uuvY/oe2RWMpuW50RhGOxtM9RM9GCaXZmpLIyTSYJqcR07yxQBV2muV8U6GWDajbJ8w/wBco7j+9/jWp4t8XaT4N01brUJC88p2W1pF80tw/oq/lk9Bn3AOTY67e6/pttPdab9nR2SOe283KB2YKVd8fNyfuKD/ALR521cG07ozqRUlZnEeY1ydsDFYu8vr7L/j+We3ovgzWY5LVdMkws0YJjP/AD0HU59W9T36+tc/4j0JtKnE0Sj7NL02jhG/u/T0rGilkgmSWJykiHcrDsa6WlOJyRk6cj2aisnQNaj1ixDnC3CcSoOx9foa1q5GmnZncmmroKKKKQwooooAKKKKACkJAGScAdaWuS8Q6ncahd/2HpY3SNxO4PAHpn09fyqoxuyZS5VczfEGtz61djTNNDPDuwdnWU/4Vt6B4Vh04LcXYWW66gdVj+nqfer2iaDb6Nb4UB7hh88pHJ9h6CtaqlPTljsZxp3fNLcKYzVieIfF2k+GjAl/JM1xcAmG3t4WlkcDGSFUHgZHJrAHxR0rd+80fxDEn99tOYj9CT+lZmx2rgSAqwBU9Qa858S+AL2y1RvEvg65/s/V15lj/wCWV0vdZF7/AF/rgjpNM+IHhPVJRDBrVtHcHjyLkmB8+m1wCfwrqF2soIIIIyCOhoA4fwZ8QrTxFcNpGp250rxDCMS2MxwJMfxRH+Je+Ov1HNdzgVyXjH4f6X4sgV5FNvfRHdBdQnbJG3YgiuYs/GPivwUw0/xXpV1rNqnyw6lp8e6Vh2Ekfc+4P50Aeq1xXjLx/D4fnTR9Kt/7T8RXA/c2UZ4jB/jlP8Kj8z7dRz118Rda8YgaX4K0m9spJCVn1LUIAotxnB2Lk7m6/T+XU+DvAmn+FYHly9zqM533F3Od0krHqSTQBw0XhC9TWdPuNdvWvvFGsOVa4/hsoFGX8ofw8HaD7mvRdegg03w9axW0Yiht7u0CovACieOq1/th+JWjySj5ZrGeKJj/AHwysR/3zmrnjNGbwnfMvWIJN/3w6t/StF9lGL1UmMSRb0zadfLvguGkELHrlGIZc+oxkH0/3STwuq6ZNpV81vLyOqPj7y+tdz9nlubTU47fH2m0vDNbdvn2rIB9DvIPsxqTUbG38R6LFLHgGRBLA5HK5GcH+tVCfKyZw515nAaZqM+lXyXUB5HDLnhl7g16pY30Oo2cdzA2UcfiD3B968jngltp3hmQpIhwynsa1/DeuNpF5skJNrKcSD+6f7wrSpDmV0Y0anI7PY9OopqOsiK6MGVhkEHginVyncFFFFABRRUU8wghaQgnHRR1Y9gPegDO1q/mhVLKxAa+uOE9EXu59hUmjaPDpFtsX55n5llPVz/hUlhZGF5LmfDXc3Lt2UdlHsP161eqm9LIhK7uwpCaDSVJZzXinwdbeJXt7n7RcWl/a5+z3VvIUdM9RnuDgcEEVz5/4Tnw6Ns9pp/iOzXuVFtcY+oBQ/iFr0fFFAHmUniLwLrrLYeItOOk3LnAh1a3CIx/2ZOYz+dWx8NIrECbwxrmo6UG+ZVtrgmJs9PkbKkfhXZ6hounarA8N7aQzRuMMroCD9a4B9KPw/8AFehW+hXkgsdWu2gm0ln3RhdrM0san7m04zjg5AxQBd8/4kaLxIul67CvUujW0p/Fdy/+OiiTx3qzxeXdeAtRNwRwi3MDpn/eLAj8q9Bpkqt5beUE8zHy7umfegDgPD96vgzwrv1eGNNSvLie6FpC2SvmSM+3PoM4z+VZl5q3i7WyZILe8itz91beNlGP97qfzrv7LQLS2uWvJx9qvnOWuJhk/wDAR0UemK0pZobeMyTSpHGvVnYAD8TXNOlOru7LyNFOMdkeKXa67ZyQTXi38bQSCSJ5g2FYdwTxW0PHlxd6VdafqkCyrcQvF5sXysNwIyR0P6V6JHrej3L+VHqdlKzcbFnUk/hmud8VeHPDkdjJqF1MmmheTLGPlY+m3ufpzWf1avTf7uV/Jj9pTkveQlh4jilEzWF3pySTlHk+2TGMhhGqkBcc/d65q5o+qQWVtHpz3VteXsk0jRxWTF1VWYtyewGe/YV4hc63bpNItsjyxg/K7gIWHrjnFaGgfEC+0CR2hsbKUP8AfLK28j03Z4/Ku2lQxk9JRSOeVShF3Tueu+KtB+2wm8tk/wBJiHzAfxr/AIiuArqtE+Kuh6oVivt+nTn/AJ6ndGf+BDp+IFReJtIiH/E109kktZTlzGQVUnuMdj/OuuHNB8s0c1WMZe/Et+ENf8pl0y6f5GOIHPY/3f8ACu5rxR5FiAZnC84Bz3r0jwtr41O2+zXDf6XEOpP+sX1+vrWdanb3kXQq391nR0UUVgdIUhUMQSM4OR7UtFABRRRQAlLWR4i1O80vT0fT7B727mlEUca5wCQTuY9gMVzt22vWN1ayX+vDzywmmtreFRDFApy5Yn5iMcD1JFRKdnY1hScle53NZ+t65p3h3SJ9U1W5W3s4QN7kE9TgAAckk9hS6deSzWsUl6EgmuCWjhJwwXqAfVscn3rP8S6Rovi7RdQ0TU5A0CBTMUfa0B+8rZ7Edefx4qroz5WcRcfHfQl0+a/ttNvprVAQrNtQs2cAYycAnv8ApWn8PrY+JHHjjUbyG8vLtDHAkOfLtIwf9WoPOc9SeSfbFcJF8DtKl0p76HxHqz6TzItotsvmyLnjHOMnAx8vOQcV6X4Nk8OaDFB4U0Hey28byzl23FGyN289CxJ7cDH0pynDSw40566HZ0Vh6v4hgtNK+02EkN3NKxjgVH3KzgEnJHpj+Q6kVma34ovLSdNKsY7f+0Rbie5nmbEVuuMk46k8E4FQ6kUXGlOWxY8UeLV0QrZWNs9/q8wzFaxAsQP7zY6D+dee3ngjx14rm+1avcQxZ5WKabhPYKuQK67wrd3Fhaq97bie7uopL+5nWPEpjziMEdSzc4HYDHar9x4vkW7cxWwW2ig+cSnD+ccbUPYAZbJ5+6392tYYqNNXitTOeFlKVmeYXvwl8S2sZkiFrdY/hilw3/jwFc3ejV9MuYLbV7e4KwNuS2uy2z3wM9Poa+jbHUD9gsP7TlggvrmNSYt23LEZIUHmk1GDR9Wsmhv1tLi3ztIkYEAk4HPY54+tdUMc/tq5zywv8p5joHxH8NW1usN54cis2AwXtoldT+eD/OtKbXPC3iy5XTdK8Ni/u5P+WjwiFYh/eZhyAKtXnwz8KR3Ns0dvfutxIEWOCXcqjruJPIUeufSuu0jTdE0GwkTTY7a3t4yfNdWHUddzHuPeonVo7wvccadTaWx51rvwdbZ52h3YL4+aCc4BP+y39D+dc1a+AvG9vK0FvazW6twxW5VUI98NzXvsM0VxCk0EiSxOMq6NkMPUGn4oji6iVnqDw8b9jxN/B954fuIpdSm+1TuuUcEsqnuBnvW1pml6z9pjuLO2lR0OVdhtH69RXpskYOCQDjkZ7UwZBpSxEpLUn6ur3uSW7StbxmdFSUqN6qcgHviilRs0VznQSHgU3cKV/uH6VX+b0oAsbhRkVl6rE8+kXcKi5zJCyf6MwWUZGMoSQNw7Vy6/8JHBZWsVtbzW1spmDNCmZHO4bDsfdsBG75exHYcUAdfq/nnR7v7K8qz+U3lmFQXzjjAPGa4JvAN3eX9j/aeo6jcPcRF72ZZQFQqPlQfiT+R45rct/wDhKEtZ7ydjLcQvEUs1WNEmTyk8wA84beXxlsZUDpzUZj8Q212TK0rxyeX9puLSNC+drkhA38IYqOhOMe5rOdOM3qbUq86a90z5/DWrf279ptIP3lkxNtNPL8hjEe2NF5J6kls4ye9UJLPVBa3UH9nTR3mqlTNa+arO6RgB2yeMHJ69SwGMDnfk/txbsTRrei2eOFZpvLi+0bQZ84X7ucmLPHQnjPSV7G6u9GuZ72K8N24MMckYUT+QJMruUELnuwHJHGM8VLoroaLEvqjGttF1RbmwmOkSeS873LwvOPkmwoRpOT8qgHAGSSM8ZwGQaRrF5pcCyaQYhcTSNeKWEbSnnbuxyIgMfKDk4H1rVt5NdjtII2t7u0iWA+UloquWl3v98SElVK7CBnjLAngUmlzeIrCZri+tbmZJ4y0iRKrN53k24U4zwNyzDjjPXsaPYruL6zLsZ2iaVqtvcaOZtGcJHDIVVpAEjlZwxd1HAH91RnoO/Tf8Z2//ABKQ0dm8yzXES3fkR5keIHkepzgD6Gsy+TxLPpkttcG8a7MUKxi1WPyn+RPMLN1B3+Z0I424Bra8R22r6m0NjpkptIwPOlut+07h9xVxkn5sMexC4PDGqVNKNiZV3Kam0ZF/o2pSS6dcSWRummnM11AkgVEZQPJVj3ROc46nJxzWdZ6ZqyrpYn0SaQR3UslxumGZZjna59Ixk/mePXbaXxPMs9wyS2+1IE8iIRt/ERMyZ+8cAFc9j0J4pbS7123vWlmiv7jTVnKqJIo/OKGMYOFwcb8joDyOMc0nSV7jWIklaxiwaJrT+ILS8u9PaS5Z5fMuWl4UjhTkfdjAY4UcnGTUJ8EyJp2qxR6SCI5MwAzfNc7V2qTz05ZjnqcDoK34JfEO2H+0Pt8cnkxsgs44mDOc7hITwCOBxgY6E0SS+Ivti7ftgl+2kOixxfZxb7jtIY/NkrtzznOeAKXsYj+tT6GJ/ZGs2ZuzDpk8fl28UEDwTgmK3+XekfrIfmyfy7Uy+8P3/wDZvkWGjSR2CwvNDbPIGPm/3pFz8zYwFXkDv0xW39n8SiHTBK73UjpBLciVY1EUoZdwG0DjBb1+7xVjR5NdbU7IXZvTG1u5vVniiWNJvlwEK8kff9RjHOaPYruH1mV72NfQoJbXRbWCWDyPLjCLEX3sqgYG49z64rSrijDq9pq+oTWFnduHfzWkmI3YEybo0+Yq4aPeV4BXGM88aNo+uXviASSG4ttKzK6IyIGbAgCBs5IBbzz64x04rVKysc7d3c6MjNQstT0mKYiJPvUVLiigBaTAoooANopNooooANoo2iiigA20bRRRQAbaNooooANtG2iigBcUYoooAKWiigAooooAKKKKACiiigAooooA/9k=';
   var REP_FOOTER = 'Unidad de Electricidad - Departamento de Operaciones | Hospital de Villarrica';
   var INF_MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
-  var INF_FRACCIONES = ['1/8 de capacidad','1/4 de capacidad','3/8 de capacidad','1/2 de capacidad','5/8 de capacidad','3/4 de capacidad','7/8 de capacidad','Capacidad completa'];
+  var INF_FRACCIONES = ['1/8 de capacidad','2/8 de capacidad','3/8 de capacidad','4/8 de capacidad','5/8 de capacidad','6/8 de capacidad','7/8 de capacidad','8/8 de capacidad (full)'];
   var INF_MODOS = ['Modo AUTO','Modo STOP','Modo MANUAL'];
   var INF_FOTOS_POR_BLOQUE = 6;
 
@@ -2323,10 +2323,40 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     return st.estado !== 'final' && infVentanaAbierta(st.tipo, st.fechaInicio);
   }
 
-  function infAutor(){
+  // Compara nombres sin importar mayusculas, tildes ni espacios de mas
+  var INF_TILDES = new RegExp('[' + String.fromCharCode(768) + '-' + String.fromCharCode(879) + ']', 'g');
+  function infNorm(s){ return String(s || '').normalize('NFD').replace(INF_TILDES, '').replace(/\s+/g, ' ').trim().toLowerCase(); }
+  // Nombre de quien esta usando el programa: si esta en la lista de funcionarios se usa tal cual sale ahi
+  function infMiNombre(){
     var em = (currentUser && currentUser.email) || '';
     var nombre = (currentProfile && currentProfile.nombre) || (em ? em.split('@')[0] : '');
-    return { uid: (currentUser && currentUser.uid) || null, email: em, nombre: nombre, cargo: isJefe() ? 'Jefe supervisor' : 'Técnico eléctrico' };
+    var enLista = TECHNICIANS.filter(function(t){ return infNorm(t) === infNorm(nombre); })[0];
+    return enLista || nombre;
+  }
+  function infCargoDe(nombre){
+    return (isJefe() && infNorm(nombre) === infNorm(infMiNombre())) ? 'Jefe supervisor' : 'Técnico eléctrico';
+  }
+  function infAutor(){
+    var nombre = infMiNombre();
+    return { uid: (currentUser && currentUser.uid) || null, email: (currentUser && currentUser.email) || '', nombre: nombre, cargo: infCargoDe(nombre) };
+  }
+  // Listado de funcionarios (el mismo de la pauta); incluye a quien usa el programa y al autor actual si no estan en la lista
+  function infNombresHtml(st){
+    var actual = (st.autor && st.autor.nombre) || '', lista = TECHNICIANS.slice();
+    [infMiNombre(), actual].forEach(function(n){
+      if(n && !lista.some(function(x){ return infNorm(x) === infNorm(n); })) lista.push(n);
+    });
+    return '<option value="">Seleccionar funcionario</option>' + lista.map(function(n){
+      return '<option value="' + esc(n) + '"' + (infNorm(n) === infNorm(actual) ? ' selected' : '') + '>' + esc(n) + '</option>';
+    }).join('');
+  }
+  // Nivel de combustible: 1/8 a 8/8 (full). Si habia un valor antiguo distinto, se conserva como opcion.
+  function infCombSelect(clave, valor){
+    var ops = INF_FRACCIONES.slice();
+    if(valor && ops.indexOf(valor) === -1) ops.push(valor);
+    return '<select data-g="' + clave + '"><option value="">Seleccionar nivel</option>' + ops.map(function(x){
+      return '<option value="' + esc(x) + '"' + (x === valor ? ' selected' : '') + '>' + esc(x) + '</option>';
+    }).join('') + '</select>';
   }
 
   // ---------- modelo ----------
@@ -2767,7 +2797,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     h += '<table class="rep-t">' + repCols(29.99, 70.01)
       + '<tr class="h"><td>Fecha</td><td>' + esc(infFechaTabla(st)) + '</td></tr>'
       + '<tr><td class="lab">Turno</td><td>' + esc(T.horario) + '</td></tr>'
-      + '<tr><td class="lab">Funcionario responsable</td><td>' + esc(au.nombre || '') + '</td></tr></table>';
+      + '<tr><td class="lab">Funcionario responsable</td><td><select data-autor>' + infNombresHtml(st) + '</select></td></tr></table>';
 
     h += '<div class="rep-blk-h">' + repH2('2. Registro cronológico de actividades y observaciones') + '</div>';
     h += '<p class="rep-p">' + esc(T.intro2) + '</p>';
@@ -2789,17 +2819,16 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       + '<tr class="h"><td>Equipo / parámetro</td><td>Condición observada</td></tr>'
       + '<tr><td>Grupo electrógeno N.º 2</td><td><input type="text" data-g="g2" list="inf-modos" value="' + esc(g.g2 || '') + '" placeholder="Ej.: Modo STOP"/></td></tr>'
       + '<tr><td>Grupo electrógeno N.º 1</td><td><input type="text" data-g="g1" list="inf-modos" value="' + esc(g.g1 || '') + '" placeholder="Ej.: Modo AUTO"/></td></tr>'
-      + '<tr><td>Nivel de combustible</td><td><div class="inf-fuel"><label>G1 <input type="text" data-g="comb1" list="inf-fracc" value="' + esc(g.comb1 || '') + '" placeholder="Ej.: 3/4 de capacidad"/></label>'
-      + '<label>G2 <input type="text" data-g="comb2" list="inf-fracc" value="' + esc(g.comb2 || '') + '" placeholder="Ej.: 1/2 de capacidad"/></label></div></td></tr></table>';
+      + '<tr><td>Nivel de combustible</td><td><div class="inf-fuel"><label>G1 ' + infCombSelect('comb1', g.comb1 || '') + '</label>'
+      + '<label>G2 ' + infCombSelect('comb2', g.comb2 || '') + '</label></div></td></tr></table>';
     h += '<datalist id="inf-modos">' + INF_MODOS.map(function(x){ return '<option value="' + x + '">'; }).join('') + '</datalist>';
-    h += '<datalist id="inf-fracc">' + INF_FRACCIONES.map(function(x){ return '<option value="' + x + '">'; }).join('') + '</datalist>';
     h += '<div class="rep-figcap"><b>Figura 1.</b><i>' + esc(T.figura) + '</i></div>';
     h += '<div class="inf-act-body">' + infThumbsHtml(st, st.figuraFotos, 'fig')
       + '<div><button type="button" class="ghost-btn inf-edit-only" data-add-photo="fig">＋ Agregar fotos de la figura</button></div></div>';
 
     h += '<div class="rep-blk-h">' + repH2('4. Entrega y recepción del turno') + '</div>';
     h += '<div class="inf-two"><div class="hd">Funcionario que entrega el turno</div><div class="hd">Funcionario que recibe el turno</div>'
-      + '<div>' + esc(au.nombre || '') + '<br>' + esc(au.cargo || 'Técnico eléctrico') + '<br>Departamento de Operaciones'
+      + '<div><span id="inf-autor-nombre">' + esc(au.nombre || '') + '</span><br><span id="inf-autor-cargo">' + esc(au.cargo || 'Técnico eléctrico') + '</span><br>Departamento de Operaciones'
       + '<canvas id="inf-sig-canvas" class="inf-sig-canvas" width="640" height="200"></canvas>'
       + '<div class="inf-sig-actions inf-edit-only"><button type="button" class="ghost-btn" id="inf-sig-upload">Adjuntar imagen</button><button type="button" class="ghost-btn" id="inf-sig-clear">Limpiar firma</button></div>'
       + '<div>Nombre y firma</div></div>'
@@ -2921,6 +2950,14 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     function cambio(e){
       if(!infEditable) return;
       var t = e.target, st = infState;
+      if(t.hasAttribute('data-autor')){
+        st.autor.nombre = t.value; st.autor.cargo = infCargoDe(t.value);
+        var n1 = infEl('inf-autor-nombre'), n2 = infEl('inf-autor-cargo');
+        if(n1) n1.textContent = st.autor.nombre;
+        if(n2) n2.textContent = st.autor.cargo;
+        infTouch();
+        return;
+      }
       var f = t.getAttribute('data-f'), gk = t.getAttribute('data-g');
       if(f){
         var r = infEncontrarAct(t); if(!r) return;
