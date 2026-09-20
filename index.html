@@ -344,13 +344,6 @@
       <form id="auth-form">
         <label>Correo<input type="email" id="auth-email" required autocomplete="username"/></label>
         <label>Contraseña<input type="password" id="auth-pass" required autocomplete="current-password" minlength="6"/></label>
-        <div id="auth-role-field" class="auth-role" hidden>
-          <span>Rol</span>
-          <div class="auth-role-opts">
-            <label><input type="radio" name="auth-role" value="tecnico" checked/> Técnico</label>
-            <label><input type="radio" name="auth-role" value="jefe"/> Jefe supervisor</label>
-          </div>
-        </div>
         <button type="submit" class="btn primary" id="auth-submit-btn">Iniciar sesión</button>
       </form>
       <button type="button" id="auth-forgot-btn">¿Olvidaste tu contraseña?</button>
@@ -937,7 +930,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
 
   function setAuthMode(register){
     isRegisterMode = register;
-    document.getElementById('auth-role-field').hidden = !register;
     document.getElementById('auth-forgot-btn').hidden = register;
     document.getElementById('auth-submit-btn').textContent = register ? 'Crear cuenta' : 'Iniciar sesión';
     document.getElementById('auth-toggle-btn').textContent = register ? '¿Ya tienes cuenta? Inicia sesión' : '¿No tienes cuenta? Regístrate';
@@ -973,7 +965,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       if(!ok){ showAuthError('No se pudo conectar con el servidor. Revisa tu conexión a internet e intenta de nuevo.'); done(); return; }
       btn.textContent = 'Espera…';
       if(isRegisterMode){
-        var role = document.querySelector('input[name="auth-role"]:checked').value;
+        var role = 'tecnico'; // el rol de jefe se asigna solo desde la consola de Firebase
         withTimeout(fbAuth.createUserWithEmailAndPassword(email, pass), 8000).then(function(cred){
           return withTimeout(fbDb.collection('users').doc(cred.user.uid).set({
             email: email, role: role, createdAt: firebase.firestore.FieldValue.serverTimestamp()
