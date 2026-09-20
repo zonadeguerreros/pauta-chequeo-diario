@@ -314,6 +314,29 @@
     .meta-flex{ padding:8px 10px; gap:4px 16px; }
 
     table.sheet{ min-width:520px; font-size:11.5px; }
+
+    /* La tabla de 3 columnas se apila: descripcion + casilla arriba, datos abajo.
+       Asi cabe en el ancho del celular sin desplazar la pantalla de lado.
+       Solo en pantalla (#view-hoy / #view-historial): el PDF y la impresion no cambian. */
+    #view-hoy table.sheet, #view-historial table.sheet{ min-width:0; }
+    #view-hoy table.sheet, #view-hoy table.sheet tbody,
+    #view-historial table.sheet, #view-historial table.sheet tbody{ display:block; width:100%; }
+    #view-hoy table.sheet colgroup, #view-historial table.sheet colgroup,
+    #view-hoy tr.colhead-row, #view-historial tr.colhead-row{ display:none; }
+    #view-hoy tr.title-row, #view-hoy tr.meta-row, #view-hoy tr.section-row, #view-hoy tr.sig-row, #view-hoy tr.subhead-row,
+    #view-historial tr.title-row, #view-historial tr.meta-row, #view-historial tr.section-row, #view-historial tr.sig-row, #view-historial tr.subhead-row{ display:block; }
+    #view-hoy tr.title-row td, #view-hoy tr.meta-row td, #view-hoy tr.section-row td, #view-hoy tr.sig-row td, #view-hoy tr.subhead-row td.desc,
+    #view-historial tr.title-row td, #view-historial tr.meta-row td, #view-historial tr.section-row td, #view-historial tr.sig-row td, #view-historial tr.subhead-row td.desc{ display:block; }
+    #view-hoy tr.subhead-row td.chk, #view-hoy tr.subhead-row td.datos,
+    #view-historial tr.subhead-row td.chk, #view-historial tr.subhead-row td.datos{ display:none; }
+    #view-hoy tr.item-row, #view-historial tr.item-row{ display:grid; grid-template-columns:minmax(0,1fr) 52px; }
+    #view-hoy tr.item-row td.desc, #view-historial tr.item-row td.desc{ grid-column:1; grid-row:1; }
+    #view-hoy tr.item-row td.chk, #view-historial tr.item-row td.chk{ grid-column:2; grid-row:1; display:flex; align-items:center; justify-content:center; }
+    #view-hoy tr.item-row td.datos, #view-historial tr.item-row td.datos{ grid-column:1 / -1; grid-row:2; border-top:none; min-width:0; }
+    #view-hoy .chk-mark{ width:24px; height:24px; font-size:17px; }
+    #view-hoy .dfields, #view-hoy .transfo-grps, #view-historial .dfields, #view-historial .transfo-grps{ min-width:0; }
+    #view-hoy .obs-input{ min-width:0; width:100%; }
+    #view-hoy .datos-row{ min-width:0; }
     table.sheet td{ padding:5px 7px; }
     col.col-chk{ width:46px; }
 
