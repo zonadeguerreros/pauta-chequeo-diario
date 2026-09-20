@@ -1092,7 +1092,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   }
 
   function newState(date){
-    return { date: date, technician: '', status:'draft', updatedAt: null, signature: null, values: defaultValues() };
+    return { date: date, technician: '', status:'draft', updatedAt: null, signature: null, values: defaultValues(), lastEditedBy: null, editors: [] };
   }
 
   var state = newState(todayStr());
@@ -1121,7 +1121,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     var done = computeDone(state);
     var pct = Math.round((done/TOTAL_UNITS)*100);
     document.getElementById('summary-frac').textContent = done + '/' + TOTAL_UNITS;
-    document.getElementById('summary-updated').textContent = savePending ? 'Guardando…' : relTime(state.updatedAt);
+    document.getElementById('summary-updated').textContent = savePending ? 'Guardando…' : (relTime(state.updatedAt) + (state.lastEditedBy ? ' · por ' + state.lastEditedBy : ''));
     document.getElementById('summary-bar').style.width = pct + '%';
     var pill = document.getElementById('status-pill');
     if(done===0){ pill.className='pill neutral'; pill.textContent='Sin iniciar'; state.status='draft'; }
@@ -1640,7 +1640,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
 
   // ---------- persistence (browser local storage) ----------
   function serializable(){
-    return { date: state.date, technician: state.technician || '', status: state.status, updatedAt: state.updatedAt, signature: state.signature || null, values: state.values, _dev: 'Cristhian Sandoval' };
+    var by = (currentUser && currentUser.email) || state.lastEditedBy || null;
+    var eds = (state.editors || []).slice();
+    if(by && eds.indexOf(by) === -1) eds.push(by);
+    state.lastEditedBy = by; state.editors = eds;
+    return { date: state.date, technician: state.technician || '', status: state.status, updatedAt: state.updatedAt, signature: state.signature || null, values: state.values, lastEditedBy: by, lastEditedByUid: (currentUser && currentUser.uid) || null, editors: eds, _dev: 'Cristhian Sandoval' };
   }
 
   function scheduleSave(delay){
@@ -1741,6 +1745,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
         state.technician = data.technician || state.technician;
         state.status = data.status || 'draft';
         state.updatedAt = data.updatedAt || null;
+        state.lastEditedBy = data.lastEditedBy || null;
+        state.editors = data.editors || (data.lastEditedBy ? [data.lastEditedBy] : []);
         state.signature = data.signature || null;
         state.values = Object.assign(defaultValues(), data.values || {});
       }
@@ -1771,6 +1777,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   }
 
   // ---------- history ----------
+  function editedByHtml(e){
+    if(!e.lastEditedBy) return '';
+    var otros = (e.editors || []).filter(function(x){ return x !== e.lastEditedBy; });
+    return '<div class="hist-tech">Último cambio: '+esc(e.lastEditedBy)+(otros.length ? ' · también editó: '+esc(otros.join(', ')) : '')+'</div>';
+  }
+
   function renderHistoryList(entries){
     entries = entries || [];
     var el = document.getElementById('view-historial');
@@ -1787,7 +1799,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       var pillTxt = done===0 ? 'Sin iniciar' : (done===TOTAL_UNITS ? 'Completo' : 'En progreso');
       return '<div class="hist-card">'
         + '<div class="hist-head" data-date="'+esc(e.date)+'">'
-        + '<div style="flex:1;min-width:160px;"><div class="hist-date">'+esc(fmtDateLong(e.date))+'</div><div class="hist-tech">'+esc(e.technician||'Sin técnico registrado')+'</div></div>'
+        + '<div style="flex:1;min-width:160px;"><div class="hist-date">'+esc(fmtDateLong(e.date))+'</div><div class="hist-tech">'+esc(e.technician||'Sin técnico registrado')+'</div>'+editedByHtml(e)+'</div>'
         + '<div class="hist-frac">'+done+'/'+TOTAL_UNITS+'</div>'
         + '<span class="pill '+pillClass+'">'+pillTxt+'</span>'
         + '</div>'
