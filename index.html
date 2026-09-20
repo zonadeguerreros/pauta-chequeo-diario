@@ -969,6 +969,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
           var roleLabel = currentProfile.role === 'jefe' ? 'Jefe supervisor' : 'Técnico';
           document.getElementById('dash-user-label').textContent = (currentProfile.email || user.email) + ' · ' + roleLabel;
           showView('dashboard');
+          syncPending();
         });
       } else {
         currentUser = null; currentProfile = null; pautaInited = false;
@@ -1677,18 +1678,54 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     return raw ? JSON.parse(raw) : null;
   }
 
+  var OFFLINE_MSG = 'Sin conexión a la nube: se guardó en este dispositivo y se subirá automáticamente cuando vuelva la conexión.';
+
+  // Pautas guardadas en este equipo que aun no llegan a la nube (marca _pending).
+  function pendingLocalEntries(){
+    var idx = [];
+    try{ idx = JSON.parse(localStorage.getItem('checklist_index')||'[]'); }catch(err){}
+    return idx.map(function(d){ return loadLocalCopy(d); }).filter(function(e){ return e && e._pending; });
+  }
+
+  var syncing = false;
+  function syncPending(){
+    if(syncing || !fbReady || !fbDb || !currentUser) return Promise.resolve();
+    var pend = [];
+    try{ pend = pendingLocalEntries(); }catch(err){}
+    if(!pend.length) return Promise.resolve();
+    syncing = true;
+    var uploaded = 0;
+    return pend.reduce(function(chain, e){
+      return chain.then(function(){
+        var ref = fbDb.collection('checklists').doc(e.date);
+        return withTimeout(ref.get(), 8000).then(function(doc){
+          if(doc.exists && (doc.data().updatedAt || '') > (e.updatedAt || '')){
+            saveLocalCopy(doc.data());
+            return;
+          }
+          var clean = Object.assign({}, e); delete clean._pending;
+          return withTimeout(ref.set(clean), 8000).then(function(){ saveLocalCopy(clean); uploaded++; });
+        }).catch(function(){});
+      });
+    }, Promise.resolve()).then(function(){
+      syncing = false;
+      if(uploaded){ setLocalBanner('Se subieron a la nube '+uploaded+' pauta(s) que estaban pendientes por falta de conexión.', false); }
+    });
+  }
+
   function doSave(){
     saveTimer = null;
     var payload = serializable();
-    saveLocalCopy(payload);
+    saveLocalCopy(Object.assign({}, payload, { _pending: true }));
     if(fbReady && fbDb){
       return withTimeout(fbDb.collection('checklists').doc(payload.date).set(payload), 8000).then(function(){
+        saveLocalCopy(payload);
         setLocalBanner('Guardado en la nube compartida — visible desde cualquier dispositivo.', false);
       }).catch(function(){
-        setLocalBanner('Sin conexión a la nube: se guardó solo en este dispositivo.', true);
+        setLocalBanner(OFFLINE_MSG, true);
       }).then(function(){ savePending = false; updateSummary(); });
     }
-    setLocalBanner('Sin conexión a la nube: se guardó solo en este dispositivo.', true);
+    setLocalBanner(OFFLINE_MSG, true);
     savePending = false; updateSummary();
     return Promise.resolve();
   }
@@ -1712,9 +1749,17 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
 
     if(fbReady && fbDb){
       withTimeout(fbDb.collection('checklists').doc(date).get(), 8000).then(function(doc){
-        var data = doc.exists ? doc.data() : loadLocalCopy(date);
+        var local = loadLocalCopy(date);
+        var data = doc.exists ? doc.data() : local;
+        var usePending = local && local._pending && (!doc.exists || (local.updatedAt || '') >= (doc.data().updatedAt || ''));
+        if(usePending) data = local;
         applyData(data);
-        setLocalBanner('Conectado a la nube compartida — visible desde cualquier dispositivo.', false);
+        if(usePending){
+          setLocalBanner('Hay cambios de este día pendientes de subir; se subirán automáticamente.', true);
+          syncPending();
+        } else {
+          setLocalBanner('Conectado a la nube compartida — visible desde cualquier dispositivo.', false);
+        }
       }).catch(function(){
         applyData(loadLocalCopy(date));
         setLocalBanner('Sin conexión a la nube: mostrando datos guardados en este dispositivo.', true);
@@ -1828,6 +1873,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   // ---------- lifecycle ----------
   document.addEventListener('visibilitychange', function(){ if(document.hidden) flushSave(); });
   window.addEventListener('beforeunload', function(){ if(saveTimer) doSave(); });
+
+  // Reintenta subir lo pendiente: al volver la conexion, cada 30 s y al volver a la ventana.
+  window.addEventListener('online', function(){ syncPending(); });
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) syncPending(); });
+  setInterval(function(){ syncPending(); }, 30000);
 })();
 </script>
 </body>
