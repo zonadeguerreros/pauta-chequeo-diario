@@ -139,6 +139,8 @@
   /* ---- Signature block ---- */
   tr.sig-row td{ border:none; padding:16px 16px 14px; }
   .sig-block{ display:flex; flex-direction:column; align-items:flex-start; gap:6px; max-width:440px; }
+  #sheet-table.readonly .sig-canvas{ pointer-events:none; cursor:default; }
+  #sheet-table.readonly input:disabled, #sheet-table.readonly select:disabled, #sheet-table.readonly textarea:disabled{ opacity:1; -webkit-text-fill-color:currentColor; cursor:default; }
   .sig-canvas{ width:100%; max-width:440px; height:150px; border:1px solid #C7C7C7; border-radius:4px; background:#fff; touch-action:none; cursor:crosshair; }
   .sig-caption{ font-size:11px; color:#555; border-top:1px solid #9A9A9A; padding-top:5px; width:100%; max-width:440px; }
   .sig-line{ width:100%; max-width:440px; height:70px; border-bottom:1px solid #9A9A9A; }
@@ -1103,6 +1105,28 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   var state = newState(todayStr());
   var saveTimer = null, savePending = false;
 
+  // ---------- permisos ----------
+  // Jefe supervisor: puede todo. Tecnico: edita solo el dia de hoy; en dias anteriores solo ve.
+  var TECH_EXPORT_PAST = false; // true = el tecnico tambien podria descargar/imprimir dias anteriores
+  var editableDay = true;
+  function isJefe(){ return !!(currentProfile && currentProfile.role === 'jefe'); }
+  function canEditDate(d){ return isJefe() || d === todayStr(); }
+  function canExportDate(d){ return isJefe() || TECH_EXPORT_PAST || d === todayStr(); }
+  function applyDayPermissions(){
+    editableDay = canEditDate(state.date);
+    var tbl = document.getElementById('sheet-table');
+    tbl.classList.toggle('readonly', !editableDay);
+    tbl.querySelectorAll('input, select, textarea, button').forEach(function(el){
+      if(el.id === 'date-input') return;
+      el.disabled = !editableDay;
+    });
+    var exp = canExportDate(state.date);
+    document.getElementById('save-btn').style.display = editableDay ? '' : 'none';
+    document.getElementById('download-btn').style.display = exp ? '' : 'none';
+    document.getElementById('print-btn').style.display = exp ? '' : 'none';
+    if(!editableDay){ setLocalBanner('', true); }
+  }
+
   // ---------- completion ----------
   function itemComplete(item, v){
     v = v || {};
@@ -1317,6 +1341,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     document.getElementById('date-input').addEventListener('change', onDateChange);
     setupSignaturePad();
     updateSummary();
+    applyDayPermissions();
   }
 
   // ---------- static (print / history) rendering — compact single-column, matches paper original ----------
@@ -1399,6 +1424,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
 
   function handleFieldChange(e){
     var t = e.target;
+    if(!editableDay) return;
     var itemId = t.getAttribute('data-item');
     var field = t.getAttribute('data-field');
     if(!itemId || !field) return;
@@ -1421,6 +1447,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   sheetTable.addEventListener('input', handleFieldChange);
   sheetTable.addEventListener('change', handleFieldChange);
   sheetTable.addEventListener('click', function(e){
+    if(!editableDay) return;
     var cell = e.target.closest('td.chk');
     if(cell && e.target.tagName !== 'INPUT'){
       var input = cell.querySelector('input[type="checkbox"]');
@@ -1506,6 +1533,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   }
 
   function onTechInput(e){
+    if(!editableDay) return;
     state.technician = e.target.value;
     state.updatedAt = new Date().toISOString();
     try{ localStorage.setItem('pe_last_tech', state.technician); }catch(err){}
@@ -1653,6 +1681,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   }
 
   function scheduleSave(delay){
+    if(!editableDay) return;
     savePending = true;
     updateSummary();
     if(saveTimer) clearTimeout(saveTimer);
@@ -1665,6 +1694,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   }
 
   function setLocalBanner(msg, warn){
+    if(!editableDay){ msg = 'Día anterior: solo lectura (solo el jefe supervisor puede modificar días pasados).' + (msg ? ' ' + msg : ''); }
     var el = document.getElementById('local-banner');
     if(!el) return;
     el.textContent = msg;
@@ -1724,6 +1754,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
 
   function doSave(){
     saveTimer = null;
+    if(!editableDay){ savePending = false; return Promise.resolve(); }
     var payload = serializable();
     saveLocalCopy(Object.assign({}, payload, { _pending: true }));
     if(fbReady && fbDb){
@@ -1741,6 +1772,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
 
   function loadDay(date){
     state = newState(date);
+    editableDay = canEditDate(date);
     var lastTech = '';
     try{ lastTech = localStorage.getItem('pe_last_tech') || ''; }catch(err){}
     state.technician = lastTech;
@@ -1809,7 +1841,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
         + '<span class="pill '+pillClass+'">'+pillTxt+'</span>'
         + '</div>'
         + '<div class="hist-detail" id="detail-'+esc(e.date)+'" hidden><div class="sheet-wrap"><table class="sheet"></table></div></div>'
-        + '<div class="hist-actions"><button class="ghost-btn" data-toggle="'+esc(e.date)+'">Ver detalle</button><button class="ghost-btn" data-edit="'+esc(e.date)+'">Editar este día</button><button class="ghost-btn" data-download="'+esc(e.date)+'">Descargar</button><button class="ghost-btn" data-print="'+esc(e.date)+'">Imprimir / PDF</button></div>'
+        + '<div class="hist-actions"><button class="ghost-btn" data-toggle="'+esc(e.date)+'">Ver detalle</button>'+(canEditDate(e.date) ? '<button class="ghost-btn" data-edit="'+esc(e.date)+'">Editar este día</button>' : '')+(canExportDate(e.date) ? '<button class="ghost-btn" data-download="'+esc(e.date)+'">Descargar</button><button class="ghost-btn" data-print="'+esc(e.date)+'">Imprimir / PDF</button>' : '')+'</div>'
         + '</div>';
     }).join('');
 
