@@ -2240,7 +2240,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   var REP_FOOTER = 'Unidad de Electricidad - Departamento de Operaciones | Hospital de Villarrica';
   var INF_MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
   var INF_FRACCIONES = ['1/8 de capacidad','2/8 de capacidad','3/8 de capacidad','4/8 de capacidad','5/8 de capacidad','6/8 de capacidad','7/8 de capacidad','8/8 de capacidad (full)'];
-  var INF_MODOS = ['Modo AUTO','Modo STOP','Modo MANUAL'];
+  var INF_MODOS = ['Modo AUTO','Modo STOP','En falla'];
   var INF_FOTOS_POR_BLOQUE = 6;
 
   var INF_TIPOS = {
@@ -2350,14 +2350,16 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       return '<option value="' + esc(n) + '"' + (infNorm(n) === infNorm(actual) ? ' selected' : '') + '>' + esc(n) + '</option>';
     }).join('');
   }
-  // Nivel de combustible: 1/8 a 8/8 (full). Si habia un valor antiguo distinto, se conserva como opcion.
-  function infCombSelect(clave, valor){
-    var ops = INF_FRACCIONES.slice();
+  // Desplegable con todas las opciones siempre visibles. Si habia un valor antiguo distinto, se conserva como opcion.
+  function infSelectHtml(clave, valor, opciones, vacio){
+    var ops = opciones.slice();
     if(valor && ops.indexOf(valor) === -1) ops.push(valor);
-    return '<select data-g="' + clave + '"><option value="">Seleccionar nivel</option>' + ops.map(function(x){
+    return '<select data-g="' + clave + '"><option value="">' + vacio + '</option>' + ops.map(function(x){
       return '<option value="' + esc(x) + '"' + (x === valor ? ' selected' : '') + '>' + esc(x) + '</option>';
     }).join('') + '</select>';
   }
+  function infCombSelect(clave, valor){ return infSelectHtml(clave, valor, INF_FRACCIONES, 'Seleccionar nivel'); }
+  function infModoSelect(clave, valor){ return infSelectHtml(clave, valor, INF_MODOS, 'Seleccionar modo'); }
 
   // ---------- modelo ----------
   function infNuevo(tipo, fecha){
@@ -2817,11 +2819,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     h += '<p class="rep-p">' + esc(T.intro3) + '</p>';
     h += '<table class="rep-t">' + repCols(38.78, 61.22)
       + '<tr class="h"><td>Equipo / parámetro</td><td>Condición observada</td></tr>'
-      + '<tr><td>Grupo electrógeno N.º 2</td><td><input type="text" data-g="g2" list="inf-modos" value="' + esc(g.g2 || '') + '" placeholder="Ej.: Modo STOP"/></td></tr>'
-      + '<tr><td>Grupo electrógeno N.º 1</td><td><input type="text" data-g="g1" list="inf-modos" value="' + esc(g.g1 || '') + '" placeholder="Ej.: Modo AUTO"/></td></tr>'
+      + '<tr><td>Grupo electrógeno N.º 2</td><td>' + infModoSelect('g2', g.g2 || '') + '</td></tr>'
+      + '<tr><td>Grupo electrógeno N.º 1</td><td>' + infModoSelect('g1', g.g1 || '') + '</td></tr>'
       + '<tr><td>Nivel de combustible</td><td><div class="inf-fuel"><label>G1 ' + infCombSelect('comb1', g.comb1 || '') + '</label>'
       + '<label>G2 ' + infCombSelect('comb2', g.comb2 || '') + '</label></div></td></tr></table>';
-    h += '<datalist id="inf-modos">' + INF_MODOS.map(function(x){ return '<option value="' + x + '">'; }).join('') + '</datalist>';
     h += '<div class="rep-figcap"><b>Figura 1.</b><i>' + esc(T.figura) + '</i></div>';
     h += '<div class="inf-act-body">' + infThumbsHtml(st, st.figuraFotos, 'fig')
       + '<div><button type="button" class="ghost-btn inf-edit-only" data-add-photo="fig">＋ Agregar fotos de la figura</button></div></div>';
