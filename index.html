@@ -172,8 +172,9 @@
   .hist-detail{ border-top:1px solid var(--line); padding:10px; }
   .hist-actions{ padding:0 14px 12px; display:flex; gap:8px; flex-wrap:wrap; }
   .ghost-btn{ font-family:var(--font); font-weight:600; font-size:12px; background:var(--surface-2); color:var(--ink); border:1px solid var(--line); border-radius:7px; padding:6px 11px; cursor:pointer; }
-  .empty{ text-align:center; padding:36px 16px; color:var(--ink-faint); font-size:13px; }
-  .empty .bolt{ font-size:24px; display:block; margin-bottom:8px; }
+  /* Solo el aviso 'sin pautas' del historial (div). No debe afectar a .static-txt.empty (valores vacios del PDF). */
+  div.empty{ text-align:center; padding:36px 16px; color:var(--ink-faint); font-size:13px; }
+  div.empty .bolt{ font-size:24px; display:block; margin-bottom:8px; }
 
   /* ---- Auth gate ---- */
   .auth-wrap{ min-height:70vh; display:flex; align-items:center; justify-content:center; padding:16px; }
@@ -214,27 +215,27 @@
   #print-root{ display:none; }
   #print-root.pdf-capture{ display:block !important; position:fixed !important; top:0; left:-10000px; width:780px; background:#fff; z-index:-1; }
   #print-root.pdf-capture .sheet-wrap{ border:none; box-shadow:none; border-radius:0; overflow:visible; }
-  #print-root.pdf-capture table.sheet{ min-width:0; font-size:9px; }
-  #print-root.pdf-capture table.sheet td{ padding:1.5px 6px; }
-  #print-root.pdf-capture tr.title-row td{ padding:4px 10px; }
-  #print-root.pdf-capture .brand-corner-print{ height:80px; top:4px; right:8px; }
-  #print-root.pdf-capture .letterhead{ gap:10px; min-height:80px; }
-  #print-root.pdf-capture .letterhead img{ height:28px; }
-  #print-root.pdf-capture .letterhead .doc-title-main{ font-size:14px; }
-  #print-root.pdf-capture .letterhead .doc-title-sub{ font-size:8px; }
-  #print-root.pdf-capture .meta-flex{ padding:3px 10px; gap:4px 24px; }
-  #print-root.pdf-capture .meta-item b, #print-root.pdf-capture .meta-item .meta-static{ font-size:9px; }
-  #print-root.pdf-capture tr.section-row td{ font-size:9px; padding:2px 8px; }
-  #print-root.pdf-capture tr.colhead-row td{ font-size:7.5px; padding:2px 6px; }
-  #print-root.pdf-capture tr.subhead-row td{ font-size:8px; padding:2px 8px; }
-  #print-root.pdf-capture td.desc{ font-size:9px; }
-  #print-root.pdf-capture td.desc .note{ font-size:7.5px; padding:0 5px; }
-  #print-root.pdf-capture .dfields{ gap:2px 10px; }
-  #print-root.pdf-capture .dfield, #print-root.pdf-capture .dfield b, #print-root.pdf-capture .static-txt{ font-size:8px; }
-  #print-root.pdf-capture .transfo-grps{ gap:4px 10px; }
-  #print-root.pdf-capture .phase span, #print-root.pdf-capture .transfo-grp b{ font-size:8px; }
-  #print-root.pdf-capture .chk-mark{ font-size:10px; width:12px; height:12px; border-width:1px; }
-  #print-root.pdf-capture tr.sig-row td{ padding:5px 10px 3px; }
+  #print-root.pdf-capture table.sheet{ min-width:0; font-size:11.5px; }
+  #print-root.pdf-capture table.sheet td{ padding:3.5px 8px; }
+  #print-root.pdf-capture tr.title-row td{ padding:6px 12px; }
+  #print-root.pdf-capture .brand-corner-print{ height:90px; top:4px; right:8px; }
+  #print-root.pdf-capture .letterhead{ gap:12px; min-height:90px; }
+  #print-root.pdf-capture .letterhead img{ height:34px; }
+  #print-root.pdf-capture .letterhead .doc-title-main{ font-size:17px; }
+  #print-root.pdf-capture .letterhead .doc-title-sub{ font-size:9.5px; }
+  #print-root.pdf-capture .meta-flex{ padding:5px 12px; gap:4px 28px; }
+  #print-root.pdf-capture .meta-item b, #print-root.pdf-capture .meta-item .meta-static{ font-size:11px; }
+  #print-root.pdf-capture tr.section-row td{ font-size:11.5px; padding:4px 10px; }
+  #print-root.pdf-capture tr.colhead-row td{ font-size:9px; padding:3px 8px; }
+  #print-root.pdf-capture tr.subhead-row td{ font-size:10px; padding:3px 10px; }
+  #print-root.pdf-capture td.desc{ font-size:11.5px; }
+  #print-root.pdf-capture td.desc .note{ font-size:9px; padding:0 6px; }
+  #print-root.pdf-capture .dfields{ gap:3px 12px; }
+  #print-root.pdf-capture .dfield, #print-root.pdf-capture .dfield b, #print-root.pdf-capture .static-txt{ font-size:10.5px; }
+  #print-root.pdf-capture .transfo-grps{ gap:5px 12px; }
+  #print-root.pdf-capture .phase span, #print-root.pdf-capture .transfo-grp b{ font-size:10px; }
+  #print-root.pdf-capture .chk-mark{ font-size:12px; width:15px; height:15px; border-width:1px; }
+  #print-root.pdf-capture tr.sig-row td{ padding:8px 12px 5px; }
   #print-root.pdf-capture .sig-block{ max-width:260px; gap:2px; }
   #print-root.pdf-capture .sig-img{ max-width:260px; max-height:40px; }
   #print-root.pdf-capture .sig-box{ min-height:20px; }
@@ -248,27 +249,27 @@
     .app-title, .toolbar, .summary, .info-banner, #view-hoy, #view-historial, #view-auth, #view-dashboard, .pw-overlay{ display:none !important; }
     #print-root{ display:block !important; }
     #print-root .sheet-wrap{ border:none; box-shadow:none; border-radius:0; overflow:visible; }
-    table.sheet{ min-width:0; font-size:9px; }
-    table.sheet td{ padding:1.5px 6px; }
-    tr.title-row td{ padding:4px 10px; }
-    .brand-corner-print{ height:80px; top:4px; right:8px; }
-    .letterhead{ gap:10px; min-height:80px; }
-    .letterhead img{ height:28px; }
-    .letterhead .doc-title-main{ font-size:14px; }
-    .letterhead .doc-title-sub{ font-size:8px; }
-    .meta-flex{ padding:3px 10px; gap:4px 24px; }
-    .meta-item b, .meta-item .meta-static{ font-size:9px; }
-    tr.section-row td{ font-size:9px; padding:2px 8px; }
-    tr.colhead-row td{ font-size:7.5px; padding:2px 6px; }
-    tr.subhead-row td{ font-size:8px; padding:2px 8px; }
-    td.desc{ font-size:9px; }
-    td.desc .note{ font-size:7.5px; padding:0 5px; }
-    .dfields{ gap:2px 10px; }
-    .dfield, .dfield b, .static-txt{ font-size:8px; }
-    .transfo-grps{ gap:4px 10px; }
-    .phase span, .transfo-grp b{ font-size:8px; }
-    .chk-mark{ font-size:10px; width:12px; height:12px; border-width:1px; }
-    tr.sig-row td{ padding:5px 10px 3px; }
+    table.sheet{ min-width:0; font-size:11.5px; }
+    table.sheet td{ padding:3.5px 8px; }
+    tr.title-row td{ padding:6px 12px; }
+    .brand-corner-print{ height:90px; top:4px; right:8px; }
+    .letterhead{ gap:12px; min-height:90px; }
+    .letterhead img{ height:34px; }
+    .letterhead .doc-title-main{ font-size:17px; }
+    .letterhead .doc-title-sub{ font-size:9.5px; }
+    .meta-flex{ padding:5px 12px; gap:4px 28px; }
+    .meta-item b, .meta-item .meta-static{ font-size:11px; }
+    tr.section-row td{ font-size:11.5px; padding:4px 10px; }
+    tr.colhead-row td{ font-size:9px; padding:3px 8px; }
+    tr.subhead-row td{ font-size:10px; padding:3px 10px; }
+    td.desc{ font-size:11.5px; }
+    td.desc .note{ font-size:9px; padding:0 6px; }
+    .dfields{ gap:3px 12px; }
+    .dfield, .dfield b, .static-txt{ font-size:10.5px; }
+    .transfo-grps{ gap:5px 12px; }
+    .phase span, .transfo-grp b{ font-size:10px; }
+    .chk-mark{ font-size:12px; width:15px; height:15px; border-width:1px; }
+    tr.sig-row td{ padding:8px 12px 5px; }
     .sig-block{ max-width:260px; gap:2px; }
     .sig-canvas{ display:none; }
     .sig-img{ max-width:260px; max-height:40px; }
