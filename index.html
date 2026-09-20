@@ -503,6 +503,42 @@
   }
 
 
+  /* ---- Fondo animado (circuito y rayos) y pequeños efectos de movimiento ---- */
+  #fx-bg{ position:fixed; left:0; top:0; width:100%; height:100%; z-index:-1; pointer-events:none; display:block; }
+  #fx-toggle{ position:fixed; left:10px; bottom:10px; z-index:40; width:34px; height:34px; border-radius:99px; border:1px solid var(--line); background:var(--surface); color:var(--accent-strong); opacity:.55; cursor:pointer; font-size:16px; line-height:1; padding:0; box-shadow:var(--shadow); transition:opacity .2s ease, transform .2s ease; }
+  #fx-toggle:hover{ opacity:1; transform:scale(1.08); }
+  #fx-toggle[aria-pressed="false"]{ opacity:.35; color:var(--ink-faint); }
+  /* Manchas de luz azul y anaranjada de fondo (fijas: no cuestan CPU) */
+  #fx-glow{ position:fixed; left:0; top:0; width:100%; height:100%; z-index:-1; pointer-events:none;
+    background:radial-gradient(48% 48% at 22% 24%, rgba(30,110,210,.17), rgba(30,110,210,0) 72%), radial-gradient(42% 42% at 82% 84%, rgba(255,150,40,.12), rgba(255,150,40,0) 72%); }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]) #fx-glow{ background:radial-gradient(42% 42% at 24% 26%, rgba(110,190,255,.16), rgba(110,190,255,0) 70%), radial-gradient(38% 38% at 80% 80%, rgba(255,170,70,.09), rgba(255,170,70,0) 70%); }
+  }
+  :root[data-theme="dark"] #fx-glow{ background:radial-gradient(42% 42% at 24% 26%, rgba(110,190,255,.16), rgba(110,190,255,0) 70%), radial-gradient(38% 38% at 80% 80%, rgba(255,170,70,.09), rgba(255,170,70,0) 70%); }
+  body.fx-off #fx-bg, body.fx-off #fx-glow{ display:none; }
+
+  @keyframes fx-subir{ from{ opacity:0; transform:translateY(12px); } to{ opacity:1; transform:none; } }
+  @keyframes fx-brillo{ 0%,100%{ box-shadow:var(--shadow); } 50%{ box-shadow:0 0 0 1px rgba(60,140,230,.35), 0 6px 22px rgba(60,140,230,.22); } }
+  .auth-card{ animation:fx-subir .6s ease backwards; }
+  .dash-card{ animation:fx-subir .5s ease backwards; transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+  .dash-card:nth-child(2){ animation-delay:.05s; } .dash-card:nth-child(3){ animation-delay:.1s; }
+  .dash-card:nth-child(4){ animation-delay:.15s; } .dash-card:nth-child(5){ animation-delay:.2s; }
+  .dash-card:not(.disabled):hover{ transform:translateY(-3px); border-color:#5AA0E6; box-shadow:0 8px 24px rgba(40,120,220,.20); }
+  .dash-card:not(.disabled):active{ transform:translateY(-1px); }
+  .dash-card-tag.alert{ animation:fx-brillo 2.4s ease-in-out infinite; }
+  .btn, .ghost-btn{ transition:transform .12s ease, box-shadow .15s ease, background-color .15s ease, border-color .15s ease; }
+  .btn.primary:hover{ transform:translateY(-1px); box-shadow:0 4px 14px rgba(181,103,15,.35); }
+
+  @media (prefers-reduced-motion: reduce){
+    #fx-bg{ display:none; }
+    .auth-card, .dash-card, .dash-card-tag.alert{ animation:none !important; }
+    .dash-card, .btn, .ghost-btn{ transition:none !important; }
+  }
+  @media print{
+    #fx-bg, #fx-glow, #fx-toggle{ display:none !important; }
+  }
+
+
   /* ---- Mobile / small screens (phones, small tablets) — screen only, never print ---- */
   @media screen and (max-width: 640px){
     body{ padding-inline:10px; padding-block:12px 40px; }
@@ -793,6 +829,11 @@
     </div>
     <div class="inf-ov-body" id="sol-pv-body"><div id="sol-pv-box" style="position:relative"><div id="sol-pv-pages" class="rep" style="transform-origin:top left;position:absolute;left:0;top:0"></div></div></div>
   </div>
+
+
+  <div id="fx-glow" aria-hidden="true"></div>
+  <canvas id="fx-bg" aria-hidden="true"></canvas>
+  <button type="button" id="fx-toggle" aria-pressed="true" title="Animación de fondo: activada (pulsa para apagarla)">⚡</button>
 
 
   <div id="print-root"><div class="sheet-wrap"><table class="sheet" id="print-table"></table></div><div id="print-photo-appendix"></div></div>
@@ -4397,6 +4438,170 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   document.addEventListener('visibilitychange', function(){ if(document.hidden) solFlush(); else { solSyncPending(); solActualizarBadge(); } });
   window.addEventListener('online', function(){ solSyncPending(); solActualizarBadge(); });
   setInterval(function(){ solSyncPending(); solActualizarBadge(); solRefrescarLista(); }, 30000);
+
+
+  // =====================================================================
+  //  Fondo animado: red de circuito con pulsos de corriente y rayos suaves.
+  //  Muy liviano: se dibuja a menor resolucion, por lotes, a 24 cuadros/s como maximo,
+  //  y se pausa con la ventana oculta. Sin destellos bruscos. Se apaga con el boton ⚡
+  //  (se recuerda en ese equipo) o automaticamente con "reducir movimiento".
+  //  Las manchas de luz de fondo son CSS (#fx-glow).
+  // =====================================================================
+  (function(){
+    var cv = document.getElementById('fx-bg'), btn = document.getElementById('fx-toggle');
+    if(!cv || !cv.getContext || !btn) return;
+    var ctx = cv.getContext('2d');
+    var reducir = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    var apagado = false; try{ apagado = localStorage.getItem('fx_off') === '1'; }catch(err){}
+    var W = 0, H = 0, nodos = [], pulsos = [], rayos = [], raf = 0, ultimo = 0, sigPulso = 0, sigRayo = 0, corriendo = false;
+    var FRAME = 1000 / 15, DIST = 165, ESCALA = 0.5, NIVELES = 5;
+    var muestras = 0, sumaMs = 0;   // proteccion: si el equipo va justo, baja los cuadros y luego se apaga sola
+
+    function oscuro(){
+      var t = document.documentElement.getAttribute('data-theme');
+      if(t === 'dark') return true;
+      if(t === 'light') return false;
+      return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    }
+    function medir(){
+      W = window.innerWidth; H = window.innerHeight;
+      cv.width = Math.max(1, Math.round(W * ESCALA)); cv.height = Math.max(1, Math.round(H * ESCALA));
+      ctx.setTransform(ESCALA, 0, 0, ESCALA, 0, 0);
+      var n = Math.max(14, Math.min(W < 700 ? 20 : 36, Math.round(W * H / 26000)));
+      nodos = [];
+      for(var i = 0; i < n; i++){ nodos.push({ x: Math.random() * W, y: Math.random() * H, vx: (Math.random() - .5) * .10, vy: (Math.random() - .5) * .10 }); }
+      pulsos = [];
+    }
+    // Rayo: linea quebrada por desplazamiento del punto medio, con un par de ramas.
+    function zigzag(x0, y0, x1, y1, desp, prof, salida){
+      if(prof === 0){ salida.push([x0, y0, x1, y1]); return; }
+      var mx = (x0 + x1) / 2 + (Math.random() - .5) * desp, my = (y0 + y1) / 2 + (Math.random() - .5) * desp * .4;
+      zigzag(x0, y0, mx, my, desp / 2, prof - 1, salida); zigzag(mx, my, x1, y1, desp / 2, prof - 1, salida);
+    }
+    function nuevoRayo(){
+      var x0 = W * (.1 + Math.random() * .8), y0 = -10, x1 = x0 + (Math.random() - .5) * W * .25, y1 = H * (.35 + Math.random() * .5);
+      var seg = []; zigzag(x0, y0, x1, y1, Math.min(W, H) * .22, 5, seg);
+      var ramas = [];
+      for(var k = 0; k < 2; k++){
+        var base = seg[Math.floor(seg.length * (.25 + Math.random() * .5))];
+        zigzag(base[2], base[3], base[2] + (Math.random() - .5) * W * .16, base[3] + H * (.12 + Math.random() * .2), Math.min(W, H) * .1, 3, ramas);
+      }
+      rayos.push({ seg: seg, ramas: ramas, t: 0, dur: 1500 });
+    }
+    function trazo(lista, ancho, rgb, a){
+      ctx.lineWidth = ancho; ctx.strokeStyle = 'rgba(' + rgb + ',' + a.toFixed(3) + ')'; ctx.beginPath();
+      for(var i = 0; i < lista.length; i++){ ctx.moveTo(lista[i][0], lista[i][1]); ctx.lineTo(lista[i][2], lista[i][3]); }
+      ctx.stroke();
+    }
+
+    function cuadro(dt){
+      var osc = oscuro(), azul = osc ? '110,190,255' : '30,110,210';
+      ctx.clearRect(0, 0, W, H);
+      var i, j, a, b, d, dx, dy;
+      for(i = 0; i < nodos.length; i++){
+        a = nodos[i]; a.x += a.vx * dt / 33; a.y += a.vy * dt / 33;
+        if(a.x < -20) a.x = W + 20; else if(a.x > W + 20) a.x = -20;
+        if(a.y < -20) a.y = H + 20; else if(a.y > H + 20) a.y = -20;
+      }
+      // lineas de la red, agrupadas por intensidad (una sola pasada de dibujo por nivel)
+      var lotes = []; for(i = 0; i < NIVELES; i++) lotes.push([]);
+      for(i = 0; i < nodos.length; i++){
+        a = nodos[i];
+        for(j = i + 1; j < nodos.length; j++){
+          b = nodos[j]; dx = a.x - b.x; dy = a.y - b.y;
+          if(dx > DIST || dx < -DIST || dy > DIST || dy < -DIST) continue;
+          d = Math.sqrt(dx * dx + dy * dy);
+          if(d < DIST) lotes[Math.min(NIVELES - 1, Math.floor((1 - d / DIST) * NIVELES))].push([a.x, a.y, b.x, b.y]);
+        }
+      }
+      var base = osc ? .40 : .32;
+      for(i = 0; i < NIVELES; i++){ if(lotes[i].length) trazo(lotes[i], 1.5, azul, base * (i + 1) / NIVELES); }
+      // nodos (un solo relleno)
+      ctx.fillStyle = 'rgba(' + azul + ',' + (osc ? .60 : .48) + ')'; ctx.beginPath();
+      for(i = 0; i < nodos.length; i++){ ctx.moveTo(nodos[i].x + 2.6, nodos[i].y); ctx.arc(nodos[i].x, nodos[i].y, 2.6, 0, 6.2832); }
+      ctx.fill();
+      // pulsos de corriente que viajan por las lineas
+      sigPulso -= dt;
+      if(sigPulso <= 0 && pulsos.length < 8 && nodos.length > 3){
+        for(var intento = 0; intento < 8; intento++){
+          var p = nodos[Math.floor(Math.random() * nodos.length)], q = nodos[Math.floor(Math.random() * nodos.length)];
+          dx = p.x - q.x; dy = p.y - q.y; d = Math.sqrt(dx * dx + dy * dy);
+          if(p !== q && d < DIST && d > 40){ pulsos.push({ a: p, b: q, t: 0, v: .0009 + Math.random() * .0006 }); break; }
+        }
+        sigPulso = 250 + Math.random() * 400;
+      }
+      var estelas = [], cabezas = [];
+      for(i = pulsos.length - 1; i >= 0; i--){
+        var pu = pulsos[i]; pu.t += pu.v * dt;
+        if(pu.t >= 1){ pulsos.splice(i, 1); continue; }
+        var t0 = Math.max(0, pu.t - .2);
+        estelas.push([pu.a.x + (pu.b.x - pu.a.x) * t0, pu.a.y + (pu.b.y - pu.a.y) * t0, pu.a.x + (pu.b.x - pu.a.x) * pu.t, pu.a.y + (pu.b.y - pu.a.y) * pu.t]);
+        cabezas.push(estelas[estelas.length - 1]);
+      }
+      if(estelas.length){
+        trazo(estelas, 3, azul, osc ? .35 : .28);
+        trazo(estelas, 1.4, osc ? '235,248,255' : azul, osc ? .9 : .85);
+        ctx.fillStyle = 'rgba(' + azul + ',' + (osc ? .45 : .35) + ')'; ctx.beginPath();
+        for(i = 0; i < cabezas.length; i++){ ctx.moveTo(cabezas[i][2] + 6, cabezas[i][3]); ctx.arc(cabezas[i][2], cabezas[i][3], 6, 0, 6.2832); }
+        ctx.fill();
+      }
+      // rayos suaves de vez en cuando (aparecen y se desvanecen sin destello)
+      sigRayo -= dt;
+      if(sigRayo <= 0){ if(rayos.length < 2) nuevoRayo(); sigRayo = 6000 + Math.random() * 6000; }
+      for(i = rayos.length - 1; i >= 0; i--){
+        var r = rayos[i]; r.t += dt;
+        if(r.t >= r.dur){ rayos.splice(i, 1); continue; }
+        var f = r.t / r.dur, alfa = f < .12 ? f / .12 : Math.pow(1 - (f - .12) / .88, 1.6);
+        alfa *= osc ? .75 : .62;
+        trazo(r.seg, 8, azul, alfa * .22); trazo(r.ramas, 6, azul, alfa * .18);
+        trazo(r.seg, 3.4, azul, alfa * .5); trazo(r.ramas, 2.4, azul, alfa * .4);
+        trazo(r.seg, 1.4, osc ? '235,248,255' : '255,255,255', Math.min(1, alfa * 1.3));
+      }
+    }
+
+    function bucle(ts){
+      raf = requestAnimationFrame(bucle);
+      if(document.hidden){ ultimo = ts; return; }
+      var dt = ts - ultimo;
+      if(dt < FRAME) return;
+      ultimo = ts - (dt % FRAME);
+      var t0 = performance.now();
+      cuadro(Math.min(dt, 120));
+      sumaMs += performance.now() - t0; muestras++;
+      if(muestras >= 90){
+        var prom = sumaMs / muestras; muestras = 0; sumaMs = 0;
+        if(prom > 14){ apagado = true; try{ localStorage.setItem('fx_off', '1'); }catch(err){} aplicar(); }   // equipo muy justo: se apaga sola
+        else if(prom > 8 && FRAME < 1000 / 10){ FRAME = 1000 / 10; }
+      }
+    }
+    function arrancar(){
+      if(corriendo || apagado || reducir) return;
+      corriendo = true; medir(); ultimo = performance.now(); sigRayo = 2500; raf = requestAnimationFrame(bucle);
+    }
+    function parar(){
+      corriendo = false; if(raf) cancelAnimationFrame(raf); raf = 0;
+      ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, cv.width, cv.height);
+    }
+    function aplicar(){
+      document.body.classList.toggle('fx-off', apagado || reducir);
+      btn.setAttribute('aria-pressed', apagado ? 'false' : 'true');
+      btn.title = apagado ? 'Animación de fondo: apagada (pulsa para encenderla)' : 'Animación de fondo: activada (pulsa para apagarla)';
+      if(apagado || reducir) parar(); else arrancar();
+    }
+    btn.addEventListener('click', function(){
+      apagado = !apagado;
+      try{ localStorage.setItem('fx_off', apagado ? '1' : '0'); }catch(err){}
+      aplicar();
+    });
+    window.fxRayo = function(){ if(corriendo) nuevoRayo(); };   // solo para pruebas
+    if(reducir) btn.style.display = 'none';
+    var tiempoResize = null;
+    window.addEventListener('resize', function(){
+      if(!corriendo) return;
+      clearTimeout(tiempoResize); tiempoResize = setTimeout(medir, 200);
+    });
+    aplicar();
+  })();
 
 
   // ---------- lifecycle ----------
