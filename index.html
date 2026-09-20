@@ -1617,6 +1617,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     s = (s===undefined||s===null) ? '' : String(s);
     return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
+  // Las imagenes (fotos y firmas) llegan de la nube: solo se aceptan data URL de imagen (png/jpeg/webp/gif); cualquier otro valor se descarta.
+  var SAFE_IMG_RE = /^data:image\/(?:png|jpe?g|webp|gif);base64,[A-Za-z0-9+\/=]+$/;
+  function safeImg(u){ return (typeof u === 'string' && SAFE_IMG_RE.test(u)) ? u : ''; }
 
   function todayStr(){
     var d = new Date();
@@ -1771,11 +1774,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
 
   function photoCtlHtml(itemId, v){
     v = v || {};
-    var hasPhoto = !!v.photo;
+    var hasPhoto = !!safeImg(v.photo);
     return '<div class="photo-ctl" data-photo-item="'+itemId+'">'
       + '<input type="file" accept="image/*" hidden class="photo-file-input"/>'
       + '<button type="button" class="photo-btn"'+(hasPhoto?' hidden':'')+'>📷 Foto</button>'
-      + '<span class="photo-thumb-wrap"'+(hasPhoto?'':' hidden')+'><img class="photo-thumb" src="'+(hasPhoto?esc(v.photo):'')+'"/><button type="button" class="photo-remove" title="Quitar foto">×</button></span>'
+      + '<span class="photo-thumb-wrap"'+(hasPhoto?'':' hidden')+'><img class="photo-thumb" src="'+(hasPhoto?safeImg(v.photo):'')+'"/><button type="button" class="photo-remove" title="Quitar foto">×</button></span>'
       + '</div>';
   }
 
@@ -1957,8 +1960,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   }
 
   function signatureRowStatic(st){
-    var sigHtml = st.signature
-      ? '<img src="'+st.signature+'" class="sig-img"/>'
+    var sigHtml = safeImg(st.signature)
+      ? '<img src="'+safeImg(st.signature)+'" class="sig-img"/>'
       : '<div class="sig-line"></div>';
     return '<tr class="sig-row"><td colspan="3"><div class="sig-block">'
       + '<div class="sig-box">'+sigHtml+'</div>'
@@ -2109,12 +2112,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     SECTIONS.forEach(function(s){
       s.items.forEach(function(it){
         var v = (st.values && st.values[it.id]) || {};
-        if(v.photo){ entries.push({ section: s.title, label: it.label, url: v.photo }); }
+        if(safeImg(v.photo)){ entries.push({ section: s.title, label: it.label, url: v.photo }); }
       });
     });
     if(!entries.length) return '';
     var cards = entries.map(function(e){
-      return '<div class="photo-card"><img src="'+esc(e.url)+'"/>'
+      return '<div class="photo-card"><img src="'+safeImg(e.url)+'"/>'
         + '<div class="photo-caption"><b>'+esc(e.section)+'</b><span>'+esc(e.label)+'</span></div></div>';
     }).join('');
     return '<div class="photo-appendix">'
@@ -2845,9 +2848,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   function repCols(a, b){ return '<colgroup><col style="width:' + a + '%"><col style="width:' + b + '%"></colgroup>'; }
 
   function repFotosHtml(st, ids){
-    ids = ids.filter(function(id){ return st.photos[id]; });
+    ids = ids.filter(function(id){ return safeImg(st.photos[id]); });
     if(!ids.length) return '';
-    return '<div class="rep-photos n' + Math.min(ids.length, 4) + '">' + ids.map(function(id){ return '<img src="' + st.photos[id] + '"/>'; }).join('') + '</div>';
+    return '<div class="rep-photos n' + Math.min(ids.length, 4) + '">' + ids.map(function(id){ return '<img src="' + safeImg(st.photos[id]) + '"/>'; }).join('') + '</div>';
   }
 
   function repFilaAct(st, hora, texto, fotos, cont){
@@ -2871,7 +2874,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     var head = '<table class="rep-t">' + repCols(15.51, 84.49) + '<tr class="h"><td>Hora</td><td>Actividad ejecutada, verificación y observaciones</td></tr></table>';
     out.push({ keep: true, g: 'act', head: true, html: head });
     st.actividades.forEach(function(a){
-      var fotos = a.fotos.filter(function(id){ return st.photos[id]; });
+      var fotos = a.fotos.filter(function(id){ return safeImg(st.photos[id]); });
       if(!(a.hora || (a.texto && a.texto.trim()) || fotos.length)) return;
       var lote = fotos.slice(0, INF_FOTOS_POR_BLOQUE);
       out.push({ g: 'act', html: repFilaAct(st, a.hora, a.texto, lote, true) });
@@ -2888,12 +2891,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       + '<tr><td>Grupo electrógeno N.º 2</td><td>' + esc(g.g2 || '—') + '</td></tr>'
       + '<tr><td>Grupo electrógeno N.º 1</td><td>' + esc(g.g1 || '—') + '</td></tr>'
       + '<tr><td>Nivel de combustible</td><td>' + comb + '</td></tr></table>' });
-    var fig = st.figuraFotos.filter(function(id){ return st.photos[id]; });
+    var fig = st.figuraFotos.filter(function(id){ return safeImg(st.photos[id]); });
     if(fig.length){
       out.push({ keep: true, html: '<div class="rep-figcap"><b>Figura 1.</b><i>' + esc(T.figura) + '</i></div>' });
       for(var k = 0; k < fig.length; k += 2){
         var a1 = fig[k], a2 = fig[k + 1];
-        out.push({ g: 'fig', html: '<table class="rep-t rep-fig' + (k ? ' cont' : '') + '">' + repCols(50, 50) + '<tr><td><img src="' + st.photos[a1] + '"/></td><td>' + (a2 ? '<img src="' + st.photos[a2] + '"/>' : '') + '</td></tr></table>' });
+        out.push({ g: 'fig', html: '<table class="rep-t rep-fig' + (k ? ' cont' : '') + '">' + repCols(50, 50) + '<tr><td><img src="' + safeImg(st.photos[a1]) + '"/></td><td>' + (a2 ? '<img src="' + safeImg(st.photos[a2]) + '"/>' : '') + '</td></tr></table>' });
       }
     }
     // 4. Entrega y recepcion
@@ -2901,7 +2904,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     out.push({ html: '<table class="rep-t">' + repCols(50, 50)
       + '<tr class="h"><td>Funcionario que entrega el turno</td><td>Funcionario que recibe el turno</td></tr>'
       + '<tr><td class="pad">' + esc(au.nombre || '') + '<br>' + esc(au.cargo || 'Técnico eléctrico') + '<br>Departamento de Operaciones<br>'
-      + (st.firma ? '<img class="rep-sigimg" src="' + st.firma + '"/>' : '<br>') + 'Nombre y firma</td>'
+      + (safeImg(st.firma) ? '<img class="rep-sigimg" src="' + safeImg(st.firma) + '"/>' : '<br>') + 'Nombre y firma</td>'
       + '<td class="pad"><br><br><br>Nombre y firma</td></tr></table>' });
     return out;
   }
@@ -3027,8 +3030,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   function infFotoCount(st){ return infPhotoIds(st).length; }
 
   function infThumbsHtml(st, ids, key){
-    return '<div class="inf-thumbs">' + ids.filter(function(id){ return st.photos[id]; }).map(function(id){
-      return '<div class="inf-thumb"><img src="' + st.photos[id] + '"/><button type="button" class="inf-edit-only" data-rm-photo="' + id + '" data-from="' + key + '" title="Quitar foto">×</button></div>';
+    return '<div class="inf-thumbs">' + ids.filter(function(id){ return safeImg(st.photos[id]); }).map(function(id){
+      return '<div class="inf-thumb"><img src="' + safeImg(st.photos[id]) + '"/><button type="button" class="inf-edit-only" data-rm-photo="' + esc(id) + '" data-from="' + esc(key) + '" title="Quitar foto">×</button></div>';
     }).join('') + '</div>';
   }
 
@@ -3048,14 +3051,14 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     h += '<div class="rep-blk-h">' + repH2('2. Registro cronológico de actividades y observaciones') + '</div>';
     h += '<p class="rep-p">' + esc(T.intro2) + '</p>';
     st.actividades.forEach(function(a, i){
-      h += '<div class="inf-act" data-act="' + a.id + '">'
+      h += '<div class="inf-act" data-act="' + esc(a.id) + '">'
         + '<div class="inf-act-head"><label>Hora <input type="time" data-f="hora" value="' + esc(a.hora || '') + '"/></label><span class="spacer"></span>'
         + '<button type="button" class="ghost-btn inf-edit-only" data-up' + (i === 0 ? ' disabled' : '') + '>↑</button>'
         + '<button type="button" class="ghost-btn inf-edit-only" data-down' + (i === st.actividades.length - 1 ? ' disabled' : '') + '>↓</button>'
         + '<button type="button" class="ghost-btn inf-edit-only" data-del-act>Eliminar</button></div>'
         + '<div class="inf-act-body"><textarea data-f="texto" rows="3" placeholder="Actividad ejecutada, verificación y observaciones">' + esc(a.texto || '') + '</textarea>'
         + infThumbsHtml(st, a.fotos, 'act:' + a.id)
-        + '<div><button type="button" class="ghost-btn inf-edit-only" data-add-photo="act:' + a.id + '">＋ Agregar fotos</button></div></div></div>';
+        + '<div><button type="button" class="ghost-btn inf-edit-only" data-add-photo="act:' + esc(a.id) + '">＋ Agregar fotos</button></div></div></div>';
     });
     h += '<div><button type="button" class="btn inf-edit-only" data-add-act>＋ Agregar actividad</button></div>';
 
@@ -4030,8 +4033,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       + ((c.aprobado || c.espera) ? '<div class="p-leyenda">✔ Material aprobado · E.A. = En espera de adquisición</div>' : '')
       + (s.mensajeJefe ? '<div class="p-msg"><b>Mensaje de jefatura:</b>' + escBr(s.mensajeJefe) + '</div>' : '')
       + '<div class="p-firmas"><div><b>Firmas de Control</b></div>'
-      + '<div>Recepcionado por:<div class="f-sig">' + (s.firmaRecepcion ? '<img src="' + s.firmaRecepcion + '"/>' : '<span class="p-box"></span>') + '</div><div class="f-nom">' + esc(recNom) + '</div></div>'
-      + '<div>Supervisor/Autorizador:<div class="f-sig">' + (s.firmaJefe ? '<img src="' + s.firmaJefe + '"/>' : '<span class="p-box"></span>') + '</div><div class="f-nom">' + esc(jefe || '') + '</div></div></div>'
+      + '<div>Recepcionado por:<div class="f-sig">' + (safeImg(s.firmaRecepcion) ? '<img src="' + safeImg(s.firmaRecepcion) + '"/>' : '<span class="p-box"></span>') + '</div><div class="f-nom">' + esc(recNom) + '</div></div>'
+      + '<div>Supervisor/Autorizador:<div class="f-sig">' + (safeImg(s.firmaJefe) ? '<img src="' + safeImg(s.firmaJefe) + '"/>' : '<span class="p-box"></span>') + '</div><div class="f-nom">' + esc(jefe || '') + '</div></div></div>'
       + '<div class="p-notas"><img src="' + SOL_LOGO3 + '"/><b>📌 Notas:</b><br>' + SOL_NOTAS.map(esc).join('<br>') + '</div>'
       + '<div class="p-pie">' + esc(SOL_PIE) + '</div></div>';
   }
@@ -4107,7 +4110,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   }
   function solFilaHtml(it, i){
     var e = it.estado || 'pendiente';
-    return '<div class="sol-row ' + (e === 'aprobado' ? 'aprobado' : (e === 'espera' ? 'espera' : '')) + '" data-item="' + it.id + '">'
+    return '<div class="sol-row ' + (e === 'aprobado' ? 'aprobado' : (e === 'espera' ? 'espera' : '')) + '" data-item="' + esc(it.id) + '">'
       + '<div class="c-n">' + (i + 1) + '</div>'
       + '<label class="c-cod"><span>Código/ID</span><input type="text" data-if="codigo" data-z="campos" value="' + esc(it.codigo) + '"/></label>'
       + '<label class="c-desc"><span>Descripción del material</span><input type="text" data-if="descripcion" data-z="campos" value="' + esc(it.descripcion) + '" placeholder="Ej.: Cable THHN 12 AWG negro"/></label>'
