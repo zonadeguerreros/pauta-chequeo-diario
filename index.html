@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="author" content="Cristhian Sandoval">
 <!-- Politica de seguridad de contenido: la genera build.ps1 (incluye los hashes de los scripts en linea). -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-a6na6YQ5hbkEssYMfl9Z9QCWAtIZ/fXWshWP3ROuA3A=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=' https://www.gstatic.com/firebasejs/10.14.1/; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-NBHtPkkYxt7wkZWAyuLdVLq67CsSzJWbGrK4B7v9Spk=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=' https://www.gstatic.com/firebasejs/10.14.1/; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'none'; form-action 'none'">
 <title>Pauta de Chequeo Diario</title>
 <style>
   @font-face{
@@ -2278,6 +2278,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   }
 
   var OFFLINE_MSG = 'Sin conexión a la nube: se guardó en este dispositivo y se subirá automáticamente cuando vuelva la conexión.';
+  // El servidor (reglas de Firestore) solo deja al técnico guardar la pauta de hoy, según la hora de Chile.
+  var DENIED_MSG = 'La nube no aceptó guardar esta pauta: solo se puede guardar la pauta de hoy (hora de Chile). Quedó en este equipo; si necesitas corregir otro día, pídeselo al jefe supervisor.';
 
   // Pautas guardadas en este equipo que aun no llegan a la nube (marca _pending).
   function pendingLocalEntries(){
@@ -2293,7 +2295,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     try{ pend = pendingLocalEntries(); }catch(err){}
     if(!pend.length) return Promise.resolve();
     syncing = true;
-    var uploaded = 0;
+    var uploaded = 0, rejected = 0;
     return pend.reduce(function(chain, e){
       return chain.then(function(){
         var ref = fbDb.collection('checklists').doc(e.date);
@@ -2304,11 +2306,15 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
           }
           var clean = Object.assign({}, e); delete clean._pending;
           return withTimeout(ref.set(clean), 8000).then(function(){ saveLocalCopy(clean); uploaded++; });
-        }).catch(function(){});
+        }).catch(function(err){
+          // Rechazada por el servidor (fecha que ya no se puede guardar): se deja de reintentar, la copia queda en este equipo.
+          if(err && err.code === 'permission-denied'){ var c2 = Object.assign({}, e); delete c2._pending; saveLocalCopy(c2); rejected++; }
+        });
       });
     }, Promise.resolve()).then(function(){
       syncing = false;
       if(uploaded){ setLocalBanner('Se subieron a la nube '+uploaded+' pauta(s) que estaban pendientes por falta de conexión.', false); }
+      else if(rejected){ setLocalBanner('La nube no aceptó '+rejected+' pauta(s) de días anteriores: solo se puede guardar la pauta de hoy. Quedaron en este equipo; pídele al jefe supervisor que las corrija si hace falta.', true); }
     });
   }
 
@@ -2321,8 +2327,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       return withTimeout(fbDb.collection('checklists').doc(payload.date).set(payload), 8000).then(function(){
         saveLocalCopy(payload);
         setLocalBanner('Guardado en la nube compartida — visible desde cualquier dispositivo.', false);
-      }).catch(function(){
-        setLocalBanner(OFFLINE_MSG, true);
+      }).catch(function(err){
+        if(err && err.code === 'permission-denied'){ saveLocalCopy(payload); setLocalBanner(DENIED_MSG, true); }
+        else { setLocalBanner(OFFLINE_MSG, true); }
       }).then(function(){ savePending = false; updateSummary(); });
     }
     setLocalBanner(OFFLINE_MSG, true);
@@ -2701,7 +2708,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     el.style.color = warn ? 'var(--warn)' : 'var(--ink-dim)';
   }
   var INF_MSG_OFFLINE = 'Sin conexión a la nube: el informe se guardó en este dispositivo y se subirá automáticamente cuando vuelva la conexión.';
-  var INF_MSG_PERM = 'La nube no permite guardar informes todavía (faltan permisos en Firestore para la colección "informes"). El informe queda en este dispositivo; el administrador debe actualizar las reglas.';
+  var INF_MSG_PERM = 'La nube no aceptó guardar este informe: el técnico solo puede guardar informes de su turno en curso (hora de Chile), o faltan permisos en Firestore. Queda en este dispositivo; si necesitas corregirlo, pídeselo al jefe supervisor.';
 
   // Sube fotos nuevas + documento; solo un guardado a la vez.
   function infCloudSave(st){
@@ -3875,7 +3882,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     el.style.color = warn ? 'var(--warn)' : 'var(--ink-dim)';
   }
   var SOL_MSG_OFFLINE = 'Sin conexión a la nube: la solicitud quedó guardada en este dispositivo y se enviará automáticamente cuando vuelva la conexión.';
-  var SOL_MSG_PERM = 'La nube no permite guardar solicitudes todavía (faltan permisos en Firestore para la colección "solicitudes"). Queda en este dispositivo; el administrador debe actualizar las reglas.';
+  var SOL_MSG_PERM = 'La nube no aceptó guardar esta solicitud (permiso denegado): revisa que sea tuya y siga en estado "enviada", o faltan permisos en Firestore. Queda en este dispositivo; si necesitas cambiarla, pídeselo al jefe supervisor.';
 
   function solCloudSave(s){
     solCloudChain = solCloudChain.then(function(){ return solCloudSaveNow(s); }, function(){ return solCloudSaveNow(s); });
