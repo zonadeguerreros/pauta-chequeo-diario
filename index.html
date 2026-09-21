@@ -5,6 +5,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="author" content="Cristhian Sandoval">
+<!-- Politica de seguridad de contenido: la genera build.ps1 (incluye los hashes de los scripts en linea). -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-a6na6YQ5hbkEssYMfl9Z9QCWAtIZ/fXWshWP3ROuA3A=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=' https://www.gstatic.com/firebasejs/10.14.1/; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'none'; form-action 'none'">
 <title>Pauta de Chequeo Diario</title>
 <style>
   @font-face{
@@ -1322,11 +1324,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   // login sigue funcionando de inmediato y solo se avisa el problema
   // cuando el usuario intenta iniciar sesion (con un limite de espera
   // corto, en vez de dejar la app entera esperando indefinidamente).
-  function loadScriptTimeout(src, timeoutMs){
+  // 'integrity' (SRI): el navegador rechaza el script si no coincide con el hash. Si se cambia la version de Firebase, hay que recalcularlos.
+  function loadScriptTimeout(src, timeoutMs, integrity){
     return new Promise(function(resolve, reject){
       var settled = false;
       var s = document.createElement('script');
       s.src = src;
+      if(integrity){ s.integrity = integrity; s.crossOrigin = 'anonymous'; }
       var timer = setTimeout(function(){
         if(!settled){ settled = true; reject(new Error('timeout')); }
       }, timeoutMs);
@@ -1338,9 +1342,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
 
   function initFirebase(){
     if(fbInitPromise) return fbInitPromise;
-    fbInitPromise = loadScriptTimeout('https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js', 7000)
-      .then(function(){ return loadScriptTimeout('https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js', 7000); })
-      .then(function(){ return loadScriptTimeout('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js', 7000); })
+    fbInitPromise = loadScriptTimeout('https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js', 7000, 'sha384-ZaR6mWzmJtrRibZ1Vm7SoHFr8OXjyAuGAXalGDKqbxFT18oi/z+oZLIRFkpeNor1')
+      .then(function(){ return loadScriptTimeout('https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js', 7000, 'sha384-I1LYojsZ5RM1cOda44Z2h42Qa6YfsQ1XkXxREnhp4ueYBR/4d1pG1K+NZM537Vsj'); })
+      .then(function(){ return loadScriptTimeout('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js', 7000, 'sha384-Ke0FJhH7LyRqDxZ0wt+/OXV38yfQVu7g9VPEEGjYmB4RVOY/ta04uecRhsMwT7V3'); })
       .then(function(){
         firebase.initializeApp(firebaseConfig);
         fbAuth = firebase.auth();
