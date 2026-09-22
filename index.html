@@ -1,14 +1,17 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" translate="no">
 <head>
 <!-- Desarrollado por Cristhian Sandoval -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="author" content="Cristhian Sandoval">
+<!-- Sin esto, el traductor automatico del navegador puede "traducir" palabras tecnicas que en realidad son datos
+     guardados (p. ej. el estado "Stop" de un generador podia mostrarse como "Detener"). -->
+<meta name="google" content="notranslate">
 <!-- Politica de seguridad de contenido: la genera build.ps1 (incluye los hashes de los scripts en linea). -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-qY3aCeVaPQ/v9slhmFtjMdNQ7wxJj2Lqas3IpfJ1zD0=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=' https://www.gstatic.com/firebasejs/10.14.1/; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://zonadeguerreros.github.io; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-S+tuygtDTaP22fyMXzoBQ/gUtHpnY6aSIJq/a2hGddk=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=' https://www.gstatic.com/firebasejs/10.14.1/; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://zonadeguerreros.github.io; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'none'; form-action 'none'">
 <title>Pauta de Chequeo Diario</title>
-<meta name="app-version" content="2026-09-22.0319-8d085626">
+<meta name="app-version" content="2026-09-22.0333-3670354d">
 <style>
   @font-face{
     font-family:"Roboto";
@@ -729,7 +732,7 @@
             <th>Fecha</th><th>Técnico</th><th>Estado G1</th><th>Estado G2</th>
             <th>Consumo G1 (Lt)</th><th>Consumo G2 (Lt)</th>
             <th>Horómetro G1 (hrs)</th><th>Horómetro G2 (hrs)</th>
-            <th>Estanque enterrado (Lt)</th>
+            <th>Estanque enterrado (Lt)</th><th>Consumo empalme (KWh)</th>
           </tr></thead>
           <tbody id="rpg-detalle-cuerpo"></tbody>
         </table></div>
@@ -1853,7 +1856,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   }
 
   // ---------- version y aviso de actualizacion ----------
-  // Cada version publicada lleva un identificador (2026-09-22.0319-8d085626, lo genera compilar.js). Se compara contra la version
+  // Cada version publicada lleva un identificador (2026-09-22.0333-3670354d, lo genera compilar.js). Se compara contra la version
   // publicada de la web (mismo origen para todos: PC, celular o navegador) leyendo su etiqueta <meta name="app-version">.
   // Es una lectura publica de una pagina de solo texto: no requiere Firebase ni maneja datos del usuario.
   var APP_VERSION = (document.querySelector('meta[name="app-version"]') || {}).content || '';
@@ -5456,7 +5459,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   function rpgPintar(docsMes, docPrevio){
     if(!docsMes.length){
       rpgEl('rpg-tabla').innerHTML = '<tr><td colspan="3" class="empty">No hay pautas guardadas en este mes.</td></tr>';
-      rpgEl('rpg-detalle-cuerpo').innerHTML = '<tr><td colspan="9" class="empty">No hay pautas guardadas en este mes.</td></tr>';
+      rpgEl('rpg-detalle-cuerpo').innerHTML = '<tr><td colspan="10" class="empty">No hay pautas guardadas en este mes.</td></tr>';
       rpgEl('rpg-grafico').innerHTML = '<div class="empty">Sin datos.</div>';
       return;
     }
@@ -5483,6 +5486,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
         + '<td>' + rpgCelda(rpgValor(d, 'gen_horometro.g1')) + '</td>'
         + '<td>' + rpgCelda(rpgValor(d, 'gen_horometro.g2')) + '</td>'
         + '<td>' + rpgCelda(rpgValor(d, 'gen_enterrado.nivel')) + '</td>'
+        + '<td>' + rpgCelda(rpgValor(d, 'elec_consumo.valor')) + '</td>'
         + '</tr>';
     }).join('');
 
