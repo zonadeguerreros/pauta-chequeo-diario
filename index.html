@@ -9,9 +9,9 @@
      guardados (p. ej. el estado "Stop" de un generador podia mostrarse como "Detener"). -->
 <meta name="google" content="notranslate">
 <!-- Politica de seguridad de contenido: la genera build.ps1 (incluye los hashes de los scripts en linea). -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-CS32gS6uKDWVlfAg43zopWWn95w6KZyBpXipGxnoIOI=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=' https://www.gstatic.com/firebasejs/10.14.1/; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://zonadeguerreros.github.io; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-xiehy8Gt6RBzihDWZa8YCR4KvAmAvigqhjEfsVmKvVo=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=' https://www.gstatic.com/firebasejs/10.14.1/; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://zonadeguerreros.github.io; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'none'; form-action 'none'">
 <title>Pauta de Chequeo Diario</title>
-<meta name="app-version" content="2026-09-22.0552-5dd285f0">
+<meta name="app-version" content="2026-09-22.2121-5dd285f0">
 <style>
   @font-face{
     font-family:"Roboto";
@@ -76,6 +76,7 @@
   .spacer{ flex:1; }
   .btn{ font-family:var(--font); font-weight:600; font-size:13px; border-radius:7px; padding:8px 14px; cursor:pointer; border:1px solid var(--line); background:var(--surface); color:var(--ink); }
   .btn.primary{ background:var(--accent-solid); border-color:var(--accent-solid); color:#fff; }
+  .btn:disabled{ opacity:.45; cursor:not-allowed; }
   .btn.link{ border-color:transparent; background:transparent; color:var(--ink-dim); text-decoration:underline; padding:8px 6px; }
   .btn:active{ transform:translateY(1px); }
 
@@ -1925,7 +1926,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   }
 
   // ---------- version y aviso de actualizacion ----------
-  // Cada version publicada lleva un identificador (2026-09-22.0552-5dd285f0, lo genera compilar.js). Se compara contra la version
+  // Cada version publicada lleva un identificador (2026-09-22.2121-5dd285f0, lo genera compilar.js). Se compara contra la version
   // publicada de la web (mismo origen para todos: PC, celular o navegador) leyendo su etiqueta <meta name="app-version">.
   // Es una lectura publica de una pagina de solo texto: no requiere Firebase ni maneja datos del usuario.
   var APP_VERSION = (document.querySelector('meta[name="app-version"]') || {}).content || '';
@@ -2361,6 +2362,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     if(done===0){ pill.className='pill neutral'; pill.textContent='Sin iniciar'; state.status='draft'; }
     else if(done===TOTAL_UNITS){ pill.className='pill done'; pill.textContent='Completo'; state.status='completo'; }
     else { pill.className='pill progress'; pill.textContent='En progreso'; state.status='progreso'; }
+    // El boton "Guardar" solo se habilita cuando la pauta esta 100% marcada (asi no sube nada incompleto a la nube).
+    var saveBtn = document.getElementById('save-btn');
+    if(saveBtn){
+      var falta = done !== TOTAL_UNITS;
+      saveBtn.disabled = !editableDay || falta;
+      saveBtn.title = (editableDay && falta) ? 'Faltan ' + (TOTAL_UNITS - done) + ' casilla(s) por marcar para poder guardar.' : '';
+    }
   }
 
   // ---------- editable sheet rendering ----------
@@ -2872,6 +2880,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     saveTimer = null;
     if(!editableDay){ savePending = false; return Promise.resolve(); }
     var st = state, payload = serializable();
+    if(computeDone(st) !== TOTAL_UNITS){
+      // Pauta incompleta: no sube nada a la nube (ni queda marcada "pendiente" para subirse sola despues). Solo
+      // se guarda una copia en este equipo, por si se cierra el navegador o se corta la luz a medio llenar.
+      return saveLocalCopy(payload).then(function(){
+        setLocalBanner('Guardado en ' + ESTE_EQUIPO + ': faltan casillas por marcar. Se sube a la nube recien cuando la pauta quede completa.', 'info');
+      }).then(function(){ savePending = false; updateSummary(); });
+    }
     return saveLocalCopy(Object.assign({}, payload, { _pending: true })).then(function(){
       if(fbReady && fbDb){
         return guardarSinPisar(fbDb.collection('checklists').doc(payload.date), payload, st, { sobrescribir: !!(opciones && opciones.sobrescribir) }).then(function(){
