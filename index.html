@@ -9,9 +9,9 @@
      guardados (p. ej. el estado "Stop" de un generador podia mostrarse como "Detener"). -->
 <meta name="google" content="notranslate">
 <!-- Politica de seguridad de contenido: la genera build.ps1 (incluye los hashes de los scripts en linea). -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-V2PEOMseLas/M2EyrKyISoTGZmdGqLGuZ7fgnah5Hfw=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=' https://www.gstatic.com/firebasejs/10.14.1/; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://zonadeguerreros.github.io; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-7Q5+LqaG4qriw5wT5TKa4a5cgWcsYw89xJ7GTURIARk=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=' https://www.gstatic.com/firebasejs/10.14.1/; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://zonadeguerreros.github.io; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'none'; form-action 'none'">
 <title>Pauta de Chequeo Diario</title>
-<meta name="app-version" content="2026-09-22.0348-01f91dad">
+<meta name="app-version" content="2026-09-22.0433-1227e8b6">
 <style>
   @font-face{
     font-family:"Roboto";
@@ -32,6 +32,10 @@
     --ink:#16211F; --ink-dim:#57655F; --ink-faint:#8B9793;
     --accent:#D98324; --accent-strong:#B5670F; --accent-bg:#FBEBD7;
     --ok:#2F7A4F; --ok-bg:#E1F0E5; --warn:#B23A2E; --warn-bg:#F7E3E0;
+    /* Fondo solido + texto blanco (botones primarios y de peligro). A diferencia de --accent-strong/--warn
+       (que en modo oscuro se aclaran para leerse como texto sobre el fondo oscuro), estos dos NO cambian
+       segun el tema: se eligieron para dar siempre buen contraste con texto blanco encima (min. 4.5:1 WCAG AA). */
+    --accent-solid:#9A540C; --accent-solid-rgb:154,84,12; --warn-solid:#B23A2E;
     --shadow: 0 1px 2px rgba(20,30,28,.06), 0 4px 14px rgba(20,30,28,.05);
     --font: "Roboto", Arial, Helvetica, sans-serif;
     --font-mono: "Roboto Mono", ui-monospace, monospace;
@@ -61,6 +65,7 @@
   .app-title{ display:flex; align-items:center; justify-content:space-between; gap:9px; }
   .brand-left{ display:flex; align-items:center; gap:9px; }
   .app-title img{ height:26px; width:auto; border-radius:3px; }
+  /* Igual en PC y en web (antes estaba repetida dos veces entre marcas de plataforma, sin ninguna diferencia real). */
   .app-title img.brand-corner{ height:115px; width:auto; flex:none; border-radius:0; }
   .app-title span{ font-size:12.5px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-faint); }
 
@@ -70,7 +75,7 @@
   .tab[aria-selected="true"]{ background:var(--surface); color:var(--ink); box-shadow:var(--shadow); }
   .spacer{ flex:1; }
   .btn{ font-family:var(--font); font-weight:600; font-size:13px; border-radius:7px; padding:8px 14px; cursor:pointer; border:1px solid var(--line); background:var(--surface); color:var(--ink); }
-  .btn.primary{ background:var(--accent-strong); border-color:var(--accent-strong); color:#fff; }
+  .btn.primary{ background:var(--accent-solid); border-color:var(--accent-solid); color:#fff; }
   .btn.link{ border-color:transparent; background:transparent; color:var(--ink-dim); text-decoration:underline; padding:8px 6px; }
   .btn:active{ transform:translateY(1px); }
 
@@ -293,7 +298,7 @@
   #dlg-box{ max-width:420px; }
   #dlg-msg{ font-size:13.5px; line-height:1.45; color:var(--ink); white-space:pre-line; }
   #dlg-actions{ display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap; }
-  #dlg-actions .btn.danger{ background:var(--warn, #B3261E); border-color:var(--warn, #B3261E); color:#fff; }
+  #dlg-actions .btn.danger{ background:var(--warn-solid, #B3261E); border-color:var(--warn-solid, #B3261E); color:#fff; }
 
 
   /* ---- Novedades del turno (informe de entrega de turno) ---- */
@@ -427,7 +432,7 @@
   #sol-editor{ display:flex; flex-direction:column; gap:10px; }
   #sol-history{ display:flex; flex-direction:column; gap:10px; }
   .sol-filtros{ display:flex; gap:6px; flex-wrap:wrap; }
-  .sol-filtros .ghost-btn[aria-pressed="true"]{ background:var(--accent-strong); border-color:var(--accent-strong); color:#fff; }
+  .sol-filtros .ghost-btn[aria-pressed="true"]{ background:var(--accent-solid); border-color:var(--accent-solid); color:#fff; }
   .sol-resumen{ font-size:12px; color:var(--ink-dim); margin-top:2px; }
   #sol-status{ font-size:12px; color:var(--ink-dim); }
   .dash-card-tag.alert{ background:var(--warn-bg); color:var(--warn); }
@@ -543,7 +548,7 @@
   .dash-card:not(.disabled):active{ transform:translateY(-1px); }
   .dash-card-tag.alert{ animation:fx-brillo 2.4s ease-in-out infinite; }
   .btn, .ghost-btn{ transition:transform .12s ease, box-shadow .15s ease, background-color .15s ease, border-color .15s ease; }
-  .btn.primary:hover{ transform:translateY(-1px); box-shadow:0 4px 14px rgba(181,103,15,.35); }
+  .btn.primary:hover{ transform:translateY(-1px); box-shadow:0 4px 14px rgba(var(--accent-solid-rgb),.35); }
 
   @media (prefers-reduced-motion: reduce){
     #fx-bg{ display:none; }
@@ -722,9 +727,9 @@
     <div class="rpg-panel">
       <div class="inf-bar"><div class="inf-title">Reportes de Generadores</div></div>
       <div class="rpg-mesbar">
-        <button type="button" class="ghost-btn" id="rpg-mes-ant">‹ Mes anterior</button>
+        <button type="button" class="ghost-btn" id="rpg-mes-ant" title="Ver el mes anterior">‹ Mes anterior</button>
         <div class="rpg-mes-actual" id="rpg-mes-actual"></div>
-        <button type="button" class="ghost-btn" id="rpg-mes-sig">Mes siguiente ›</button>
+        <button type="button" class="ghost-btn" id="rpg-mes-sig" title="Ver el mes siguiente">Mes siguiente ›</button>
       </div>
       <div class="info-banner" id="rpg-nota" style="display:none"></div>
       <div class="inf-card">
@@ -1868,7 +1873,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   }
 
   // ---------- version y aviso de actualizacion ----------
-  // Cada version publicada lleva un identificador (2026-09-22.0348-01f91dad, lo genera compilar.js). Se compara contra la version
+  // Cada version publicada lleva un identificador (2026-09-22.0433-1227e8b6, lo genera compilar.js). Se compara contra la version
   // publicada de la web (mismo origen para todos: PC, celular o navegador) leyendo su etiqueta <meta name="app-version">.
   // Es una lectura publica de una pagina de solo texto: no requiere Firebase ni maneja datos del usuario.
   var APP_VERSION = (document.querySelector('meta[name="app-version"]') || {}).content || '';
@@ -2168,9 +2173,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
         {key:'g2', label:'G2', kind:'number', unit:'hrs', yellow:true}
       ]}
     ]},
-    { id:'ups_pabellones', title:'Chequeo Diario UPS Pabellones', items:[
-      {id:'ups_pab_funcionamiento', label:'Verificar funcionamiento UPS', type:'checkobs'},
-      {id:'ups_pab_climatizacion', label:'Verificar funcionamiento climatización', type:'checkobs'}
+    { id:'ups_pabellones', title:'UPS Pabellones', items:[
+      {id:'ups_pab_funcionamiento', label:'Verificar funcionamiento de UPS', type:'checkobs'},
+      {id:'ups_pab_climatizacion', label:'Verificar funcionamiento de climatización', type:'checkobs'}
     ]},
     { id:'cctv', title:'Sala CCTV', items:[
       {id:'cctv_camaras', label:'Verificar funcionamiento de cámaras', type:'checkobs'},
@@ -2272,7 +2277,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     document.getElementById('save-btn').style.display = editableDay ? '' : 'none';
     document.getElementById('download-btn').style.display = exp ? '' : 'none';
     document.getElementById('print-btn').style.display = exp ? '' : 'none';
-    if(!editableDay){ setLocalBanner('', true); }
+    if(!editableDay){ setLocalBanner('', 'info'); }
   }
 
   // ---------- completion ----------
@@ -2763,14 +2768,15 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     return Promise.resolve();
   }
 
+  // warn: true (rojo, problema real que necesita atencion) | 'info' (ambar, informativo/normal, p. ej. "sin conexion, se sube solo") | false (neutro)
   function setLocalBanner(msg, warn){
     if(!editableDay){ msg = 'Día anterior: solo lectura (solo el jefe supervisor puede modificar días pasados).' + (msg ? ' ' + msg : ''); }
     var wrap = document.getElementById('local-banner');
     var el = document.getElementById('local-banner-text') || wrap;   // en PC el texto va dentro de un span
     if(!el || !wrap) return;
     el.textContent = msg;
-    wrap.style.background = warn ? 'var(--warn-bg)' : 'var(--surface-2)';
-    wrap.style.color = warn ? 'var(--warn)' : 'var(--ink-dim)';
+    wrap.style.background = warn === true ? 'var(--warn-bg)' : (warn === 'info' ? 'var(--accent-bg)' : 'var(--surface-2)');
+    wrap.style.color = warn === true ? 'var(--warn)' : (warn === 'info' ? 'var(--accent-strong)' : 'var(--ink-dim)');
   }
 
   function saveLocalCopy(payload){ return almacenPautas.guardar(payload.date, payload); }
@@ -2827,10 +2833,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
           var r = resultadoDeError(err);
           if(r.denied){ setLocalBanner(DENIED_MSG, true); return saveLocalCopy(payload); }
           if(r.conflicto){ setLocalBanner('Cambios sin subir: otra persona modificó esta pauta.', true); return pautaAlConflicto(st, r.nube); }
-          setLocalBanner(OFFLINE_MSG, true);
+          setLocalBanner(OFFLINE_MSG, 'info');
         });
       }
-      setLocalBanner(OFFLINE_MSG, true);
+      setLocalBanner(OFFLINE_MSG, 'info');
     }).then(function(){ savePending = false; updateSummary(); });
   }
 
@@ -2885,7 +2891,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     function sinNube(){
       return loadLocalCopy(date).then(function(local){
         applyData(local);
-        setLocalBanner('Sin conexión a la nube: mostrando datos guardados en ' + ESTE_EQUIPO + '.', true);
+        setLocalBanner('Sin conexión a la nube: mostrando datos guardados en ' + ESTE_EQUIPO + '.', 'info');
       });
     }
 
@@ -2898,7 +2904,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
           applyData(data);
           if(soloNube && data){ saveLocalCopy(data); }   // se descarta lo pendiente: la copia local pasa a ser la de la nube
           if(usePending){
-            setLocalBanner('Hay cambios de este día pendientes de subir; se subirán automáticamente.', true);
+            setLocalBanner('Hay cambios de este día pendientes de subir; se subirán automáticamente.', 'info');
             syncPending();
           } else {
             setLocalBanner('Conectado a la nube compartida — visible desde cualquier dispositivo.', false);
@@ -3207,12 +3213,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   function infNubeLista(){ return !!(fbReady && fbDb && currentUser); }
 
   function infSetStatus(text){ var el = infEl('inf-status'); if(el) el.textContent = text || ''; }
+  // warn: true (rojo, problema real que necesita atencion) | 'info' (ambar, informativo/normal, p. ej. "sin conexion, se sube solo") | false (neutro)
   function infSetBanner(msg, warn){
     var el = infEl('inf-banner'); if(!el) return;
     el.textContent = msg || '';
     el.style.display = msg ? '' : 'none';
-    el.style.background = warn ? 'var(--warn-bg)' : 'var(--surface-2)';
-    el.style.color = warn ? 'var(--warn)' : 'var(--ink-dim)';
+    el.style.background = warn === true ? 'var(--warn-bg)' : (warn === 'info' ? 'var(--accent-bg)' : 'var(--surface-2)');
+    el.style.color = warn === true ? 'var(--warn)' : (warn === 'info' ? 'var(--accent-strong)' : 'var(--ink-dim)');
   }
   var INF_MSG_OFFLINE = 'Sin conexión a la nube: el informe se guardó en este dispositivo y se subirá automáticamente cuando vuelva la conexión.';
   var INF_MSG_PERM = 'La nube no aceptó guardar este informe: el técnico solo puede guardar informes de su turno en curso (hora de Chile), o faltan permisos en Firestore. Queda en este dispositivo; si necesitas corregirlo, pídeselo al jefe supervisor.';
@@ -3266,7 +3273,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     } else if(res.denied){
       infSetStatus('Guardado en este dispositivo'); infSetBanner(INF_MSG_PERM, true);
     } else {
-      infSetStatus('Guardado en este dispositivo'); infSetBanner(INF_MSG_OFFLINE, true);
+      infSetStatus('Guardado en este dispositivo'); infSetBanner(INF_MSG_OFFLINE, 'info');
     }
   }
 
@@ -4326,12 +4333,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
 
   // ---------- nube ----------
   function solSetStatus(t){ var el = solEl('sol-status'); if(el) el.textContent = t || ''; }
+  // warn: true (rojo, problema real que necesita atencion) | 'info' (ambar, informativo/normal, p. ej. "sin conexion, se sube solo") | false (neutro)
   function solSetBanner(msg, warn){
     var el = solEl('sol-banner'); if(!el) return;
     el.textContent = msg || '';
     el.style.display = msg ? '' : 'none';
-    el.style.background = warn ? 'var(--warn-bg)' : 'var(--surface-2)';
-    el.style.color = warn ? 'var(--warn)' : 'var(--ink-dim)';
+    el.style.background = warn === true ? 'var(--warn-bg)' : (warn === 'info' ? 'var(--accent-bg)' : 'var(--surface-2)');
+    el.style.color = warn === true ? 'var(--warn)' : (warn === 'info' ? 'var(--accent-strong)' : 'var(--ink-dim)');
   }
   var SOL_MSG_OFFLINE = 'Sin conexión a la nube: la solicitud quedó guardada en este dispositivo y se enviará automáticamente cuando vuelva la conexión.';
   var SOL_MSG_PERM = 'La nube no aceptó guardar esta solicitud (permiso denegado): revisa que sea tuya y siga en estado "enviada", o faltan permisos en Firestore. Queda en este dispositivo; si necesitas cambiarla, pídeselo al jefe supervisor.';
@@ -4404,7 +4412,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     } else if(res.conflicto){
       solSetStatus('Cambios sin subir'); solAlConflicto(res.st, res.nube);
     } else if(res.denied){ solSetStatus('Guardado en este dispositivo'); solSetBanner(SOL_MSG_PERM, true); }
-    else { solSetStatus('Guardado en este dispositivo'); solSetBanner(SOL_MSG_OFFLINE, true); }
+    else { solSetStatus('Guardado en este dispositivo'); solSetBanner(SOL_MSG_OFFLINE, 'info'); }
   }
 
   // Otra persona guardo esta solicitud mientras se editaba: se pregunta que hacer (nunca se pisa en silencio).
