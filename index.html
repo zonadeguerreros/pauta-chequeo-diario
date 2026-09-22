@@ -6,9 +6,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="author" content="Cristhian Sandoval">
 <!-- Politica de seguridad de contenido: la genera build.ps1 (incluye los hashes de los scripts en linea). -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-chdQWt3vilW6tFUJ6DBncdO0zc/LgUNeT/uiydqc2Ww=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=' https://www.gstatic.com/firebasejs/10.14.1/; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://zonadeguerreros.github.io; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-qY3aCeVaPQ/v9slhmFtjMdNQ7wxJj2Lqas3IpfJ1zD0=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=' https://www.gstatic.com/firebasejs/10.14.1/; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://zonadeguerreros.github.io; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'none'; form-action 'none'">
 <title>Pauta de Chequeo Diario</title>
-<meta name="app-version" content="2026-09-22.0253-bb95cb60">
+<meta name="app-version" content="2026-09-22.0319-8d085626">
 <style>
   @font-face{
     font-family:"Roboto";
@@ -560,13 +560,21 @@
   #auth-cupos-nota{ width:100%; text-align:center; font-size:12px; color:var(--ink-dim); }
 
 
-  /* ---- Reportes de Generadores ---- */
-  .rpg-mesbar{ display:flex; align-items:center; justify-content:center; gap:14px; margin:4px 0 10px; }
+  /* ---- Reportes de Generadores (dentro del panel principal, debajo de las tarjetas) ---- */
+  .rpg-panel{ margin-top:20px; display:flex; flex-direction:column; gap:14px; }
+  .rpg-mesbar{ display:flex; align-items:center; justify-content:center; gap:14px; margin:4px 0 2px; }
   .rpg-mes-actual{ font-weight:700; font-size:14px; color:var(--ink); min-width:160px; text-align:center; }
-  table.rpg-tabla{ width:100%; border-collapse:collapse; font-size:13.5px; }
-  table.rpg-tabla th, table.rpg-tabla td{ padding:7px 10px; border-bottom:1px solid var(--line); text-align:right; }
-  table.rpg-tabla th:first-child, table.rpg-tabla td:first-child{ text-align:left; color:var(--ink-dim); font-weight:600; }
-  table.rpg-tabla th{ color:var(--ink-dim); font-weight:700; font-size:11.5px; text-transform:uppercase; letter-spacing:.03em; }
+  table.rpg-resumen{ width:100%; border-collapse:collapse; font-size:13.5px; }
+  table.rpg-resumen th, table.rpg-resumen td{ padding:7px 10px; border-bottom:1px solid var(--line); text-align:right; }
+  table.rpg-resumen th:first-child, table.rpg-resumen td:first-child{ text-align:left; color:var(--ink-dim); font-weight:600; }
+  table.rpg-resumen th{ color:var(--ink-dim); font-weight:700; font-size:11.5px; text-transform:uppercase; letter-spacing:.03em; }
+  .rpg-tabla-wrap{ overflow-x:auto; border:1px solid var(--line); border-radius:8px; }
+  table.rpg-detalle{ width:100%; min-width:760px; border-collapse:collapse; font-size:12.5px; }
+  table.rpg-detalle th, table.rpg-detalle td{ padding:6px 9px; border-bottom:1px solid var(--line); text-align:right; white-space:nowrap; }
+  table.rpg-detalle th:first-child, table.rpg-detalle td:first-child,
+  table.rpg-detalle th:nth-child(2), table.rpg-detalle td:nth-child(2){ text-align:left; }
+  table.rpg-detalle thead th{ background:var(--surface-2); color:var(--ink-dim); font-weight:700; font-size:10.5px; text-transform:uppercase; letter-spacing:.03em; position:sticky; top:0; }
+  table.rpg-detalle tbody tr:last-child td{ border-bottom:none; }
   .rpg-svg{ width:100%; height:auto; max-height:260px; }
   .rpg-linea{ fill:none; stroke:var(--accent-strong); stroke-width:2; stroke-linejoin:round; stroke-linecap:round; }
   .rpg-punto{ fill:var(--accent-strong); }
@@ -574,7 +582,7 @@
   @media screen and (max-width:640px){
     .rpg-mesbar{ gap:8px; }
     .rpg-mes-actual{ min-width:0; font-size:12.5px; }
-    table.rpg-tabla{ font-size:12px; }
+    table.rpg-resumen{ font-size:12px; }
   }
 
 
@@ -685,10 +693,6 @@
       </button>
       <div class="dash-card disabled"><span class="dash-card-title">Pauta Diaria de Generadores</span><span class="dash-card-tag">Próximamente</span></div>
       <div class="dash-card disabled"><span class="dash-card-title">Pauta Semanal de Generadores</span><span class="dash-card-tag">Próximamente</span></div>
-      <button type="button" class="dash-card" id="dash-card-reportes">
-        <span class="dash-card-title">Reportes de Generadores</span>
-        <span class="dash-card-desc">Consumo, horas de funcionamiento y nivel del estanque</span>
-      </button>
       <button type="button" class="dash-card" id="dash-card-informes">
         <span class="dash-card-title">Novedades del Turno</span>
         <span class="dash-card-desc">Informe de entrega de turno (día y noche)</span>
@@ -704,6 +708,39 @@
         <span class="dash-card-tag alert" id="dash-cuentas-badge" hidden></span>
       </button>
     </div>
+
+    <div class="rpg-panel">
+      <div class="inf-bar"><div class="inf-title">Reportes de Generadores</div></div>
+      <div class="rpg-mesbar">
+        <button type="button" class="ghost-btn" id="rpg-mes-ant">‹ Mes anterior</button>
+        <div class="rpg-mes-actual" id="rpg-mes-actual"></div>
+        <button type="button" class="ghost-btn" id="rpg-mes-sig">Mes siguiente ›</button>
+      </div>
+      <div class="info-banner" id="rpg-nota" style="display:none"></div>
+      <div class="inf-card">
+        <h2>Resumen del mes</h2>
+        <div class="inf-note">Consumo de combustible y horas de funcionamiento: diferencia entre la última lectura del mes y la última lectura anterior a él (son contadores acumulados, no valores diarios).</div>
+        <table class="rpg-resumen"><tbody id="rpg-tabla"></tbody></table>
+      </div>
+      <div class="inf-card">
+        <h2>Detalle diario del mes</h2>
+        <div class="rpg-tabla-wrap"><table class="rpg-detalle">
+          <thead><tr>
+            <th>Fecha</th><th>Técnico</th><th>Estado G1</th><th>Estado G2</th>
+            <th>Consumo G1 (Lt)</th><th>Consumo G2 (Lt)</th>
+            <th>Horómetro G1 (hrs)</th><th>Horómetro G2 (hrs)</th>
+            <th>Estanque enterrado (Lt)</th>
+          </tr></thead>
+          <tbody id="rpg-detalle-cuerpo"></tbody>
+        </table></div>
+      </div>
+      <div class="inf-card">
+        <h2>Nivel de estanque enterrado</h2>
+        <div class="inf-note">Litros registrados cada día del mes en la pauta de chequeo.</div>
+        <div id="rpg-grafico"></div>
+      </div>
+    </div>
+
   </div>
 
   <div id="view-pauta-diaria" hidden>
@@ -942,30 +979,6 @@
     <div id="cu-pendientes"></div>
     <div class="inf-bar"><div class="inf-title">Cuentas oficiales</div></div>
     <div id="cu-oficiales"></div>
-  </div>
-
-
-  <div id="view-reportes" hidden>
-    <div class="inf-bar">
-      <button type="button" class="ghost-btn" id="rpg-back-btn">← Menú</button>
-      <div class="inf-title">Reportes de Generadores</div>
-    </div>
-    <div class="rpg-mesbar">
-      <button type="button" class="ghost-btn" id="rpg-mes-ant">‹ Mes anterior</button>
-      <div class="rpg-mes-actual" id="rpg-mes-actual"></div>
-      <button type="button" class="ghost-btn" id="rpg-mes-sig">Mes siguiente ›</button>
-    </div>
-    <div class="info-banner" id="rpg-nota" style="display:none"></div>
-    <div class="inf-card">
-      <h2>Resumen del mes</h2>
-      <div class="inf-note">Consumo de combustible y horas de funcionamiento: diferencia entre la última lectura del mes y la última lectura anterior a él (son contadores acumulados, no valores diarios).</div>
-      <table class="rpg-tabla"><tbody id="rpg-tabla"></tbody></table>
-    </div>
-    <div class="inf-card">
-      <h2>Nivel de estanque enterrado</h2>
-      <div class="inf-note">Litros registrados cada día del mes en la pauta de chequeo.</div>
-      <div id="rpg-grafico"></div>
-    </div>
   </div>
 
 
@@ -1840,7 +1853,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   }
 
   // ---------- version y aviso de actualizacion ----------
-  // Cada version publicada lleva un identificador (2026-09-22.0253-bb95cb60, lo genera compilar.js). Se compara contra la version
+  // Cada version publicada lleva un identificador (2026-09-22.0319-8d085626, lo genera compilar.js). Se compara contra la version
   // publicada de la web (mismo origen para todos: PC, celular o navegador) leyendo su etiqueta <meta name="app-version">.
   // Es una lectura publica de una pagina de solo texto: no requiere Firebase ni maneja datos del usuario.
   var APP_VERSION = (document.querySelector('meta[name="app-version"]') || {}).content || '';
@@ -1947,8 +1960,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     document.getElementById('view-informes').hidden = name !== 'informes';
     document.getElementById('view-solicitudes').hidden = name !== 'solicitudes';
     document.getElementById('view-cuentas').hidden = name !== 'cuentas';
-    document.getElementById('view-reportes').hidden = name !== 'reportes';
     document.getElementById('view-pendiente').hidden = name !== 'pendiente';
+    // El reporte de generadores va directo en el panel (no es una pantalla aparte): se recalcula cada vez que se vuelve a el.
+    if(name === 'dashboard') rpgCargar();
   }
 
   function showAuthError(msg){
@@ -5333,13 +5347,14 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
 
   // =====================================================================
   //  REPORTES DE GENERADORES — consumo de combustible, horas de funcionamiento y nivel de
-  //  estanque enterrado, por mes. Los datos salen de la pauta de chequeo diario (checklists):
-  //  no hay nada que guardar aparte, asi que el reporte siempre queda al dia solo. El consumo
-  //  de combustible, las horas de funcionamiento y el consumo de energia son contadores
-  //  acumulados (solo suben); el consumo/las horas del mes se calculan como la diferencia entre
-  //  la ultima lectura del mes y la ultima lectura anterior a el. El nivel del estanque enterrado
-  //  es un valor real (sube al cargar combustible, baja al consumir), por eso se grafica en vez
-  //  de sumarse.
+  //  estanque enterrado, por mes. Se muestra directo en el panel principal, debajo de las
+  //  tarjetas (no es una pantalla aparte). Los datos salen de la pauta de chequeo diario
+  //  (checklists): no hay nada que guardar aparte, asi que el reporte siempre queda al dia
+  //  solo. El consumo de combustible, las horas de funcionamiento y el consumo de energia son
+  //  contadores acumulados (solo suben); el consumo/las horas del mes se calculan como la
+  //  diferencia entre la ultima lectura del mes y la ultima lectura anterior a el. El nivel del
+  //  estanque enterrado es un valor real (sube al cargar combustible, baja al consumir), por
+  //  eso se grafica y se lista dia a dia en vez de sumarse.
   // =====================================================================
   var rpgMes = null;   // { y, m } del mes que se esta mostrando (m: 1 a 12)
 
@@ -5355,14 +5370,16 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     var fin = y + '-' + rpgDosDig(m) + '-' + rpgDosDig(ultimoDia);
     return { ini: ini, fin: fin };
   }
+  function rpgFechaCorta(iso){ var p = String(iso).split('-'); return p.length === 3 ? (p[2] + '-' + p[1] + '-' + p[0]) : iso; }
   function rpgNum(v){ var n = parseFloat(v); return isFinite(n) ? n : null; }
 
-  // Valor numerico de un campo dentro de checklists/{fecha}.values, p. ej. "gen_consumo.g1"
-  function rpgValor(doc, ruta){
+  // Valor numerico o de texto de un campo dentro de checklists/{fecha}.values, p. ej. "gen_consumo.g1"
+  function rpgCampo(doc, ruta){
     var p = ruta.split('.'), v = (doc && doc.values) || {};
     for(var i = 0; i < p.length; i++){ v = v ? v[p[i]] : undefined; }
-    return rpgNum(v);
+    return v === undefined ? null : v;
   }
+  function rpgValor(doc, ruta){ return rpgNum(rpgCampo(doc, ruta)); }
   // Ultima / primera lectura valida de 'ruta' en 'docs' (ya ordenados por fecha ascendente)
   function rpgUltima(docs, ruta){
     for(var i = docs.length - 1; i >= 0; i--){ var v = rpgValor(docs[i], ruta); if(v !== null) return v; }
@@ -5388,6 +5405,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     if(n === null || n === undefined) return 'Sin dato';
     return n.toLocaleString('es-CL', { maximumFractionDigits: 1 }) + (unidad ? ' ' + unidad : '');
   }
+  function rpgCelda(v){
+    if(v === null || v === undefined || v === '') return '—';
+    if(typeof v === 'number') return v.toLocaleString('es-CL', { maximumFractionDigits: 1 });
+    return esc(String(v));
+  }
   function rpgFila(etiqueta, g1, g2, unidad){
     return '<tr><td>' + esc(etiqueta) + '</td><td>' + rpgFmt(g1, unidad) + '</td><td>' + rpgFmt(g2, unidad) + '</td></tr>';
   }
@@ -5407,6 +5429,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     rpgMes = rpgMes || rpgMesActual();
     rpgActualizarBotones();
     rpgEl('rpg-tabla').innerHTML = '<tr><td colspan="3" class="empty">Calculando…</td></tr>';
+    rpgEl('rpg-detalle-cuerpo').innerHTML = '';
     rpgEl('rpg-grafico').innerHTML = '';
     if(!fbReady || !fbDb || !currentUser){
       rpgNota('Se necesita conexión a la nube para calcular el reporte.');
@@ -5433,6 +5456,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   function rpgPintar(docsMes, docPrevio){
     if(!docsMes.length){
       rpgEl('rpg-tabla').innerHTML = '<tr><td colspan="3" class="empty">No hay pautas guardadas en este mes.</td></tr>';
+      rpgEl('rpg-detalle-cuerpo').innerHTML = '<tr><td colspan="9" class="empty">No hay pautas guardadas en este mes.</td></tr>';
       rpgEl('rpg-grafico').innerHTML = '<div class="empty">Sin datos.</div>';
       return;
     }
@@ -5448,10 +5472,24 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       + rpgFila('Horas de funcionamiento', horasG1, horasG2, 'hrs')
       + '<tr><td>Consumo de energía (empalme)</td><td colspan="2">' + rpgFmt(kwh, 'KWh') + '</td></tr>';
 
+    rpgEl('rpg-detalle-cuerpo').innerHTML = docsMes.map(function(d){
+      return '<tr>'
+        + '<td>' + esc(rpgFechaCorta(d.date)) + '</td>'
+        + '<td>' + rpgCelda(d.technician) + '</td>'
+        + '<td>' + rpgCelda(rpgCampo(d, 'gen_estado.g1')) + '</td>'
+        + '<td>' + rpgCelda(rpgCampo(d, 'gen_estado.g2')) + '</td>'
+        + '<td>' + rpgCelda(rpgValor(d, 'gen_consumo.g1')) + '</td>'
+        + '<td>' + rpgCelda(rpgValor(d, 'gen_consumo.g2')) + '</td>'
+        + '<td>' + rpgCelda(rpgValor(d, 'gen_horometro.g1')) + '</td>'
+        + '<td>' + rpgCelda(rpgValor(d, 'gen_horometro.g2')) + '</td>'
+        + '<td>' + rpgCelda(rpgValor(d, 'gen_enterrado.nivel')) + '</td>'
+        + '</tr>';
+    }).join('');
+
     rpgGraficoEstanque(docsMes);
   }
 
-  // Grafico (SVG) del nivel del estanque enterrado, dia a dia del mes.
+  // Grafico (SVG, sin librerias externas) del nivel del estanque enterrado, dia a dia del mes.
   function rpgGraficoEstanque(docsMes){
     var puntos = [];
     docsMes.forEach(function(d){ var v = rpgValor(d, 'gen_enterrado.nivel'); if(v !== null) puntos.push({ fecha: d.date, valor: v }); });
@@ -5479,9 +5517,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       + '<path d="' + linea + '" class="rpg-linea"/>' + puntosSvg + etiquetas + '</svg>';
   }
 
-  function rpgEntrar(){ showView('reportes'); rpgMes = null; rpgCargar(); }
-  rpgEl('dash-card-reportes').addEventListener('click', rpgEntrar);
-  rpgEl('rpg-back-btn').addEventListener('click', function(){ showView('dashboard'); });
   rpgEl('rpg-mes-ant').addEventListener('click', function(){
     rpgMes = rpgMes || rpgMesActual();
     rpgMes = { y: rpgMes.m === 1 ? rpgMes.y - 1 : rpgMes.y, m: rpgMes.m === 1 ? 12 : rpgMes.m - 1 };
