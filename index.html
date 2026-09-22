@@ -6,9 +6,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="author" content="Cristhian Sandoval">
 <!-- Politica de seguridad de contenido: la genera build.ps1 (incluye los hashes de los scripts en linea). -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-mpB7LDFcJDr8I331R8s1OGDsbD178oJd+d2gJHGA8bY=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=' https://www.gstatic.com/firebasejs/10.14.1/; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://zonadeguerreros.github.io; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-chdQWt3vilW6tFUJ6DBncdO0zc/LgUNeT/uiydqc2Ww=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=' https://www.gstatic.com/firebasejs/10.14.1/; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://zonadeguerreros.github.io; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'none'; form-action 'none'">
 <title>Pauta de Chequeo Diario</title>
-<meta name="app-version" content="2026-09-22.0225-92c1371d">
+<meta name="app-version" content="2026-09-22.0253-bb95cb60">
 <style>
   @font-face{
     font-family:"Roboto";
@@ -560,6 +560,24 @@
   #auth-cupos-nota{ width:100%; text-align:center; font-size:12px; color:var(--ink-dim); }
 
 
+  /* ---- Reportes de Generadores ---- */
+  .rpg-mesbar{ display:flex; align-items:center; justify-content:center; gap:14px; margin:4px 0 10px; }
+  .rpg-mes-actual{ font-weight:700; font-size:14px; color:var(--ink); min-width:160px; text-align:center; }
+  table.rpg-tabla{ width:100%; border-collapse:collapse; font-size:13.5px; }
+  table.rpg-tabla th, table.rpg-tabla td{ padding:7px 10px; border-bottom:1px solid var(--line); text-align:right; }
+  table.rpg-tabla th:first-child, table.rpg-tabla td:first-child{ text-align:left; color:var(--ink-dim); font-weight:600; }
+  table.rpg-tabla th{ color:var(--ink-dim); font-weight:700; font-size:11.5px; text-transform:uppercase; letter-spacing:.03em; }
+  .rpg-svg{ width:100%; height:auto; max-height:260px; }
+  .rpg-linea{ fill:none; stroke:var(--accent-strong); stroke-width:2; stroke-linejoin:round; stroke-linecap:round; }
+  .rpg-punto{ fill:var(--accent-strong); }
+  .rpg-eje{ fill:var(--ink-faint); font-size:10px; font-family:var(--font); }
+  @media screen and (max-width:640px){
+    .rpg-mesbar{ gap:8px; }
+    .rpg-mes-actual{ min-width:0; font-size:12.5px; }
+    table.rpg-tabla{ font-size:12px; }
+  }
+
+
   /* ---- Mobile / small screens (phones, small tablets) — screen only, never print ---- */
   @media screen and (max-width: 640px){
     body{ padding-inline:10px; padding-block:12px 40px; }
@@ -667,6 +685,10 @@
       </button>
       <div class="dash-card disabled"><span class="dash-card-title">Pauta Diaria de Generadores</span><span class="dash-card-tag">Próximamente</span></div>
       <div class="dash-card disabled"><span class="dash-card-title">Pauta Semanal de Generadores</span><span class="dash-card-tag">Próximamente</span></div>
+      <button type="button" class="dash-card" id="dash-card-reportes">
+        <span class="dash-card-title">Reportes de Generadores</span>
+        <span class="dash-card-desc">Consumo, horas de funcionamiento y nivel del estanque</span>
+      </button>
       <button type="button" class="dash-card" id="dash-card-informes">
         <span class="dash-card-title">Novedades del Turno</span>
         <span class="dash-card-desc">Informe de entrega de turno (día y noche)</span>
@@ -920,6 +942,30 @@
     <div id="cu-pendientes"></div>
     <div class="inf-bar"><div class="inf-title">Cuentas oficiales</div></div>
     <div id="cu-oficiales"></div>
+  </div>
+
+
+  <div id="view-reportes" hidden>
+    <div class="inf-bar">
+      <button type="button" class="ghost-btn" id="rpg-back-btn">← Menú</button>
+      <div class="inf-title">Reportes de Generadores</div>
+    </div>
+    <div class="rpg-mesbar">
+      <button type="button" class="ghost-btn" id="rpg-mes-ant">‹ Mes anterior</button>
+      <div class="rpg-mes-actual" id="rpg-mes-actual"></div>
+      <button type="button" class="ghost-btn" id="rpg-mes-sig">Mes siguiente ›</button>
+    </div>
+    <div class="info-banner" id="rpg-nota" style="display:none"></div>
+    <div class="inf-card">
+      <h2>Resumen del mes</h2>
+      <div class="inf-note">Consumo de combustible y horas de funcionamiento: diferencia entre la última lectura del mes y la última lectura anterior a él (son contadores acumulados, no valores diarios).</div>
+      <table class="rpg-tabla"><tbody id="rpg-tabla"></tbody></table>
+    </div>
+    <div class="inf-card">
+      <h2>Nivel de estanque enterrado</h2>
+      <div class="inf-note">Litros registrados cada día del mes en la pauta de chequeo.</div>
+      <div id="rpg-grafico"></div>
+    </div>
   </div>
 
 
@@ -1794,7 +1840,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   }
 
   // ---------- version y aviso de actualizacion ----------
-  // Cada version publicada lleva un identificador (2026-09-22.0225-92c1371d, lo genera compilar.js). Se compara contra la version
+  // Cada version publicada lleva un identificador (2026-09-22.0253-bb95cb60, lo genera compilar.js). Se compara contra la version
   // publicada de la web (mismo origen para todos: PC, celular o navegador) leyendo su etiqueta <meta name="app-version">.
   // Es una lectura publica de una pagina de solo texto: no requiere Firebase ni maneja datos del usuario.
   var APP_VERSION = (document.querySelector('meta[name="app-version"]') || {}).content || '';
@@ -1901,6 +1947,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     document.getElementById('view-informes').hidden = name !== 'informes';
     document.getElementById('view-solicitudes').hidden = name !== 'solicitudes';
     document.getElementById('view-cuentas').hidden = name !== 'cuentas';
+    document.getElementById('view-reportes').hidden = name !== 'reportes';
     document.getElementById('view-pendiente').hidden = name !== 'pendiente';
   }
 
@@ -5281,6 +5328,169 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       registrarError('respaldo completo', err);
       msg.textContent = 'No se pudo generar el respaldo. Revisa tu conexión e inténtalo de nuevo.';
     }).then(function(){ btn.disabled = false; btn.textContent = orig; });
+  });
+
+
+  // =====================================================================
+  //  REPORTES DE GENERADORES — consumo de combustible, horas de funcionamiento y nivel de
+  //  estanque enterrado, por mes. Los datos salen de la pauta de chequeo diario (checklists):
+  //  no hay nada que guardar aparte, asi que el reporte siempre queda al dia solo. El consumo
+  //  de combustible, las horas de funcionamiento y el consumo de energia son contadores
+  //  acumulados (solo suben); el consumo/las horas del mes se calculan como la diferencia entre
+  //  la ultima lectura del mes y la ultima lectura anterior a el. El nivel del estanque enterrado
+  //  es un valor real (sube al cargar combustible, baja al consumir), por eso se grafica en vez
+  //  de sumarse.
+  // =====================================================================
+  var rpgMes = null;   // { y, m } del mes que se esta mostrando (m: 1 a 12)
+
+  function rpgMesActual(){ var d = new Date(); return { y: d.getFullYear(), m: d.getMonth() + 1 }; }
+  function rpgDosDig(n){ return (n < 10 ? '0' : '') + n; }
+  function rpgNombreMes(y, m){
+    var meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    return meses[m - 1] + ' de ' + y;
+  }
+  function rpgRangoMes(y, m){
+    var ini = y + '-' + rpgDosDig(m) + '-01';
+    var ultimoDia = new Date(y, m, 0).getDate();
+    var fin = y + '-' + rpgDosDig(m) + '-' + rpgDosDig(ultimoDia);
+    return { ini: ini, fin: fin };
+  }
+  function rpgNum(v){ var n = parseFloat(v); return isFinite(n) ? n : null; }
+
+  // Valor numerico de un campo dentro de checklists/{fecha}.values, p. ej. "gen_consumo.g1"
+  function rpgValor(doc, ruta){
+    var p = ruta.split('.'), v = (doc && doc.values) || {};
+    for(var i = 0; i < p.length; i++){ v = v ? v[p[i]] : undefined; }
+    return rpgNum(v);
+  }
+  // Ultima / primera lectura valida de 'ruta' en 'docs' (ya ordenados por fecha ascendente)
+  function rpgUltima(docs, ruta){
+    for(var i = docs.length - 1; i >= 0; i--){ var v = rpgValor(docs[i], ruta); if(v !== null) return v; }
+    return null;
+  }
+  function rpgPrimera(docs, ruta){
+    for(var i = 0; i < docs.length; i++){ var v = rpgValor(docs[i], ruta); if(v !== null) return v; }
+    return null;
+  }
+  // Consumo/horas del mes: ultima lectura del mes menos la ultima lectura anterior al mes
+  // (o la primera lectura del mes, si no hay ninguna anterior). Un resultado negativo suele ser
+  // un contador reiniciado o un dato mal escrito: se muestra "sin dato" en vez de un numero enganoso.
+  function rpgDelta(docsMes, docPrevio, ruta){
+    var fin = rpgUltima(docsMes, ruta);
+    if(fin === null) return null;
+    var inicio = docPrevio ? rpgValor(docPrevio, ruta) : null;
+    if(inicio === null) inicio = rpgPrimera(docsMes, ruta);
+    if(inicio === null) return null;
+    var d = fin - inicio;
+    return d < 0 ? null : d;
+  }
+  function rpgFmt(n, unidad){
+    if(n === null || n === undefined) return 'Sin dato';
+    return n.toLocaleString('es-CL', { maximumFractionDigits: 1 }) + (unidad ? ' ' + unidad : '');
+  }
+  function rpgFila(etiqueta, g1, g2, unidad){
+    return '<tr><td>' + esc(etiqueta) + '</td><td>' + rpgFmt(g1, unidad) + '</td><td>' + rpgFmt(g2, unidad) + '</td></tr>';
+  }
+  function rpgNota(msg){
+    var el = rpgEl('rpg-nota'); el.textContent = msg || ''; el.style.display = msg ? '' : 'none';
+  }
+  function rpgEl(id){ return document.getElementById(id); }
+
+  function rpgActualizarBotones(){
+    var mes = rpgMes || rpgMesActual();
+    rpgEl('rpg-mes-actual').textContent = rpgNombreMes(mes.y, mes.m);
+    var hoy = rpgMesActual();
+    rpgEl('rpg-mes-sig').disabled = (mes.y > hoy.y) || (mes.y === hoy.y && mes.m >= hoy.m);
+  }
+
+  function rpgCargar(){
+    rpgMes = rpgMes || rpgMesActual();
+    rpgActualizarBotones();
+    rpgEl('rpg-tabla').innerHTML = '<tr><td colspan="3" class="empty">Calculando…</td></tr>';
+    rpgEl('rpg-grafico').innerHTML = '';
+    if(!fbReady || !fbDb || !currentUser){
+      rpgNota('Se necesita conexión a la nube para calcular el reporte.');
+      rpgEl('rpg-tabla').innerHTML = '';
+      return;
+    }
+    rpgNota('');
+    var mesActual = rpgMes, r = rpgRangoMes(mesActual.y, mesActual.m);
+    var pMes = withTimeout(fbDb.collection('checklists').where('date', '>=', r.ini).where('date', '<=', r.fin).orderBy('date').get(), 15000);
+    var pPrevio = withTimeout(fbDb.collection('checklists').where('date', '<', r.ini).orderBy('date', 'desc').limit(1).get(), 15000);
+    Promise.all([pMes, pPrevio]).then(function(res){
+      if(rpgMes !== mesActual) return;   // el usuario ya cambio de mes mientras esto cargaba
+      var docsMes = []; res[0].forEach(function(d){ docsMes.push(d.data()); });
+      var docPrevio = null; res[1].forEach(function(d){ docPrevio = d.data(); });
+      rpgPintar(docsMes, docPrevio);
+    }).catch(function(err){
+      if(rpgMes !== mesActual) return;
+      registrarError('reportes: cargar mes', err);
+      rpgNota('No se pudo calcular el reporte. Revisa tu conexión.');
+      rpgEl('rpg-tabla').innerHTML = '';
+    });
+  }
+
+  function rpgPintar(docsMes, docPrevio){
+    if(!docsMes.length){
+      rpgEl('rpg-tabla').innerHTML = '<tr><td colspan="3" class="empty">No hay pautas guardadas en este mes.</td></tr>';
+      rpgEl('rpg-grafico').innerHTML = '<div class="empty">Sin datos.</div>';
+      return;
+    }
+    var consumoG1 = rpgDelta(docsMes, docPrevio, 'gen_consumo.g1');
+    var consumoG2 = rpgDelta(docsMes, docPrevio, 'gen_consumo.g2');
+    var horasG1 = rpgDelta(docsMes, docPrevio, 'gen_horometro.g1');
+    var horasG2 = rpgDelta(docsMes, docPrevio, 'gen_horometro.g2');
+    var kwh = rpgDelta(docsMes, docPrevio, 'elec_consumo.valor');
+
+    rpgEl('rpg-tabla').innerHTML =
+      '<tr><th></th><th>Grupo 1</th><th>Grupo 2</th></tr>'
+      + rpgFila('Consumo de combustible', consumoG1, consumoG2, 'Lt')
+      + rpgFila('Horas de funcionamiento', horasG1, horasG2, 'hrs')
+      + '<tr><td>Consumo de energía (empalme)</td><td colspan="2">' + rpgFmt(kwh, 'KWh') + '</td></tr>';
+
+    rpgGraficoEstanque(docsMes);
+  }
+
+  // Grafico (SVG) del nivel del estanque enterrado, dia a dia del mes.
+  function rpgGraficoEstanque(docsMes){
+    var puntos = [];
+    docsMes.forEach(function(d){ var v = rpgValor(d, 'gen_enterrado.nivel'); if(v !== null) puntos.push({ fecha: d.date, valor: v }); });
+    var host = rpgEl('rpg-grafico');
+    if(!puntos.length){ host.innerHTML = '<div class="empty">No hay lecturas del estanque enterrado este mes.</div>'; return; }
+    var W = 760, H = 220, PAD_I = 44, PAD_D = 14, PAD_AB = 26;
+    var max = Math.max.apply(null, puntos.map(function(p){ return p.valor; }));
+    var min = Math.min.apply(null, puntos.map(function(p){ return p.valor; }));
+    if(max === min){ max += 1; min -= 1; }
+    function x(i){ return puntos.length > 1 ? PAD_I + (i * (W - PAD_I - PAD_D)) / (puntos.length - 1) : (W / 2); }
+    function y(v){ return H - PAD_AB - ((v - min) * (H - 2 * PAD_AB)) / (max - min); }
+    var linea = puntos.map(function(p, i){ return (i === 0 ? 'M' : 'L') + x(i).toFixed(1) + ',' + y(p.valor).toFixed(1); }).join(' ');
+    var puntosSvg = puntos.map(function(p, i){
+      return '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(p.valor).toFixed(1) + '" r="3" class="rpg-punto"><title>'
+        + esc(fmtDateLong(p.fecha)) + ': ' + rpgFmt(p.valor, 'Lt') + '</title></circle>';
+    }).join('');
+    var cadaCuantos = Math.max(1, Math.ceil(puntos.length / 8));
+    var etiquetas = puntos.map(function(p, i){
+      if(i !== 0 && i !== puntos.length - 1 && i % cadaCuantos !== 0) return '';
+      return '<text x="' + x(i).toFixed(1) + '" y="' + (H - 8) + '" class="rpg-eje" text-anchor="middle">' + esc(p.fecha.slice(8, 10)) + '</text>';
+    }).join('');
+    host.innerHTML = '<svg viewBox="0 0 ' + W + ' ' + H + '" class="rpg-svg" role="img" aria-label="Nivel de estanque enterrado durante el mes">'
+      + '<text x="4" y="14" class="rpg-eje">' + rpgFmt(max, 'Lt') + '</text>'
+      + '<text x="4" y="' + (H - PAD_AB + 4) + '" class="rpg-eje">' + rpgFmt(min, 'Lt') + '</text>'
+      + '<path d="' + linea + '" class="rpg-linea"/>' + puntosSvg + etiquetas + '</svg>';
+  }
+
+  function rpgEntrar(){ showView('reportes'); rpgMes = null; rpgCargar(); }
+  rpgEl('dash-card-reportes').addEventListener('click', rpgEntrar);
+  rpgEl('rpg-back-btn').addEventListener('click', function(){ showView('dashboard'); });
+  rpgEl('rpg-mes-ant').addEventListener('click', function(){
+    rpgMes = rpgMes || rpgMesActual();
+    rpgMes = { y: rpgMes.m === 1 ? rpgMes.y - 1 : rpgMes.y, m: rpgMes.m === 1 ? 12 : rpgMes.m - 1 };
+    rpgCargar();
+  });
+  rpgEl('rpg-mes-sig').addEventListener('click', function(){
+    rpgMes = rpgMes || rpgMesActual();
+    rpgMes = { y: rpgMes.m === 12 ? rpgMes.y + 1 : rpgMes.y, m: rpgMes.m === 12 ? 1 : rpgMes.m + 1 };
+    rpgCargar();
   });
 
 
