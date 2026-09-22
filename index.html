@@ -9,9 +9,9 @@
      guardados (p. ej. el estado "Stop" de un generador podia mostrarse como "Detener"). -->
 <meta name="google" content="notranslate">
 <!-- Politica de seguridad de contenido: la genera build.ps1 (incluye los hashes de los scripts en linea). -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-FdGt5oZ1nfp1DUHR/fpPytMhQWqLzsqfUcg3mRb+BNE=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=' https://www.gstatic.com/firebasejs/10.14.1/; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://zonadeguerreros.github.io; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-CS32gS6uKDWVlfAg43zopWWn95w6KZyBpXipGxnoIOI=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=' https://www.gstatic.com/firebasejs/10.14.1/; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://zonadeguerreros.github.io; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'none'; form-action 'none'">
 <title>Pauta de Chequeo Diario</title>
-<meta name="app-version" content="2026-09-22.0510-5dd285f0">
+<meta name="app-version" content="2026-09-22.0552-5dd285f0">
 <style>
   @font-face{
     font-family:"Roboto";
@@ -1925,7 +1925,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   }
 
   // ---------- version y aviso de actualizacion ----------
-  // Cada version publicada lleva un identificador (2026-09-22.0510-5dd285f0, lo genera compilar.js). Se compara contra la version
+  // Cada version publicada lleva un identificador (2026-09-22.0552-5dd285f0, lo genera compilar.js). Se compara contra la version
   // publicada de la web (mismo origen para todos: PC, celular o navegador) leyendo su etiqueta <meta name="app-version">.
   // Es una lectura publica de una pagina de solo texto: no requiere Firebase ni maneja datos del usuario.
   var APP_VERSION = (document.querySelector('meta[name="app-version"]') || {}).content || '';
@@ -2311,8 +2311,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   var saveTimer = null, savePending = false;
 
   // ---------- permisos ----------
-  // Jefe supervisor: puede todo. Tecnico: edita solo el dia de hoy; en dias anteriores solo ve.
-  var TECH_EXPORT_PAST = false; // true = el tecnico tambien podria descargar/imprimir dias anteriores
+  // Jefe supervisor: puede todo. Tecnico: edita solo el dia de hoy; en dias anteriores solo ve e imprime/descarga (no edita).
+  var TECH_EXPORT_PAST = true;
   var editableDay = true;
   function isJefe(){ return !!(currentProfile && currentProfile.role === 'jefe'); }
   function canEditDate(d){ return isJefe() || d === todayStr(); }
