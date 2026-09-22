@@ -9,9 +9,9 @@
      guardados (p. ej. el estado "Stop" de un generador podia mostrarse como "Detener"). -->
 <meta name="google" content="notranslate">
 <!-- Politica de seguridad de contenido: la genera build.ps1 (incluye los hashes de los scripts en linea). -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-S+tuygtDTaP22fyMXzoBQ/gUtHpnY6aSIJq/a2hGddk=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=' https://www.gstatic.com/firebasejs/10.14.1/; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://zonadeguerreros.github.io; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-V2PEOMseLas/M2EyrKyISoTGZmdGqLGuZ7fgnah5Hfw=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=' https://www.gstatic.com/firebasejs/10.14.1/; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://zonadeguerreros.github.io; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'none'; form-action 'none'">
 <title>Pauta de Chequeo Diario</title>
-<meta name="app-version" content="2026-09-22.0333-3670354d">
+<meta name="app-version" content="2026-09-22.0348-01f91dad">
 <style>
   @font-face{
     font-family:"Roboto";
@@ -571,13 +571,20 @@
   table.rpg-resumen th, table.rpg-resumen td{ padding:7px 10px; border-bottom:1px solid var(--line); text-align:right; }
   table.rpg-resumen th:first-child, table.rpg-resumen td:first-child{ text-align:left; color:var(--ink-dim); font-weight:600; }
   table.rpg-resumen th{ color:var(--ink-dim); font-weight:700; font-size:11.5px; text-transform:uppercase; letter-spacing:.03em; }
+  /* La tarjeta del empalme lleva un borde de color a la izquierda para que se note, de un vistazo, que no es de los generadores. */
+  .rpg-card-empalme{ border-left:4px solid var(--accent-strong); }
+  .rpg-stat{ display:flex; align-items:baseline; gap:10px; padding:4px 0 2px; }
+  .rpg-stat-label{ font-size:12.5px; font-weight:600; color:var(--ink-dim); }
+  .rpg-stat-valor{ font-size:22px; font-weight:700; color:var(--ink); }
   .rpg-tabla-wrap{ overflow-x:auto; border:1px solid var(--line); border-radius:8px; }
-  table.rpg-detalle{ width:100%; min-width:760px; border-collapse:collapse; font-size:12.5px; }
+  table.rpg-detalle{ width:100%; min-width:840px; border-collapse:collapse; font-size:12.5px; }
   table.rpg-detalle th, table.rpg-detalle td{ padding:6px 9px; border-bottom:1px solid var(--line); text-align:right; white-space:nowrap; }
   table.rpg-detalle th:first-child, table.rpg-detalle td:first-child,
   table.rpg-detalle th:nth-child(2), table.rpg-detalle td:nth-child(2){ text-align:left; }
   table.rpg-detalle thead th{ background:var(--surface-2); color:var(--ink-dim); font-weight:700; font-size:10.5px; text-transform:uppercase; letter-spacing:.03em; position:sticky; top:0; }
   table.rpg-detalle tbody tr:last-child td{ border-bottom:none; }
+  /* Columna del empalme: separada del resto (que es todo de los generadores) con una linea mas marcada. */
+  table.rpg-detalle .rpg-col-empalme, table.rpg-detalle .rpg-col-empalme-celda{ border-left:2px solid var(--accent-strong); background:var(--accent-bg); }
   .rpg-svg{ width:100%; height:auto; max-height:260px; }
   .rpg-linea{ fill:none; stroke:var(--accent-strong); stroke-width:2; stroke-linejoin:round; stroke-linecap:round; }
   .rpg-punto{ fill:var(--accent-strong); }
@@ -721,9 +728,14 @@
       </div>
       <div class="info-banner" id="rpg-nota" style="display:none"></div>
       <div class="inf-card">
-        <h2>Resumen del mes</h2>
+        <h2>Generadores · resumen del mes</h2>
         <div class="inf-note">Consumo de combustible y horas de funcionamiento: diferencia entre la última lectura del mes y la última lectura anterior a él (son contadores acumulados, no valores diarios).</div>
         <table class="rpg-resumen"><tbody id="rpg-tabla"></tbody></table>
+      </div>
+      <div class="inf-card rpg-card-empalme">
+        <h2>Suministro eléctrico (empalme) · resumen del mes</h2>
+        <div class="inf-note">No es de los generadores: es el consumo del empalme general del hospital. Misma forma de cálculo (diferencia con la última lectura anterior al mes).</div>
+        <div class="rpg-stat"><span class="rpg-stat-label">Consumo de energía</span><span class="rpg-stat-valor" id="rpg-empalme-valor"></span></div>
       </div>
       <div class="inf-card">
         <h2>Detalle diario del mes</h2>
@@ -732,7 +744,7 @@
             <th>Fecha</th><th>Técnico</th><th>Estado G1</th><th>Estado G2</th>
             <th>Consumo G1 (Lt)</th><th>Consumo G2 (Lt)</th>
             <th>Horómetro G1 (hrs)</th><th>Horómetro G2 (hrs)</th>
-            <th>Estanque enterrado (Lt)</th><th>Consumo empalme (KWh)</th>
+            <th>Estanque enterrado (Lt)</th><th class="rpg-col-empalme">Empalme: consumo (KWh)</th>
           </tr></thead>
           <tbody id="rpg-detalle-cuerpo"></tbody>
         </table></div>
@@ -1856,7 +1868,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   }
 
   // ---------- version y aviso de actualizacion ----------
-  // Cada version publicada lleva un identificador (2026-09-22.0333-3670354d, lo genera compilar.js). Se compara contra la version
+  // Cada version publicada lleva un identificador (2026-09-22.0348-01f91dad, lo genera compilar.js). Se compara contra la version
   // publicada de la web (mismo origen para todos: PC, celular o navegador) leyendo su etiqueta <meta name="app-version">.
   // Es una lectura publica de una pagina de solo texto: no requiere Firebase ni maneja datos del usuario.
   var APP_VERSION = (document.querySelector('meta[name="app-version"]') || {}).content || '';
@@ -5432,11 +5444,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     rpgMes = rpgMes || rpgMesActual();
     rpgActualizarBotones();
     rpgEl('rpg-tabla').innerHTML = '<tr><td colspan="3" class="empty">Calculando…</td></tr>';
+    rpgEl('rpg-empalme-valor').textContent = '…';
     rpgEl('rpg-detalle-cuerpo').innerHTML = '';
     rpgEl('rpg-grafico').innerHTML = '';
     if(!fbReady || !fbDb || !currentUser){
       rpgNota('Se necesita conexión a la nube para calcular el reporte.');
       rpgEl('rpg-tabla').innerHTML = '';
+      rpgEl('rpg-empalme-valor').textContent = '';
       return;
     }
     rpgNota('');
@@ -5453,12 +5467,14 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       registrarError('reportes: cargar mes', err);
       rpgNota('No se pudo calcular el reporte. Revisa tu conexión.');
       rpgEl('rpg-tabla').innerHTML = '';
+      rpgEl('rpg-empalme-valor').textContent = '';
     });
   }
 
   function rpgPintar(docsMes, docPrevio){
     if(!docsMes.length){
       rpgEl('rpg-tabla').innerHTML = '<tr><td colspan="3" class="empty">No hay pautas guardadas en este mes.</td></tr>';
+      rpgEl('rpg-empalme-valor').textContent = 'Sin dato';
       rpgEl('rpg-detalle-cuerpo').innerHTML = '<tr><td colspan="10" class="empty">No hay pautas guardadas en este mes.</td></tr>';
       rpgEl('rpg-grafico').innerHTML = '<div class="empty">Sin datos.</div>';
       return;
@@ -5469,11 +5485,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     var horasG2 = rpgDelta(docsMes, docPrevio, 'gen_horometro.g2');
     var kwh = rpgDelta(docsMes, docPrevio, 'elec_consumo.valor');
 
+    // Tabla de generadores (G1/G2). El empalme NO va aqui: es otra fuente (el suministro general del
+    // hospital, no un generador), por eso tiene su propia tarjeta y su propia columna en el detalle.
     rpgEl('rpg-tabla').innerHTML =
       '<tr><th></th><th>Grupo 1</th><th>Grupo 2</th></tr>'
       + rpgFila('Consumo de combustible', consumoG1, consumoG2, 'Lt')
-      + rpgFila('Horas de funcionamiento', horasG1, horasG2, 'hrs')
-      + '<tr><td>Consumo de energía (empalme)</td><td colspan="2">' + rpgFmt(kwh, 'KWh') + '</td></tr>';
+      + rpgFila('Horas de funcionamiento', horasG1, horasG2, 'hrs');
+    rpgEl('rpg-empalme-valor').textContent = rpgFmt(kwh, 'KWh');
 
     rpgEl('rpg-detalle-cuerpo').innerHTML = docsMes.map(function(d){
       return '<tr>'
@@ -5486,7 +5504,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
         + '<td>' + rpgCelda(rpgValor(d, 'gen_horometro.g1')) + '</td>'
         + '<td>' + rpgCelda(rpgValor(d, 'gen_horometro.g2')) + '</td>'
         + '<td>' + rpgCelda(rpgValor(d, 'gen_enterrado.nivel')) + '</td>'
-        + '<td>' + rpgCelda(rpgValor(d, 'elec_consumo.valor')) + '</td>'
+        + '<td class="rpg-col-empalme-celda">' + rpgCelda(rpgValor(d, 'elec_consumo.valor')) + '</td>'
         + '</tr>';
     }).join('');
 
