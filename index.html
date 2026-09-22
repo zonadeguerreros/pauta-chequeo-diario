@@ -9,9 +9,9 @@
      guardados (p. ej. el estado "Stop" de un generador podia mostrarse como "Detener"). -->
 <meta name="google" content="notranslate">
 <!-- Politica de seguridad de contenido: la genera build.ps1 (incluye los hashes de los scripts en linea). -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-7Q5+LqaG4qriw5wT5TKa4a5cgWcsYw89xJ7GTURIARk=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=' https://www.gstatic.com/firebasejs/10.14.1/; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://zonadeguerreros.github.io; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-shzAd4bHn7imT8XEa3Lf96xE1bJbzd/HQaYp8RpQ86U=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=' https://www.gstatic.com/firebasejs/10.14.1/; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://zonadeguerreros.github.io; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'none'; form-action 'none'">
 <title>Pauta de Chequeo Diario</title>
-<meta name="app-version" content="2026-09-22.0433-1227e8b6">
+<meta name="app-version" content="2026-09-22.0454-2b3fc5b5">
 <style>
   @font-face{
     font-family:"Roboto";
@@ -1751,6 +1751,58 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     return { offline: true };
   }
 
+  // ---------- nube: "otra persona ya guardo esto mientras lo editabas" (pauta, informes y solicitudes) ----------
+  // Mismo cuadro (3 opciones) en los 3 lugares; solo cambian las palabras exactas de la cosa de la que se habla.
+  // o = { entidad: 'esta pauta' (para el titulo), enQue: 'la pauta de este día' (para "guardó cambios en ..."), pronombre: 'la'|'lo' }
+  // Devuelve una promesa: 'nada' (seguir editando) | 'nube' (ver la version de la nube) | 'mio' (guardar la mia encima)
+  function dialogoConflicto(lastEditedBy, o){
+    var quien = lastEditedBy || 'otra persona';
+    return dialogo({
+      titulo: 'Otra persona modificó ' + o.entidad,
+      mensaje: quien + ' guardó cambios en ' + o.enQue + ' mientras ' + o.pronombre + ' editabas. Tus cambios todavía no se subieron.\n\n'
+        + '• «Ver la versión de la nube»: descarta tus cambios y muestra lo que se guardó.\n'
+        + '• «Guardar la mía encima»: reemplaza lo que se guardó por tu versión.\n'
+        + '• «Seguir editando»: no hace nada por ahora (se avisará de nuevo al guardar).',
+      botones: [
+        { texto: 'Seguir editando', valor: 'nada', tipo: 'ghost' },
+        { texto: 'Ver la versión de la nube', valor: 'nube', tipo: 'primary' },
+        { texto: 'Guardar la mía encima', valor: 'mio', tipo: 'danger' }
+      ],
+      cancelValor: 'nada'
+    });
+  }
+
+  // ---------- nube: subir documentos guardados localmente que quedaron "pendientes" (sin conexion, etc.) ----------
+  // Recorre, uno a la vez (para no saturar la conexion), los documentos marcados _pending: si alguien mas ya guardo una
+  // version distinta en la nube (compara el contador "rev"), lo deja marcado como conflicto (se resuelve al volver a
+  // abrirlo) y si no, lo sube. Mismo recorrido en pauta, informes y solicitudes; cada uno aporta sus propios pasos.
+  // cfg = { coleccion (nombre en Firestore), listar()->Promise<[meta,...]> (TODOS los guardados localmente, sin filtrar),
+  //         obtener(meta)->Promise<doc|null> (documento completo; puede ser el mismo meta si listar() ya lo trae entero),
+  //         idDe(doc)->string (por defecto doc.id; la pauta usa doc.date), normalizar(doc)->doc,
+  //         filtro(meta)->bool (opcional, ademas de _pending y no _conflicto),
+  //         marcarConflicto(doc)->Promise, subir(doc)->Promise, alError(err, meta)->Promise|void (por defecto: registrarError) }
+  function sincronizarPendientes(cfg){
+    var idDe = cfg.idDe || function(d){ return d.id; };
+    return cfg.listar().then(function(list){
+      var pend = list.filter(function(x){ return x && x._pending && !x._conflicto && (!cfg.filtro || cfg.filtro(x)); });
+      return pend.reduce(function(cadena, meta){
+        return cadena.then(function(){
+          return cfg.obtener(meta).then(function(full){
+            if(!full) return;
+            cfg.normalizar(full);
+            return withTimeout(fbDb.collection(cfg.coleccion).doc(idDe(full)).get(), 8000).then(function(snap){
+              if(snap.exists && (snap.data().rev || 0) !== (full.rev || 0)){ full._conflicto = true; return cfg.marcarConflicto(full); }
+              return cfg.subir(full);
+            }).catch(function(err){
+              if(cfg.alError) return cfg.alError(err, meta);
+              registrarError(cfg.coleccion + ': sincronizar', err);
+            });
+          });
+        });
+      }, Promise.resolve());
+    });
+  }
+
   // ---------- funcionarios: nombres que se eligen en las pautas, informes y solicitudes ----------
   // La lista vive en Firestore (config/funcionarios) y la edita el jefe (panel "Cuentas y accesos"): asi los nombres no van escritos
   // en la pagina publica. Se guarda una copia en el navegador para usarla sin conexion; al cerrar sesion se borra.
@@ -1873,7 +1925,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   }
 
   // ---------- version y aviso de actualizacion ----------
-  // Cada version publicada lleva un identificador (2026-09-22.0433-1227e8b6, lo genera compilar.js). Se compara contra la version
+  // Cada version publicada lleva un identificador (2026-09-22.0454-2b3fc5b5, lo genera compilar.js). Se compara contra la version
   // publicada de la web (mismo origen para todos: PC, celular o navegador) leyendo su etiqueta <meta name="app-version">.
   // Es una lectura publica de una pagina de solo texto: no requiere Firebase ni maneja datos del usuario.
   var APP_VERSION = (document.querySelector('meta[name="app-version"]') || {}).content || '';
@@ -2786,30 +2838,27 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   // El servidor (reglas de Firestore) solo deja al técnico guardar la pauta de hoy, según la hora de Chile.
   var DENIED_MSG = 'La nube no aceptó guardar esta pauta: solo se puede guardar la pauta de hoy (hora de Chile). Quedó en ' + ESTE_EQUIPO + '; si necesitas corregir otro día, pídeselo al jefe supervisor.';
 
-  // Pautas guardadas en este equipo que aun no llegan a la nube (marca _pending).
-  function pendingLocalEntries(){ return almacenPautas.pendientes().then(function(a){ return a.filter(function(e){ return !e._conflicto; }); }); }
-
   var syncing = false;
+  // Sube las pautas guardadas en este equipo que aun no llegan a la nube (marca _pending). Ver sincronizarPendientes en comun.js
+  // (mismo recorrido que usan informes y solicitudes); aqui ademas se cuenta cuantas subieron o se rechazaron, para el aviso.
   function syncPending(){
     if(syncing || !fbReady || !fbDb || !currentUser) return Promise.resolve();
     syncing = true;
     var uploaded = 0, rejected = 0;
-    return pendingLocalEntries().then(function(pend){
-      return pend.reduce(function(chain, e){
-        return chain.then(function(){
-          var ref = fbDb.collection('checklists').doc(e.date);
-          return withTimeout(ref.get(), 8000).then(function(doc){
-            // Si otra persona la guardo mientras tanto, no se sube sola: queda marcada como conflicto y se resuelve al abrir ese dia.
-            if(doc.exists && (doc.data().rev || 0) !== (e.rev || 0)){ return saveLocalCopy(Object.assign({}, e, { _conflicto: true })); }
-            var clean = Object.assign({}, e); delete clean._pending; delete clean._conflicto;
-            return guardarSinPisar(ref, clean, clean, {}).then(function(){ uploaded++; return saveLocalCopy(clean); });
-          }).catch(function(err){
-            // Rechazada por el servidor (fecha que ya no se puede guardar): se deja de reintentar, la copia queda en este equipo.
-            if(err && err.code === 'permission-denied'){ var c2 = Object.assign({}, e); delete c2._pending; rejected++; return saveLocalCopy(c2); }
-            registrarError('syncPending', err);
-          });
-        });
-      }, Promise.resolve());
+    return sincronizarPendientes({
+      coleccion: 'checklists', listar: almacenPautas.listar, idDe: function(d){ return d.date; },
+      obtener: function(meta){ return loadLocalCopy(meta.date); }, normalizar: function(d){ return d; },
+      marcarConflicto: function(e){ return saveLocalCopy(Object.assign({}, e, { _conflicto: true })); },
+      subir: function(e){
+        var ref = fbDb.collection('checklists').doc(e.date);
+        var clean = Object.assign({}, e); delete clean._pending; delete clean._conflicto;
+        return guardarSinPisar(ref, clean, clean, {}).then(function(){ uploaded++; return saveLocalCopy(clean); });
+      },
+      // Rechazada por el servidor (fecha que ya no se puede guardar): se deja de reintentar, la copia queda en este equipo.
+      alError: function(err, e){
+        if(err && err.code === 'permission-denied'){ var c2 = Object.assign({}, e); delete c2._pending; rejected++; return saveLocalCopy(c2); }
+        registrarError('syncPending', err);
+      }
     }).then(function(){
       syncing = false;
       if(uploaded){ setLocalBanner('Se subieron a la nube '+uploaded+' pauta(s) que estaban pendientes por falta de conexión.', false); }
@@ -2840,24 +2889,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     }).then(function(){ savePending = false; updateSummary(); });
   }
 
-  // Otra persona guardo la pauta de este dia mientras se editaba: se pregunta que hacer (nunca se pisa en silencio).
+  // Otra persona guardo la pauta de este dia mientras se editaba: se pregunta que hacer (nunca se pisa en silencio). Ver dialogoConflicto en comun.js.
   function pautaAlConflicto(st, nube){
     if(pautaConflictoAbierto || !st) return Promise.resolve();
     pautaConflictoAbierto = true;
-    var quien = (nube && nube.lastEditedBy) || 'otra persona';
-    return dialogo({
-      titulo: 'Otra persona modificó esta pauta',
-      mensaje: quien + ' guardó cambios en la pauta de este día mientras la editabas. Tus cambios todavía no se subieron.\n\n'
-        + '• «Ver la versión de la nube»: descarta tus cambios y muestra lo que se guardó.\n'
-        + '• «Guardar la mía encima»: reemplaza lo que se guardó por tu versión.\n'
-        + '• «Seguir editando»: no hace nada por ahora (se avisará de nuevo al guardar).',
-      botones: [
-        { texto: 'Seguir editando', valor: 'nada', tipo: 'ghost' },
-        { texto: 'Ver la versión de la nube', valor: 'nube', tipo: 'primary' },
-        { texto: 'Guardar la mía encima', valor: 'mio', tipo: 'danger' }
-      ],
-      cancelValor: 'nada'
-    }).then(function(v){
+    return dialogoConflicto((nube && nube.lastEditedBy), { entidad: 'esta pauta', enQue: 'la pauta de este día', pronombre: 'la' }).then(function(v){
       pautaConflictoAbierto = false;
       if(v === 'nube'){
         if(saveTimer){ clearTimeout(saveTimer); saveTimer = null; }
@@ -3277,25 +3313,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     }
   }
 
-  // Otra persona guardo este informe mientras se editaba: se pregunta que hacer (nunca se pisa en silencio).
+  // Otra persona guardo este informe mientras se editaba: se pregunta que hacer (nunca se pisa en silencio). Ver dialogoConflicto en comun.js.
   var infConflictoAbierto = false;
   function infAlConflicto(st, nube){
     if(infConflictoAbierto || !st) return;
     infConflictoAbierto = true;
-    var quien = (nube && nube.lastEditedBy) || 'otra persona';
-    dialogo({
-      titulo: 'Otra persona modificó este informe',
-      mensaje: quien + ' guardó cambios en este informe mientras lo editabas. Tus cambios todavía no se subieron.\n\n'
-        + '• «Ver la versión de la nube»: descarta tus cambios y muestra lo que guardó la otra persona.\n'
-        + '• «Guardar la mía encima»: reemplaza lo que guardó la otra persona por tu versión.\n'
-        + '• «Seguir editando»: no hace nada por ahora (se avisará de nuevo al guardar).',
-      botones: [
-        { texto: 'Seguir editando', valor: 'nada', tipo: 'ghost' },
-        { texto: 'Ver la versión de la nube', valor: 'nube', tipo: 'primary' },
-        { texto: 'Guardar la mía encima', valor: 'mio', tipo: 'danger' }
-      ],
-      cancelValor: 'nada'
-    }).then(function(v){
+    dialogoConflicto((nube && nube.lastEditedBy), { entidad: 'este informe', enQue: 'este informe', pronombre: 'lo' }).then(function(v){
       infConflictoAbierto = false;
       if(v === 'nube'){
         if(infSaveTimer){ clearTimeout(infSaveTimer); infSaveTimer = null; }
@@ -3338,7 +3361,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     return infLocalSave(st, true).then(function(){ return infCloudSave(st); }).then(infTrasGuardadoNube);
   }
 
-  // Sube lo que quedo pendiente por falta de conexion.
+  // Sube lo que quedo pendiente por falta de conexion. Ver sincronizarPendientes en comun.js (mismo recorrido que usan la pauta y las solicitudes).
   function infSyncPending(){
     if(infSyncing || !infNubeLista()) return Promise.resolve();
     // El informe abierto: si quedo algo sin subir, se reintenta por el guardado normal.
@@ -3346,23 +3369,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       infCloudSave(infState).then(infTrasGuardadoNube);
     }
     infSyncing = true;
-    return infLocalList().then(function(list){
+    return sincronizarPendientes({
+      coleccion: 'informes', listar: infLocalList, obtener: function(meta){ return infLocalGet(meta.id); }, normalizar: infNormalizar,
       // El informe abierto en el editor se guarda por su propio camino (evita subir una copia vieja encima).
-      var pend = list.filter(function(x){ return x && x._pending && !x._conflicto && !(infState && infEditable && infState.id === x.id); });
-      return pend.reduce(function(chain, meta){
-        return chain.then(function(){
-          return infLocalGet(meta.id).then(function(full){
-            if(!full) return;
-            infNormalizar(full);
-            var ref = fbDb.collection('informes').doc(full.id);
-            return withTimeout(ref.get(), 8000).then(function(snap){
-              // Si otra persona lo guardo mientras tanto, no se sube solo: queda marcado como conflicto y se resuelve al abrirlo.
-              if(snap.exists && (snap.data().rev || 0) !== (full.rev || 0)){ full._conflicto = true; return infLocalSave(full, true); }
-              return infCloudSave(Object.assign(full, { _finalizando: full.estado === 'final' }));
-            }).catch(function(err){ registrarError('informe: sincronizar', err); });
-          });
-        });
-      }, Promise.resolve());
+      filtro: function(x){ return !(infState && infEditable && infState.id === x.id); },
+      marcarConflicto: function(full){ return infLocalSave(full, true); },
+      subir: function(full){ return infCloudSave(Object.assign(full, { _finalizando: full.estado === 'final' })); }
     }).then(function(){ infSyncing = false; }, function(){ infSyncing = false; });
   }
 
@@ -4415,25 +4427,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     else { solSetStatus('Guardado en este dispositivo'); solSetBanner(SOL_MSG_OFFLINE, 'info'); }
   }
 
-  // Otra persona guardo esta solicitud mientras se editaba: se pregunta que hacer (nunca se pisa en silencio).
+  // Otra persona guardo esta solicitud mientras se editaba: se pregunta que hacer (nunca se pisa en silencio). Ver dialogoConflicto en comun.js.
   var solConflictoAbierto = false;
   function solAlConflicto(s, nube){
     if(solConflictoAbierto || !s) return;
     solConflictoAbierto = true;
-    var quien = (nube && nube.lastEditedBy) || 'otra persona';
-    dialogo({
-      titulo: 'Otra persona modificó esta solicitud',
-      mensaje: quien + ' guardó cambios en esta solicitud mientras la editabas. Tus cambios todavía no se subieron.\n\n'
-        + '• «Ver la versión de la nube»: descarta tus cambios y muestra lo que se guardó.\n'
-        + '• «Guardar la mía encima»: reemplaza lo que se guardó por tu versión.\n'
-        + '• «Seguir editando»: no hace nada por ahora (se avisará de nuevo al guardar).',
-      botones: [
-        { texto: 'Seguir editando', valor: 'nada', tipo: 'ghost' },
-        { texto: 'Ver la versión de la nube', valor: 'nube', tipo: 'primary' },
-        { texto: 'Guardar la mía encima', valor: 'mio', tipo: 'danger' }
-      ],
-      cancelValor: 'nada'
-    }).then(function(v){
+    dialogoConflicto((nube && nube.lastEditedBy), { entidad: 'esta solicitud', enQue: 'esta solicitud', pronombre: 'la' }).then(function(v){
       solConflictoAbierto = false;
       if(v === 'nube'){
         if(solSaveTimer){ clearTimeout(solSaveTimer); solSaveTimer = null; }
@@ -4474,25 +4473,17 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     return solLocalSave(s, s.estado !== 'borrador').then(function(){ return solCloudSave(s); }).then(solTrasNube);
   }
 
+  // Sube lo que quedo pendiente por falta de conexion. Ver sincronizarPendientes en comun.js (mismo recorrido que usan la pauta y los informes).
   function solSyncPending(){
     if(solSyncing || !infNubeLista()) return Promise.resolve();
     if(solState && solCloudPend && solState.estado !== 'borrador' && !solSaveTimer && !solCloudTimer){ solCloudSave(solState).then(solTrasNube); }
     solSyncing = true;
-    return solLocalList().then(function(list){
-      var pend = list.filter(function(x){ return x && x._pending && !x._conflicto && x.estado !== 'borrador' && !(solState && solState.id === x.id); });
-      return pend.reduce(function(cadena, meta){
-        return cadena.then(function(){
-          return solLocalGet(meta.id).then(function(full){
-            if(!full) return;
-            solNormalizar(full);
-            return withTimeout(fbDb.collection('solicitudes').doc(full.id).get(), 8000).then(function(snap){
-              // Si otra persona la guardo mientras tanto, no se sube sola: queda marcada como conflicto y se resuelve al abrirla.
-              if(snap.exists && (snap.data().rev || 0) !== (full.rev || 0)){ full._conflicto = true; return solLocalSave(full, true, true); }
-              return solCloudSave(full);
-            }).catch(function(err){ registrarError('solicitud: sincronizar', err); });
-          });
-        });
-      }, Promise.resolve());
+    return sincronizarPendientes({
+      coleccion: 'solicitudes', listar: solLocalList, obtener: function(meta){ return solLocalGet(meta.id); }, normalizar: solNormalizar,
+      // La solicitud abierta en el editor se guarda por su propio camino; un borrador nunca sube solo (recien al enviarlo).
+      filtro: function(x){ return x.estado !== 'borrador' && !(solState && solState.id === x.id); },
+      marcarConflicto: function(full){ return solLocalSave(full, true, true); },
+      subir: function(full){ return solCloudSave(full); }
     }).then(function(){ solSyncing = false; }, function(){ solSyncing = false; });
   }
 
