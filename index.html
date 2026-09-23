@@ -9,9 +9,9 @@
      guardados (p. ej. el estado "Stop" de un generador podia mostrarse como "Detener"). -->
 <meta name="google" content="notranslate">
 <!-- Politica de seguridad de contenido: la genera build.ps1 (incluye los hashes de los scripts en linea). -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-+1uDKEgLdZfNzM7u+ihhW5QHb2EqhjODZSlxQuZR4G4=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=' https://www.gstatic.com/firebasejs/10.14.1/; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://zonadeguerreros.github.io; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-La1/vcrDOBQY7C+eeNisAFAGfut6EtgP2IaL3nXeuL0=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=' https://www.gstatic.com/firebasejs/10.14.1/; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://zonadeguerreros.github.io; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'none'; form-action 'none'">
 <title>Pauta de Chequeo Diario</title>
-<meta name="app-version" content="2026-09-23.1815-bdb437a7">
+<meta name="app-version" content="2026-09-23.1921-e3de1975">
 <style>
   @font-face{
     font-family:"Roboto";
@@ -175,7 +175,7 @@
   .photo-caption{ padding:5px 9px; font-size:11px; color:#333; }
   .photo-caption b{ display:block; font-size:9px; text-transform:uppercase; letter-spacing:.03em; color:#777; font-weight:700; }
 
-  #view-historial{ display:flex; flex-direction:column; gap:10px; }
+  .pauta-historial{ display:flex; flex-direction:column; gap:10px; }
   .hist-card{ background:var(--surface); border:1px solid var(--line); border-radius:8px; overflow:hidden; }
   .hist-head{ display:flex; align-items:center; gap:12px; padding:11px 14px; cursor:pointer; flex-wrap:wrap; }
   .hist-date{ font-weight:700; font-size:14.5px; flex:1; min-width:140px; }
@@ -604,6 +604,23 @@
   }
 
 
+  /* ---- Pauta Diaria de Generadores: reusa la mayoria de estilos de la pauta de chequeo diario (table.sheet, chk-mark, dfield,
+     .pauta-hoy/.pauta-historial para el apilado en celular...). Solo lo que es propio de este modulo va aqui. ---- */
+  #view-pauta-generadores[hidden]{ display:none; }
+  #gd-sheet-table.readonly .sig-canvas{ pointer-events:none; cursor:default; }
+  #gd-sheet-table.readonly input:disabled, #gd-sheet-table.readonly select:disabled, #gd-sheet-table.readonly textarea:disabled{ opacity:1; -webkit-text-fill-color:currentColor; cursor:default; }
+  /* Casilla G1/G2 "por generador" dentro de un .dfield (items sin observacion ni casilla propia en la columna Check): reusa .chk-mark. */
+  .chk-td-mini{ position:relative; display:inline-flex; width:18px; height:18px; cursor:pointer; }
+  .chk-td-mini input{ position:absolute; inset:0; opacity:0; margin:0; cursor:pointer; }
+  @media print{
+    #view-pauta-generadores{ display:none !important; }
+  }
+  @media screen and (max-width:640px){
+    #gd-summary-line{ gap:6px 10px; font-size:11.5px; }
+    .chk-td-mini{ width:22px; height:22px; }
+  }
+
+
   /* ---- Mobile / small screens (phones, small tablets) — screen only, never print ---- */
   @media screen and (max-width: 640px){
     body{ padding-inline:10px; padding-block:12px 40px; }
@@ -641,26 +658,28 @@
 
     /* La tabla de 3 columnas se apila: descripcion + casilla arriba, datos abajo.
        Asi cabe en el ancho del celular sin desplazar la pantalla de lado.
-       Solo en pantalla (#view-hoy / #view-historial): el PDF y la impresion no cambian. */
-    #view-hoy table.sheet, #view-historial table.sheet{ min-width:0; }
-    #view-hoy table.sheet, #view-hoy table.sheet tbody,
-    #view-historial table.sheet, #view-historial table.sheet tbody{ display:block; width:100%; }
-    #view-hoy table.sheet colgroup, #view-historial table.sheet colgroup,
-    #view-hoy tr.colhead-row, #view-historial tr.colhead-row{ display:none; }
-    #view-hoy tr.title-row, #view-hoy tr.meta-row, #view-hoy tr.section-row, #view-hoy tr.sig-row, #view-hoy tr.subhead-row,
-    #view-historial tr.title-row, #view-historial tr.meta-row, #view-historial tr.section-row, #view-historial tr.sig-row, #view-historial tr.subhead-row{ display:block; }
-    #view-hoy tr.title-row td, #view-hoy tr.meta-row td, #view-hoy tr.section-row td, #view-hoy tr.sig-row td, #view-hoy tr.subhead-row td.desc,
-    #view-historial tr.title-row td, #view-historial tr.meta-row td, #view-historial tr.section-row td, #view-historial tr.sig-row td, #view-historial tr.subhead-row td.desc{ display:block; }
-    #view-hoy tr.subhead-row td.chk, #view-hoy tr.subhead-row td.datos,
-    #view-historial tr.subhead-row td.chk, #view-historial tr.subhead-row td.datos{ display:none; }
-    #view-hoy tr.item-row, #view-historial tr.item-row{ display:grid; grid-template-columns:minmax(0,1fr) 52px; }
-    #view-hoy tr.item-row td.desc, #view-historial tr.item-row td.desc{ grid-column:1; grid-row:1; }
-    #view-hoy tr.item-row td.chk, #view-historial tr.item-row td.chk{ grid-column:2; grid-row:1; display:flex; align-items:center; justify-content:center; }
-    #view-hoy tr.item-row td.datos, #view-historial tr.item-row td.datos{ grid-column:1 / -1; grid-row:2; border-top:none; min-width:0; }
-    #view-hoy .chk-mark{ width:24px; height:24px; font-size:17px; }
-    #view-hoy .dfields, #view-hoy .transfo-grps, #view-historial .dfields, #view-historial .transfo-grps{ min-width:0; }
-    #view-hoy .obs-input{ min-width:0; width:100%; }
-    #view-hoy .datos-row{ min-width:0; }
+       Solo en pantalla (.pauta-hoy / .pauta-historial): el PDF y la impresion no cambian.
+       Clase compartida (no solo la pauta de chequeo diario): cualquier modulo con una tabla.sheet
+       igual (p. ej. la pauta de generadores) le pone esta clase a su "hoy"/"historial" y hereda esto. */
+    .pauta-hoy table.sheet, .pauta-historial table.sheet{ min-width:0; }
+    .pauta-hoy table.sheet, .pauta-hoy table.sheet tbody,
+    .pauta-historial table.sheet, .pauta-historial table.sheet tbody{ display:block; width:100%; }
+    .pauta-hoy table.sheet colgroup, .pauta-historial table.sheet colgroup,
+    .pauta-hoy tr.colhead-row, .pauta-historial tr.colhead-row{ display:none; }
+    .pauta-hoy tr.title-row, .pauta-hoy tr.meta-row, .pauta-hoy tr.section-row, .pauta-hoy tr.sig-row, .pauta-hoy tr.subhead-row,
+    .pauta-historial tr.title-row, .pauta-historial tr.meta-row, .pauta-historial tr.section-row, .pauta-historial tr.sig-row, .pauta-historial tr.subhead-row{ display:block; }
+    .pauta-hoy tr.title-row td, .pauta-hoy tr.meta-row td, .pauta-hoy tr.section-row td, .pauta-hoy tr.sig-row td, .pauta-hoy tr.subhead-row td.desc,
+    .pauta-historial tr.title-row td, .pauta-historial tr.meta-row td, .pauta-historial tr.section-row td, .pauta-historial tr.sig-row td, .pauta-historial tr.subhead-row td.desc{ display:block; }
+    .pauta-hoy tr.subhead-row td.chk, .pauta-hoy tr.subhead-row td.datos,
+    .pauta-historial tr.subhead-row td.chk, .pauta-historial tr.subhead-row td.datos{ display:none; }
+    .pauta-hoy tr.item-row, .pauta-historial tr.item-row{ display:grid; grid-template-columns:minmax(0,1fr) 52px; }
+    .pauta-hoy tr.item-row td.desc, .pauta-historial tr.item-row td.desc{ grid-column:1; grid-row:1; }
+    .pauta-hoy tr.item-row td.chk, .pauta-historial tr.item-row td.chk{ grid-column:2; grid-row:1; display:flex; align-items:center; justify-content:center; }
+    .pauta-hoy tr.item-row td.datos, .pauta-historial tr.item-row td.datos{ grid-column:1 / -1; grid-row:2; border-top:none; min-width:0; }
+    .pauta-hoy .chk-mark{ width:24px; height:24px; font-size:17px; }
+    .pauta-hoy .dfields, .pauta-hoy .transfo-grps, .pauta-historial .dfields, .pauta-historial .transfo-grps{ min-width:0; }
+    .pauta-hoy .obs-input{ min-width:0; width:100%; }
+    .pauta-hoy .datos-row{ min-width:0; }
     table.sheet td{ padding:5px 7px; }
     col.col-chk{ width:46px; }
 
@@ -709,7 +728,10 @@
         <span class="dash-card-title">Pauta de Chequeo Diario</span>
         <span class="dash-card-desc">Chequeo diario de electricidad</span>
       </button>
-      <div class="dash-card disabled"><span class="dash-card-title">Pauta Diaria de Generadores</span><span class="dash-card-tag">Próximamente</span></div>
+      <button type="button" class="dash-card" id="dash-card-generadores">
+        <span class="dash-card-title">Pauta Diaria de Generadores</span>
+        <span class="dash-card-desc">Inspección diaria de grupo electrógeno</span>
+      </button>
       <div class="dash-card disabled"><span class="dash-card-title">Pauta Semanal de Generadores</span><span class="dash-card-tag">Próximamente</span></div>
       <button type="button" class="dash-card" id="dash-card-informes">
         <span class="dash-card-title">Novedades del Turno</span>
@@ -789,13 +811,13 @@
 
   <div class="info-banner" id="local-banner">Los datos de esta pauta se guardan en este navegador y este dispositivo. Para pasarlos a otro equipo, usa "Imprimir / PDF" o copia este mismo archivo.</div>
 
-  <section id="view-hoy">
+  <section id="view-hoy" class="pauta-hoy">
     <div class="sheet-wrap">
       <table class="sheet" id="sheet-table"></table>
     </div>
   </section>
 
-  <section id="view-historial" hidden></section>
+  <section id="view-historial" class="pauta-historial" hidden></section>
 
   </div>
 
@@ -1003,6 +1025,39 @@
     <div id="cu-pendientes"></div>
     <div class="inf-bar"><div class="inf-title">Cuentas oficiales</div></div>
     <div id="cu-oficiales"></div>
+  </div>
+
+
+  <div id="view-pauta-generadores" hidden>
+
+  <div class="toolbar">
+    <button type="button" class="ghost-btn" id="gd-back-to-dash-btn">← Menú</button>
+    <div class="tabs" role="tablist">
+      <button class="tab" id="gd-tab-hoy" role="tab" aria-selected="true">Hoy</button>
+      <button class="tab" id="gd-tab-historial" role="tab" aria-selected="false">Historial</button>
+    </div>
+    <div class="summary" id="gd-summary-line">
+      <span class="pill neutral" id="gd-status-pill">Sin iniciar</span>
+      <span><b id="gd-summary-frac">0/19</b> completados</span>
+      <div class="bar"><i id="gd-summary-bar"></i></div>
+      <span id="gd-summary-updated">Sin cambios guardados aún</span>
+    </div>
+    <div class="spacer"></div>
+    <button class="btn" id="gd-download-btn">Descargar</button>
+    <button class="btn" id="gd-print-btn">Imprimir / PDF</button>
+    <button class="btn primary" id="gd-save-btn">Guardar</button>
+  </div>
+
+  <div class="info-banner" id="gd-local-banner">Los datos de esta pauta se guardan en este navegador y este dispositivo. Para pasarlos a otro equipo, usa "Imprimir / PDF" o copia este mismo archivo.</div>
+
+  <section id="gd-view-hoy" class="pauta-hoy">
+    <div class="sheet-wrap">
+      <table class="sheet" id="gd-sheet-table"></table>
+    </div>
+  </section>
+
+  <section id="gd-view-historial" class="pauta-historial" hidden></section>
+
   </div>
 
 
@@ -1929,7 +1984,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   }
 
   // ---------- version y aviso de actualizacion ----------
-  // Cada version publicada lleva un identificador (2026-09-23.1815-bdb437a7, lo genera compilar.js). Se compara contra la version
+  // Cada version publicada lleva un identificador (2026-09-23.1921-e3de1975, lo genera compilar.js). Se compara contra la version
   // publicada de la web (mismo origen para todos: PC, celular o navegador) leyendo su etiqueta <meta name="app-version">.
   // Es una lectura publica de una pagina de solo texto: no requiere Firebase ni maneja datos del usuario.
   var APP_VERSION = (document.querySelector('meta[name="app-version"]') || {}).content || '';
@@ -2033,6 +2088,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     document.getElementById('view-auth').hidden = name !== 'auth';
     document.getElementById('view-dashboard').hidden = name !== 'dashboard';
     document.getElementById('view-pauta-diaria').hidden = name !== 'pauta-diaria';
+    document.getElementById('view-pauta-generadores').hidden = name !== 'pauta-generadores';
     document.getElementById('view-informes').hidden = name !== 'informes';
     document.getElementById('view-solicitudes').hidden = name !== 'solicitudes';
     document.getElementById('view-cuentas').hidden = name !== 'cuentas';
@@ -2179,7 +2235,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
         if(cuRegistrando) return;   // se esta creando la cuenta: su perfil aun no existe
         cuEntrarConUsuario(user);
       } else {
-        currentUser = null; currentProfile = null; pautaInited = false;
+        currentUser = null; currentProfile = null; pautaInited = false; gdInited = false;
         infReiniciar();
         solReiniciar();
         cuReiniciar();
@@ -5579,6 +5635,640 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     rpgMes = { y: rpgMes.m === 12 ? rpgMes.y + 1 : rpgMes.y, m: rpgMes.m === 12 ? 1 : rpgMes.m + 1 };
     rpgCargar();
   });
+
+
+  // =====================================================================
+  //  PAUTA DIARIA DE GENERADORES — inspeccion diaria de grupo electrogeno (G1 y G2).
+  //  Funciona exactamente igual que la Pauta de Chequeo Diario (guardar, ver, descargar,
+  //  imprimir, historial, firma, conflictos, sin conexion, no sube a la nube hasta estar
+  //  completa): es un modulo aparte (coleccion "checklistsGeneradores") porque la forma de
+  //  cada item es distinta (todo es G1/G2: o una casilla por generador, o un numero por
+  //  generador — no hay una casilla general aparte como en la pauta principal).
+  //  Basado en la planilla "Check diario Grupo Electrogeno" que aporto el usuario.
+  // =====================================================================
+  var GD_SECTIONS = [
+    { id:'gd_inspeccion', title:'Inspección diaria de grupo electrógeno', items:[
+      { id:'gd_limpieza', label:'Comprobar limpieza', type:'check', fields:[{key:'g1',label:'G1',kind:'check'},{key:'g2',label:'G2',kind:'check'}] },
+      { id:'gd_calefactor', label:'Comprobar calefactor', type:'check', fields:[{key:'g1',label:'G1',kind:'check'},{key:'g2',label:'G2',kind:'check'}] },
+      { id:'gd_medir_baterias', label:'Medir baterías', type:'check', fields:[{key:'g1',label:'G1',kind:'check'},{key:'g2',label:'G2',kind:'check'}] },
+      { id:'gd_voltaje_baterias', label:'Voltaje baterías', type:'check', fields:[{key:'g1',label:'G1',kind:'number',unit:'V',yellow:true},{key:'g2',label:'G2',kind:'number',unit:'V',yellow:true}] },
+      { id:'gd_tablero', label:'Tablero de control', type:'check', fields:[{key:'g1',label:'G1',kind:'check'},{key:'g2',label:'G2',kind:'check'}] },
+      { id:'gd_refrigerante', label:'Comprobar nivel de refrigerante', type:'check', fields:[{key:'g1',label:'G1',kind:'check'},{key:'g2',label:'G2',kind:'check'}] },
+      { id:'gd_filtro_aire', label:'Inspeccionar indicador de servicio filtro de aire motor', type:'check', fields:[{key:'g1',label:'G1',kind:'check'},{key:'g2',label:'G2',kind:'check'}] },
+      { id:'gd_aceite_motor', label:'Comprobar nivel de aceite del motor', type:'check', fields:[{key:'g1',label:'G1',kind:'check'},{key:'g2',label:'G2',kind:'check'}] },
+      { id:'gd_drenar_filtro', label:'Drenar filtro primario del sistema combustible', type:'check', fields:[{key:'g1',label:'G1',kind:'check'},{key:'g2',label:'G2',kind:'check'}] },
+      { id:'gd_drenar_agua', label:'Drenar agua y sedimentos del tanque combustible', type:'check', fields:[{key:'g1',label:'G1',kind:'check'},{key:'g2',label:'G2',kind:'check'}] },
+      { id:'gd_insp_maquina', label:'Inspeccionar alrededor de la máquina', type:'check', fields:[{key:'g1',label:'G1',kind:'check'},{key:'g2',label:'G2',kind:'check'}] },
+      { id:'gd_nivel_estanque', label:'Nivel de petróleo en estanque', type:'check', fields:[{key:'g1',label:'G1',kind:'number',unit:'%',yellow:true},{key:'g2',label:'G2',kind:'number',unit:'%',yellow:true}] },
+      { id:'gd_nivel_enterrado', label:'Petróleo en reserva — estanque enterrado', type:'check', fields:[{key:'g1',label:'G1',kind:'number',unit:'%',yellow:true},{key:'g2',label:'G2',kind:'number',unit:'%',yellow:true}] },
+      { id:'gd_horometro', label:'Horómetro', type:'check', fields:[{key:'g1',label:'G1',kind:'number',unit:'hrs',yellow:true},{key:'g2',label:'G2',kind:'number',unit:'hrs',yellow:true}] }
+    ]},
+    { id:'gd_funcionamiento', title:'Solo si el grupo entra en funcionamiento', items:[
+      { id:'gd_voltaje', label:'Voltaje', type:'check', fields:[{key:'g1',label:'G1',kind:'number',unit:'V',yellow:true},{key:'g2',label:'G2',kind:'number',unit:'V',yellow:true}] },
+      { id:'gd_frecuencia', label:'Frecuencia', type:'check', fields:[{key:'g1',label:'G1',kind:'number',unit:'Hz',yellow:true},{key:'g2',label:'G2',kind:'number',unit:'Hz',yellow:true}] },
+      { id:'gd_presion_aceite', label:'Presión de aceite', type:'check', fields:[{key:'g1',label:'G1',kind:'number',yellow:true},{key:'g2',label:'G2',kind:'number',yellow:true}] },
+      { id:'gd_temp_motor', label:'Temperatura del motor', type:'check', fields:[{key:'g1',label:'G1',kind:'number',unit:'°C',yellow:true},{key:'g2',label:'G2',kind:'number',unit:'°C',yellow:true}] }
+    ]},
+    { id:'gd_cierre', title:'Cierre', items:[
+      { id:'gd_observaciones', label:'Observaciones', type:'checkobs' }
+    ]}
+  ];
+  var GD_ALL_ITEMS = [];
+  GD_SECTIONS.forEach(function(s){ s.items.forEach(function(it){ GD_ALL_ITEMS.push(it); }); });
+  var GD_TOTAL_UNITS = GD_ALL_ITEMS.length;
+
+  // ---------- estado ----------
+  function gdDefaultValues(){
+    var v = {};
+    GD_ALL_ITEMS.forEach(function(it){ v[it.id] = {}; });
+    return v;
+  }
+  function gdNewState(date){
+    return { date: date, technician: '', status:'draft', updatedAt: null, signature: null, values: gdDefaultValues(), lastEditedBy: null, editors: [], rev: 0 };
+  }
+  var gdState = gdNewState(todayStr());
+  var gdSaveTimer = null, gdSavePending = false;
+  var gdEditableDay = true, gdInited = false;
+
+  // ---------- permisos (mismas reglas que la pauta de chequeo diario: isJefe/canEditDate/canExportDate son compartidas) ----------
+  function gdApplyDayPermissions(){
+    gdEditableDay = canEditDate(gdState.date);
+    var tbl = document.getElementById('gd-sheet-table');
+    tbl.classList.toggle('readonly', !gdEditableDay);
+    tbl.querySelectorAll('input, select, textarea, button').forEach(function(el){
+      if(el.id === 'gd-date-input') return;
+      el.disabled = !gdEditableDay;
+    });
+    var exp = canExportDate(gdState.date);
+    document.getElementById('gd-save-btn').style.display = gdEditableDay ? '' : 'none';
+    document.getElementById('gd-download-btn').style.display = exp ? '' : 'none';
+    document.getElementById('gd-print-btn').style.display = exp ? '' : 'none';
+    if(!gdEditableDay){ gdSetLocalBanner('', 'info'); }
+  }
+
+  // ---------- completitud: cada item queda "listo" cuando G1 Y G2 estan llenos (casilla marcada, o numero escrito) ----------
+  function gdItemComplete(item, v){
+    v = v || {};
+    if(item.type === 'checkobs') return !!v.checked;
+    return (item.fields || []).every(function(f){
+      if(f.kind === 'check') return !!v[f.key];
+      var s = v[f.key];
+      if(s === undefined || s === null || s === '') return false;
+      return isFinite(parseFloat(s));
+    });
+  }
+  function gdComputeDone(st){
+    var n = 0;
+    GD_ALL_ITEMS.forEach(function(it){ if(gdItemComplete(it, st.values[it.id])) n++; });
+    return n;
+  }
+  function gdUpdateSummary(){
+    var done = gdComputeDone(gdState);
+    var pct = Math.round((done / GD_TOTAL_UNITS) * 100);
+    document.getElementById('gd-summary-frac').textContent = done + '/' + GD_TOTAL_UNITS;
+    document.getElementById('gd-summary-updated').textContent = gdSavePending ? 'Guardando…' : (relTime(gdState.updatedAt) + (gdState.lastEditedBy ? ' · por ' + gdState.lastEditedBy : ''));
+    document.getElementById('gd-summary-bar').style.width = pct + '%';
+    var pill = document.getElementById('gd-status-pill');
+    if(done === 0){ pill.className = 'pill neutral'; pill.textContent = 'Sin iniciar'; gdState.status = 'draft'; }
+    else if(done === GD_TOTAL_UNITS){ pill.className = 'pill done'; pill.textContent = 'Completo'; gdState.status = 'completo'; }
+    else { pill.className = 'pill progress'; pill.textContent = 'En progreso'; gdState.status = 'progreso'; }
+    // Igual que la pauta de chequeo diario: el boton "Guardar" solo se habilita al 100% (no sube nada incompleto a la nube).
+    var saveBtn = document.getElementById('gd-save-btn');
+    if(saveBtn){
+      var falta = done !== GD_TOTAL_UNITS;
+      saveBtn.disabled = !gdEditableDay || falta;
+      saveBtn.title = (gdEditableDay && falta) ? 'Faltan ' + (GD_TOTAL_UNITS - done) + ' casilla(s) por marcar para poder guardar.' : '';
+    }
+  }
+
+  // ---------- hoja editable ----------
+  function gdFieldEditableHtml(itemId, f, val){
+    if(f.kind === 'check'){
+      var checked = !!val;
+      return '<span class="dfield"><b>' + esc(f.label) + '</b><span class="chk-td-mini" data-item="' + itemId + '" data-field="' + f.key + '">'
+        + '<input type="checkbox" data-item="' + itemId + '" data-field="' + f.key + '" ' + (checked ? 'checked' : '') + '/>'
+        + '<span class="chk-mark">' + (checked ? '✔' : '') + '</span></span></span>';
+    }
+    val = (val === undefined || val === null) ? '' : val;
+    var labelHtml = f.label ? '<b>' + esc(f.label) + '</b>' : '';
+    if(f.kind === 'number'){
+      return '<span class="dfield">' + labelHtml + '<input type="number" inputmode="decimal" class="' + (f.yellow ? 'yellow' : '') + '" placeholder="0" data-item="' + itemId + '" data-field="' + f.key + '" value="' + esc(val) + '"/>' + (f.unit ? '<span class="unit">' + esc(f.unit) + '</span>' : '') + '</span>';
+    }
+    return '<span class="dfield">' + labelHtml + '<input type="text" data-item="' + itemId + '" data-field="' + f.key + '" value="' + esc(val) + '"/></span>';
+  }
+
+  function gdCheckCellHtml(item, v){
+    if(item.type !== 'checkobs') return '<td class="chk"></td>';
+    var checked = !!v.checked;
+    return '<td class="chk"><input type="checkbox" data-item="' + item.id + '" data-field="checked" ' + (checked ? 'checked' : '') + '/><span class="chk-mark">' + (checked ? '✔' : '') + '</span></td>';
+  }
+
+  function gdItemRowEditable(item, values){
+    var v = values[item.id] || {};
+    var datosHtml;
+    if(item.type === 'checkobs'){
+      datosHtml = '<textarea class="obs-input" rows="1" placeholder="Sin observaciones" data-item="' + item.id + '" data-field="obs">' + esc(v.obs || '') + '</textarea>';
+    } else {
+      datosHtml = '<div class="dfields">' + item.fields.map(function(f){ return gdFieldEditableHtml(item.id, f, v[f.key]); }).join('') + '</div>';
+    }
+    return '<tr class="item-row' + (gdItemComplete(item, v) ? ' is-checked' : '') + '" data-row="' + item.id + '">'
+      + '<td class="desc">' + esc(item.label) + '</td>'
+      + gdCheckCellHtml(item, v)
+      + '<td class="datos"><div class="datos-row">' + datosHtml + '</div></td>'
+      + '</tr>';
+  }
+
+  function gdSectionRowsEditable(section, values){
+    return '<tr class="section-row"><td colspan="3">' + esc(section.title) + '</td></tr>'
+      + section.items.map(function(it){ return gdItemRowEditable(it, values); }).join('');
+  }
+
+  function gdHeaderRowsHtml(){
+    return '<tr class="title-row"><td colspan="3"><div class="letterhead">' + LOGO_HTML + '<div><div class="doc-title-main">PAUTA DIARIA DE GENERADORES</div><div class="doc-title-sub">Inspección de grupo electrógeno</div></div></div>' + LOGO2_HTML + '</td></tr>'
+      + '<tr class="meta-row"><td colspan="3"><div class="meta-flex">'
+      + '<span class="meta-item"><b>Técnico</b><select id="gd-tech-input">' + opcionesFuncionarios((gdState && gdState.technician) || '', 'Seleccionar técnico') + '</select></span>'
+      + '<span class="meta-item"><b>Fecha</b><input id="gd-date-input" type="date"/></span>'
+      + '</div></td></tr>'
+      + '<tr class="colhead-row"><td class="col-desc-hd"></td><td>Check</td><td>Datos</td></tr>';
+  }
+
+  function gdColgroupHtml(){
+    return '<colgroup><col class="col-desc"/><col class="col-chk"/><col class="col-datos"/></colgroup>';
+  }
+
+  function gdSignatureRowEditable(){
+    return '<tr class="sig-row"><td colspan="3"><div class="sig-block">'
+      + '<canvas id="gd-sig-canvas" width="640" height="200" class="sig-canvas"></canvas>'
+      + '<input type="file" id="gd-sig-file-input" accept="image/*" hidden/>'
+      + '<div class="sig-actions"><button type="button" class="ghost-btn" id="gd-sig-upload-btn">Adjuntar imagen</button><button type="button" class="ghost-btn" id="gd-sig-clear-btn">Limpiar firma</button></div>'
+      + '<div class="sig-caption">Firma técnico responsable</div>'
+      + '</div></td></tr>';
+  }
+
+  function gdSetupSignaturePad(){
+    crearFirma({
+      canvas: document.getElementById('gd-sig-canvas'), valor: gdState.signature,
+      limpiar: document.getElementById('gd-sig-clear-btn'), subir: document.getElementById('gd-sig-upload-btn'), archivo: document.getElementById('gd-sig-file-input'),
+      alCambiar: function(dataUrl){ gdState.signature = dataUrl; gdState.updatedAt = new Date().toISOString(); gdScheduleSave(); }
+    });
+  }
+
+  function gdRenderEditableSheet(){
+    var html = gdColgroupHtml() + gdHeaderRowsHtml() + GD_SECTIONS.map(function(s){ return gdSectionRowsEditable(s, gdState.values); }).join('') + gdSignatureRowEditable();
+    document.getElementById('gd-sheet-table').innerHTML = html;
+    document.getElementById('gd-tech-input').value = gdState.technician || '';
+    document.getElementById('gd-date-input').value = gdState.date;
+    document.getElementById('gd-tech-input').addEventListener('change', gdOnTechInput);
+    document.getElementById('gd-date-input').addEventListener('change', gdOnDateChange);
+    gdSetupSignaturePad();
+    gdUpdateSummary();
+    gdApplyDayPermissions();
+  }
+
+  // ---------- hoja estatica (historial / impresion / PDF) ----------
+  function gdFieldStaticHtml(f, val){
+    if(f.kind === 'check'){
+      return '<span class="dfield"><b>' + esc(f.label) + '</b><span class="chk-mark">' + (val ? '✔' : '-') + '</span></span>';
+    }
+    val = (val === undefined || val === null || val === '') ? '' : val;
+    var labelHtml = f.label ? '<b>' + esc(f.label) + '</b>' : '';
+    var hlClass = (f.yellow && val !== '') ? ' hl' : '';
+    return '<span class="dfield">' + labelHtml + '<span class="static-txt' + (val === '' ? ' empty' : hlClass) + '">' + (val === '' ? '—' : esc(val) + (f.unit ? ' ' + esc(f.unit) : '')) + '</span></span>';
+  }
+
+  function gdItemRowStatic(item, values){
+    var v = values[item.id] || {};
+    var datosHtml;
+    if(item.type === 'checkobs'){
+      var obs = v.obs || '';
+      datosHtml = '<span class="static-txt' + (obs ? '' : ' empty') + '">' + (obs ? esc(obs) : 'Sin observaciones') + '</span>';
+    } else {
+      datosHtml = '<div class="dfields">' + item.fields.map(function(f){ return gdFieldStaticHtml(f, v[f.key]); }).join('') + '</div>';
+    }
+    return '<tr class="item-row' + (gdItemComplete(item, v) ? ' is-checked' : '') + '">'
+      + '<td class="desc">' + esc(item.label) + '</td>'
+      + '<td class="chk">' + (item.type === 'checkobs' ? '<span class="chk-mark">' + (v.checked ? '✔' : '') + '</span>' : '') + '</td>'
+      + '<td class="datos">' + datosHtml + '</td>'
+      + '</tr>';
+  }
+
+  function gdSectionRowsStatic(section, values){
+    return '<tr class="section-row"><td colspan="3">' + esc(section.title) + '</td></tr>'
+      + section.items.map(function(it){ return gdItemRowStatic(it, values); }).join('');
+  }
+
+  function gdHeaderRowsStaticHtml(st){
+    return '<tr class="title-row"><td colspan="3"><div class="letterhead">' + LOGO_HTML + '<div><div class="doc-title-main">PAUTA DIARIA DE GENERADORES</div><div class="doc-title-sub">Inspección de grupo electrógeno</div></div></div>' + LOGO2_HTML + '</td></tr>'
+      + '<tr class="meta-row"><td colspan="3"><div class="meta-flex">'
+      + '<span class="meta-item"><b>Técnico</b><span class="meta-static">' + esc(st.technician || '—') + '</span></span>'
+      + '<span class="meta-item"><b>Fecha</b><span class="meta-static">' + esc(fmtDateLong(st.date)) + '</span></span>'
+      + '</div></td></tr>'
+      + '<tr class="colhead-row"><td class="col-desc-hd"></td><td>Check</td><td>Datos</td></tr>';
+  }
+
+  function gdSignatureRowStatic(st){
+    var sigHtml = safeImg(st.signature) ? '<img src="' + safeImg(st.signature) + '" class="sig-img"/>' : '<div class="sig-line"></div>';
+    return '<tr class="sig-row"><td colspan="3"><div class="sig-block">'
+      + '<div class="sig-box">' + sigHtml + '</div>'
+      + '<div class="sig-caption">Firma técnico responsable' + (st.technician ? ' — ' + esc(st.technician) : '') + '</div></div></td></tr>';
+  }
+
+  function gdRenderStaticSheet(container, st){
+    var html = gdColgroupHtml() + gdHeaderRowsStaticHtml(st) + GD_SECTIONS.map(function(s){ return gdSectionRowsStatic(s, st.values); }).join('') + gdSignatureRowStatic(st);
+    container.innerHTML = html;
+  }
+
+  // ---------- cambios de campo (editable) ----------
+  var gdSheetTable = document.getElementById('gd-sheet-table');
+  function gdHandleFieldChange(e){
+    if(!gdEditableDay) return;
+    var t = e.target;
+    var itemId = t.getAttribute('data-item');
+    var field = t.getAttribute('data-field');
+    if(!itemId || !field) return;
+    if(!gdState.values[itemId]) gdState.values[itemId] = {};
+    var val = (t.type === 'checkbox') ? t.checked : t.value;
+    gdState.values[itemId][field] = val;
+    gdState.updatedAt = new Date().toISOString();
+    if(t.type === 'checkbox'){
+      var mini = t.closest('.chk-td-mini');
+      var mark = mini ? mini.querySelector('.chk-mark') : (t.closest('td.chk') ? t.closest('td.chk').querySelector('.chk-mark') : null);
+      if(mark) mark.textContent = t.checked ? '✔' : '';
+    }
+    var row = t.closest('tr[data-row]');
+    if(row){
+      var it = GD_ALL_ITEMS.find(function(x){ return x.id === itemId; });
+      if(it) row.classList.toggle('is-checked', gdItemComplete(it, gdState.values[itemId]));
+    }
+    gdUpdateSummary();
+    gdScheduleSave();
+  }
+  gdSheetTable.addEventListener('input', gdHandleFieldChange);
+  gdSheetTable.addEventListener('change', gdHandleFieldChange);
+  gdSheetTable.addEventListener('click', function(e){
+    if(!gdEditableDay) return;
+    var cellChk = e.target.closest('td.chk');
+    if(cellChk && e.target.tagName !== 'INPUT'){
+      var input = cellChk.querySelector('input[type="checkbox"]');
+      if(input){ input.checked = !input.checked; input.dispatchEvent(new Event('change', { bubbles: true })); }
+      return;
+    }
+    var mini = e.target.closest('.chk-td-mini');
+    if(mini && e.target.tagName !== 'INPUT'){
+      var input2 = mini.querySelector('input[type="checkbox"]');
+      if(input2){ input2.checked = !input2.checked; input2.dispatchEvent(new Event('change', { bubbles: true })); }
+    }
+  });
+
+  function gdOnTechInput(e){
+    if(!gdEditableDay) return;
+    gdState.technician = e.target.value;
+    gdState.updatedAt = new Date().toISOString();
+    ls.set('pe_last_tech', gdState.technician);
+    gdUpdateSummary();
+    gdScheduleSave();
+  }
+  function gdOnDateChange(e){
+    var nd = e.target.value || todayStr();
+    gdFlushSave().then(function(){ gdLoadDay(nd); });
+  }
+
+  document.getElementById('gd-save-btn').addEventListener('click', function(){ gdScheduleSave(0); });
+  document.getElementById('gd-print-btn').addEventListener('click', function(){ gdPrintState(gdState); });
+
+
+  function gdPrintState(st){
+    var container = document.getElementById('print-table');
+    gdRenderStaticSheet(container, st);
+    var appendix = document.getElementById('print-photo-appendix');
+    if(appendix) appendix.innerHTML = '';   // esta pauta no tiene fotos por item
+    setTimeout(function(){ window.print(); }, 30);
+  }
+
+  async function gdDownloadSnapshot(st, triggerBtn){
+    var btn = triggerBtn || document.getElementById('gd-download-btn');
+    var origText = btn.textContent;
+    btn.disabled = true; btn.textContent = 'Generando PDF…';
+    var root = document.getElementById('print-root');
+    try{
+      gdRenderStaticSheet(document.getElementById('print-table'), st);
+      var appendix = document.getElementById('print-photo-appendix');
+      if(appendix) appendix.innerHTML = '';
+      root.classList.add('pdf-capture');
+      await waitForImages(root);
+      await new Promise(function(r){ setTimeout(r, 60); });
+      await ensurePdfLibs();
+
+      var jsPDFCtor = window.jspdf && window.jspdf.jsPDF;
+      if(!jsPDFCtor || typeof html2canvas !== 'function'){ throw new Error('pdf libs unavailable'); }
+      var doc = new jsPDFCtor({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      var pageW = doc.internal.pageSize.getWidth();
+      var pageH = doc.internal.pageSize.getHeight();
+      var margin = 8;
+
+      var sheetWrap = root.querySelector('.sheet-wrap');
+      var canvas1 = await html2canvas(sheetWrap, { scale: 2, backgroundColor: '#ffffff', useCORS: true });
+      addCanvasPaginated(doc, canvas1, pageW, pageH, margin);
+
+      deliverPdf(doc, 'pauta-generadores-' + st.date + '.pdf');
+    }catch(err){
+      console.error('No se pudo generar el PDF', err);
+    }finally{
+      root.classList.remove('pdf-capture');
+      btn.disabled = false; btn.textContent = origText;
+    }
+  }
+  document.getElementById('gd-download-btn').addEventListener('click', function(){ gdDownloadSnapshot(gdState); });
+
+  // ---------- persistencia: copia local + nube (mismo patron que la pauta de chequeo diario; ver comun.js) ----------
+  var almacenGeneradores = crearAlmacenLocal({ tipo: 'checklistsGeneradores', prefijo: 'checklistGen_', indice: 'checklistGen_index', maximo: 120, maxBytes: 1500000 });
+  var GD_ESTE_EQUIPO = ES_PC ? 'este equipo' : 'este dispositivo';
+  function gdSaveLocalCopy(payload){ return almacenGeneradores.guardar(payload.date, payload); }
+  function gdLoadLocalCopy(date){ return almacenGeneradores.obtener(date); }
+
+  function gdSerializable(){
+    var by = (currentUser && currentUser.email) || gdState.lastEditedBy || null;
+    var eds = (gdState.editors || []).slice();
+    if(by && eds.indexOf(by) === -1) eds.push(by);
+    gdState.lastEditedBy = by; gdState.editors = eds;
+    return { date: gdState.date, rev: gdState.rev || 0, technician: gdState.technician || '', status: gdState.status, updatedAt: gdState.updatedAt, signature: gdState.signature || null, values: gdState.values, lastEditedBy: by, lastEditedByUid: (currentUser && currentUser.uid) || null, editors: eds, _dev: 'Cristhian Sandoval' };
+  }
+
+  function gdScheduleSave(delay){
+    if(!gdEditableDay) return;
+    gdSavePending = true;
+    gdUpdateSummary();
+    if(gdSaveTimer) clearTimeout(gdSaveTimer);
+    gdSaveTimer = setTimeout(gdDoSave, delay === 0 ? 0 : 900);
+  }
+  function gdFlushSave(){
+    if(gdSaveTimer){ clearTimeout(gdSaveTimer); gdSaveTimer = null; return gdDoSave(); }
+    return Promise.resolve();
+  }
+
+  function gdSetLocalBanner(msg, warn){
+    if(!gdEditableDay){ msg = 'Día anterior: solo lectura (solo el jefe supervisor puede modificar días pasados).' + (msg ? ' ' + msg : ''); }
+    var wrap = document.getElementById('gd-local-banner');
+    var el = document.getElementById('gd-local-banner-text') || wrap;
+    if(!el || !wrap) return;
+    el.textContent = msg;
+    wrap.style.background = warn === true ? 'var(--warn-bg)' : (warn === 'info' ? 'var(--accent-bg)' : 'var(--surface-2)');
+    wrap.style.color = warn === true ? 'var(--warn)' : (warn === 'info' ? 'var(--accent-strong)' : 'var(--ink-dim)');
+  }
+
+  var GD_OFFLINE_MSG = 'Sin conexión a la nube: se guardó en ' + GD_ESTE_EQUIPO + ' y se subirá automáticamente cuando vuelva la conexión.';
+  var GD_DENIED_MSG = 'La nube no aceptó guardar esta pauta: solo se puede guardar la pauta de hoy (hora de Chile). Quedó en ' + GD_ESTE_EQUIPO + '; si necesitas corregir otro día, pídeselo al jefe supervisor.';
+
+  var gdConflictoAbierto = false;
+  // opciones.sobrescribir = "guardar la mia encima" (ignora el conflicto)
+  function gdDoSave(opciones){
+    gdSaveTimer = null;
+    if(!gdEditableDay){ gdSavePending = false; return Promise.resolve(); }
+    var st = gdState, payload = gdSerializable();
+    if(gdComputeDone(st) !== GD_TOTAL_UNITS){
+      // Pauta incompleta: no sube nada a la nube (ni queda "pendiente" para subirse sola despues). Solo
+      // se guarda una copia en este equipo, por si se cierra el navegador o se corta la luz a medio llenar.
+      return gdSaveLocalCopy(payload).then(function(){
+        gdSetLocalBanner('Guardado en ' + GD_ESTE_EQUIPO + ': faltan casillas por marcar. Se sube a la nube recien cuando la pauta quede completa.', 'info');
+      }).then(function(){ gdSavePending = false; gdUpdateSummary(); });
+    }
+    return gdSaveLocalCopy(Object.assign({}, payload, { _pending: true })).then(function(){
+      if(fbReady && fbDb){
+        return guardarSinPisar(fbDb.collection('checklistsGeneradores').doc(payload.date), payload, st, { sobrescribir: !!(opciones && opciones.sobrescribir) }).then(function(){
+          payload.rev = st.rev;
+          gdSetLocalBanner('Guardado en la nube compartida — visible desde cualquier dispositivo.', false);
+          return gdSaveLocalCopy(payload);
+        }).catch(function(err){
+          var r = resultadoDeError(err);
+          if(r.denied){ gdSetLocalBanner(GD_DENIED_MSG, true); return gdSaveLocalCopy(payload); }
+          if(r.conflicto){ gdSetLocalBanner('Cambios sin subir: otra persona modificó esta pauta.', true); return gdAlConflicto(st, r.nube); }
+          gdSetLocalBanner(GD_OFFLINE_MSG, 'info');
+        });
+      }
+      gdSetLocalBanner(GD_OFFLINE_MSG, 'info');
+    }).then(function(){ gdSavePending = false; gdUpdateSummary(); });
+  }
+
+  // Otra persona guardo la pauta de este dia mientras se editaba: se pregunta que hacer (nunca se pisa en silencio). Ver dialogoConflicto en comun.js.
+  function gdAlConflicto(st, nube){
+    if(gdConflictoAbierto || !st) return Promise.resolve();
+    gdConflictoAbierto = true;
+    return dialogoConflicto((nube && nube.lastEditedBy), { entidad: 'esta pauta de generadores', enQue: 'la pauta de generadores de este día', pronombre: 'la' }).then(function(v){
+      gdConflictoAbierto = false;
+      if(v === 'nube'){
+        if(gdSaveTimer){ clearTimeout(gdSaveTimer); gdSaveTimer = null; }
+        gdLoadDay(st.date, true);
+      } else if(v === 'mio'){
+        st.rev = (nube && nube.rev) || 0;
+        return gdDoSave({ sobrescribir: true });
+      }
+    });
+  }
+
+  // Sube lo que quedo pendiente por falta de conexion. Ver sincronizarPendientes en comun.js.
+  var gdSyncing = false;
+  function gdSyncPending(){
+    if(gdSyncing || !fbReady || !fbDb || !currentUser) return Promise.resolve();
+    gdSyncing = true;
+    var uploaded = 0, rejected = 0;
+    return sincronizarPendientes({
+      coleccion: 'checklistsGeneradores', listar: almacenGeneradores.listar, idDe: function(d){ return d.date; },
+      obtener: function(meta){ return gdLoadLocalCopy(meta.date); }, normalizar: function(d){ return d; },
+      marcarConflicto: function(e){ return gdSaveLocalCopy(Object.assign({}, e, { _conflicto: true })); },
+      subir: function(e){
+        var ref = fbDb.collection('checklistsGeneradores').doc(e.date);
+        var clean = Object.assign({}, e); delete clean._pending; delete clean._conflicto;
+        return guardarSinPisar(ref, clean, clean, {}).then(function(){ uploaded++; return gdSaveLocalCopy(clean); });
+      },
+      alError: function(err, e){
+        if(err && err.code === 'permission-denied'){ var c2 = Object.assign({}, e); delete c2._pending; rejected++; return gdSaveLocalCopy(c2); }
+        registrarError('gdSyncPending', err);
+      }
+    }).then(function(){
+      gdSyncing = false;
+      if(uploaded){ gdSetLocalBanner('Se subieron a la nube ' + uploaded + ' pauta(s) que estaban pendientes por falta de conexión.', false); }
+      else if(rejected){ gdSetLocalBanner('La nube no aceptó ' + rejected + ' pauta(s) de días anteriores: solo se puede guardar la pauta de hoy. Quedaron en ' + GD_ESTE_EQUIPO + '; pídele al jefe supervisor que las corrija si hace falta.', true); }
+    }, function(err){ gdSyncing = false; registrarError('gdSyncPending', err); });
+  }
+
+  // soloNube = true: se ignora la copia local pendiente y se muestra lo que hay en la nube (para resolver un conflicto)
+  function gdLoadDay(date, soloNube){
+    gdState = gdNewState(date);
+    gdEditableDay = canEditDate(date);
+    gdState.technician = ls.get('pe_last_tech') || '';
+
+    function applyData(data){
+      if(data){
+        gdState.technician = data.technician || gdState.technician;
+        gdState.status = data.status || 'draft';
+        gdState.updatedAt = data.updatedAt || null;
+        gdState.lastEditedBy = data.lastEditedBy || null;
+        gdState.editors = data.editors || (data.lastEditedBy ? [data.lastEditedBy] : []);
+        gdState.rev = data.rev || 0;
+        gdState.signature = data.signature || null;
+        gdState.values = Object.assign(gdDefaultValues(), data.values || {});
+      }
+      gdRenderEditableSheet();
+    }
+    function sinNube(){
+      return gdLoadLocalCopy(date).then(function(local){
+        applyData(local);
+        gdSetLocalBanner('Sin conexión a la nube: mostrando datos guardados en ' + GD_ESTE_EQUIPO + '.', 'info');
+      });
+    }
+
+    if(fbReady && fbDb){
+      withTimeout(fbDb.collection('checklistsGeneradores').doc(date).get(), 8000).then(function(doc){
+        return gdLoadLocalCopy(date).then(function(local){
+          var data = doc.exists ? doc.data() : local;
+          var usePending = local && local._pending && !soloNube;
+          if(usePending) data = local;
+          applyData(data);
+          if(soloNube && data){ gdSaveLocalCopy(data); }
+          if(usePending){
+            gdSetLocalBanner('Hay cambios de este día pendientes de subir; se subirán automáticamente.', 'info');
+            gdSyncPending();
+          } else {
+            gdSetLocalBanner('Conectado a la nube compartida — visible desde cualquier dispositivo.', false);
+          }
+        });
+      }).catch(function(err){ registrarError('gdLoadDay', err); return sinNube(); });
+    } else {
+      sinNube();
+    }
+  }
+
+  // ---------- historial ----------
+  function gdEditedByHtml(e){
+    if(!e.lastEditedBy) return '';
+    var otros = (e.editors || []).filter(function(x){ return x !== e.lastEditedBy; });
+    return '<div class="hist-tech">Último cambio: ' + esc(e.lastEditedBy) + (otros.length ? ' · también editó: ' + esc(otros.join(', ')) : '') + '</div>';
+  }
+
+  var gdHistTodas = [], gdHistLimite = 90;
+  var gdHistBarra = crearBarraHistorial({
+    texto: 'Buscar por técnico o fecha (AAAA-MM-DD)…',
+    coincide: function(e, q){ return normNombre(e.technician || '').indexOf(q) >= 0 || String(e.date).indexOf(q) >= 0; },
+    alFiltrar: function(){ gdPintarHistoryList(); }
+  });
+  function gdRenderHistoryList(entries){
+    gdHistTodas = entries || [];
+    gdPintarHistoryList();
+  }
+  function gdPintarHistoryList(){
+    var entries = gdHistBarra.filtrar(gdHistTodas);
+    var el = document.getElementById('gd-view-historial');
+    if(!gdHistTodas.length){
+      el.innerHTML = '<div class="empty"><span class="bolt">⚡</span>Aún no hay pautas de generadores guardadas.<br>Completa la de hoy para que aparezca aquí.</div>';
+      return;
+    }
+    if(!entries.length){
+      el.innerHTML = gdHistBarra.barraHtml + '<div class="empty">Sin resultados para esa búsqueda.</div>';
+      gdHistBarra.activar(el);
+      return;
+    }
+    var histEntries = {};
+    entries.forEach(function(e){ histEntries[e.date] = e; });
+
+    el.innerHTML = gdHistBarra.barraHtml + entries.map(function(e){
+      var done = gdComputeDone(e);
+      var pillClass = done === 0 ? 'neutral' : (done === GD_TOTAL_UNITS ? 'done' : 'progress');
+      var pillTxt = done === 0 ? 'Sin iniciar' : (done === GD_TOTAL_UNITS ? 'Completo' : 'En progreso');
+      return '<div class="hist-card">'
+        + '<div class="hist-head" data-date="' + esc(e.date) + '">'
+        + '<div style="flex:1;min-width:160px;"><div class="hist-date">' + esc(fmtDateLong(e.date)) + '</div><div class="hist-tech">' + esc(e.technician || 'Sin técnico registrado') + '</div>' + gdEditedByHtml(e) + '</div>'
+        + '<div class="hist-frac">' + done + '/' + GD_TOTAL_UNITS + '</div>'
+        + '<span class="pill ' + pillClass + '">' + pillTxt + '</span>'
+        + '</div>'
+        + '<div class="hist-detail" id="gd-detail-' + esc(e.date) + '" hidden><div class="sheet-wrap"><table class="sheet"></table></div></div>'
+        + '<div class="hist-actions"><button class="ghost-btn" data-gd-toggle="' + esc(e.date) + '">Ver detalle</button>' + (canEditDate(e.date) ? '<button class="ghost-btn" data-gd-edit="' + esc(e.date) + '">Editar este día</button>' : '') + (canExportDate(e.date) ? '<button class="ghost-btn" data-gd-download="' + esc(e.date) + '">Descargar</button><button class="ghost-btn" data-gd-print="' + esc(e.date) + '">Imprimir / PDF</button>' : '') + '</div>'
+        + '</div>';
+    }).join('') + (gdHistTodas.length >= gdHistLimite ? '<div class="hist-mas"><button type="button" class="ghost-btn" id="gd-hist-cargar-mas">Cargar más pautas</button></div>' : '');
+    gdHistBarra.activar(el);
+    var masBtn = document.getElementById('gd-hist-cargar-mas');
+    if(masBtn) masBtn.addEventListener('click', function(){ masBtn.disabled = true; masBtn.textContent = 'Cargando…'; gdHistLimite += 90; gdStartHistory(); });
+
+    el.querySelectorAll('[data-gd-toggle]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var d = btn.getAttribute('data-gd-toggle');
+        var box = document.getElementById('gd-detail-' + d);
+        var isHidden = box.hasAttribute('hidden');
+        if(isHidden){
+          var st = Object.assign(gdNewState(d), histEntries[d], { values: Object.assign(gdDefaultValues(), histEntries[d].values || {}) });
+          gdRenderStaticSheet(box.querySelector('table.sheet'), st);
+          box.removeAttribute('hidden');
+          btn.textContent = 'Ocultar detalle';
+        } else {
+          box.setAttribute('hidden', '');
+          btn.textContent = 'Ver detalle';
+        }
+      });
+    });
+    el.querySelectorAll('[data-gd-edit]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var d = btn.getAttribute('data-gd-edit');
+        gdSwitchTab('hoy');
+        gdFlushSave().then(function(){ gdLoadDay(d); });
+      });
+    });
+    el.querySelectorAll('[data-gd-print]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var d = btn.getAttribute('data-gd-print');
+        var st = Object.assign(gdNewState(d), histEntries[d], { values: Object.assign(gdDefaultValues(), histEntries[d].values || {}) });
+        gdPrintState(st);
+      });
+    });
+    el.querySelectorAll('[data-gd-download]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var d = btn.getAttribute('data-gd-download');
+        var st = Object.assign(gdNewState(d), histEntries[d], { values: Object.assign(gdDefaultValues(), histEntries[d].values || {}) });
+        gdDownloadSnapshot(st, btn);
+      });
+    });
+  }
+
+  function gdLocalHistoryEntries(){
+    return almacenGeneradores.listar().then(function(a){ return a.sort(function(x, y){ return x.date < y.date ? 1 : -1; }); });
+  }
+  function gdStartHistory(){
+    if(fbReady && fbDb){
+      withTimeout(fbDb.collection('checklistsGeneradores').orderBy('date', 'desc').limit(gdHistLimite).get(), 8000).then(function(snap){
+        var entries = [];
+        snap.forEach(function(doc){ entries.push(doc.data()); });
+        gdRenderHistoryList(entries);
+      }).catch(function(err){ registrarError('gdStartHistory', err); gdLocalHistoryEntries().then(gdRenderHistoryList); });
+    } else {
+      gdLocalHistoryEntries().then(gdRenderHistoryList);
+    }
+  }
+
+  // ---------- pestañas ----------
+  function gdSwitchTab(name){
+    var hoy = name === 'hoy';
+    document.getElementById('gd-view-hoy').hidden = !hoy;
+    document.getElementById('gd-view-historial').hidden = hoy;
+    document.getElementById('gd-tab-hoy').setAttribute('aria-selected', hoy);
+    document.getElementById('gd-tab-historial').setAttribute('aria-selected', !hoy);
+    document.getElementById('gd-summary-line').style.display = hoy ? '' : 'none';
+    if(!hoy){ gdStartHistory(); }
+  }
+  document.getElementById('gd-tab-hoy').addEventListener('click', function(){ gdSwitchTab('hoy'); });
+  document.getElementById('gd-tab-historial').addEventListener('click', function(){ gdSwitchTab('historial'); });
+
+  // ---------- entrada desde el panel ----------
+  document.getElementById('dash-card-generadores').addEventListener('click', function(){
+    showView('pauta-generadores');
+    if(!gdInited){ gdInited = true; gdLoadDay(todayStr()); }
+  });
+  document.getElementById('gd-back-to-dash-btn').addEventListener('click', function(){
+    gdFlushSave().then(function(){ showView('dashboard'); });
+  });
+
+  // ---------- ciclo de vida ----------
+  alOcultarPagina(gdFlushSave);
+  alVolverConexion(gdSyncPending);
+  alMostrarPagina(gdSyncPending);
+  cadaSegundos(30, gdSyncPending, { enSegundoPlano: true });
 
 
   // ---------- lifecycle ----------
