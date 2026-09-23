@@ -9,9 +9,9 @@
      guardados (p. ej. el estado "Stop" de un generador podia mostrarse como "Detener"). -->
 <meta name="google" content="notranslate">
 <!-- Politica de seguridad de contenido: la genera build.ps1 (incluye los hashes de los scripts en linea). -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-xiehy8Gt6RBzihDWZa8YCR4KvAmAvigqhjEfsVmKvVo=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=' https://www.gstatic.com/firebasejs/10.14.1/; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://zonadeguerreros.github.io; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-+1uDKEgLdZfNzM7u+ihhW5QHb2EqhjODZSlxQuZR4G4=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=' https://www.gstatic.com/firebasejs/10.14.1/; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://zonadeguerreros.github.io; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'none'; form-action 'none'">
 <title>Pauta de Chequeo Diario</title>
-<meta name="app-version" content="2026-09-22.2121-5dd285f0">
+<meta name="app-version" content="2026-09-23.1815-bdb437a7">
 <style>
   @font-face{
     font-family:"Roboto";
@@ -582,6 +582,8 @@
   .rpg-stat{ display:flex; align-items:baseline; gap:10px; padding:4px 0 2px; }
   .rpg-stat-label{ font-size:12.5px; font-weight:600; color:var(--ink-dim); }
   .rpg-stat-valor{ font-size:22px; font-weight:700; color:var(--ink); }
+  /* Muestra la lectura cruda del medidor y la multiplicacion por el factor, junto al consumo real de arriba. */
+  .rpg-stat-detalle{ font-size:11.5px; color:var(--ink-faint); font-family:var(--font-mono); font-variant-numeric:tabular-nums; }
   .rpg-tabla-wrap{ overflow-x:auto; border:1px solid var(--line); border-radius:8px; }
   table.rpg-detalle{ width:100%; min-width:840px; border-collapse:collapse; font-size:12.5px; }
   table.rpg-detalle th, table.rpg-detalle td{ padding:6px 9px; border-bottom:1px solid var(--line); text-align:right; white-space:nowrap; }
@@ -740,8 +742,9 @@
       </div>
       <div class="inf-card rpg-card-empalme">
         <h2>Suministro eléctrico (empalme) · resumen del mes</h2>
-        <div class="inf-note">Diferencia entre la última lectura del mes y la última lectura anterior a él.</div>
-        <div class="rpg-stat"><span class="rpg-stat-label">Consumo de energía · <span id="rpg-empalme-mes"></span></span><span class="rpg-stat-valor" id="rpg-empalme-valor"></span></div>
+        <div class="inf-note">Diferencia entre la última lectura del mes y la última lectura anterior a él, multiplicada por 1200 (factor de medición del hospital).</div>
+        <div class="rpg-stat"><span class="rpg-stat-label">Consumo real de energía · <span id="rpg-empalme-mes"></span></span><span class="rpg-stat-valor" id="rpg-empalme-valor"></span></div>
+        <div class="rpg-stat-detalle" id="rpg-empalme-detalle"></div>
       </div>
       <div class="inf-card">
         <h2>Detalle diario del mes</h2>
@@ -1926,7 +1929,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   }
 
   // ---------- version y aviso de actualizacion ----------
-  // Cada version publicada lleva un identificador (2026-09-22.2121-5dd285f0, lo genera compilar.js). Se compara contra la version
+  // Cada version publicada lleva un identificador (2026-09-23.1815-bdb437a7, lo genera compilar.js). Se compara contra la version
   // publicada de la web (mismo origen para todos: PC, celular o navegador) leyendo su etiqueta <meta name="app-version">.
   // Es una lectura publica de una pagina de solo texto: no requiere Firebase ni maneja datos del usuario.
   var APP_VERSION = (document.querySelector('meta[name="app-version"]') || {}).content || '';
@@ -5386,6 +5389,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   //  eso se grafica y se lista dia a dia en vez de sumarse.
   // =====================================================================
   var rpgMes = null;   // { y, m } del mes que se esta mostrando (m: 1 a 12)
+  // Factor de medicion del empalme del hospital: la lectura del medidor (lo que se anota en la pauta) hay que
+  // multiplicarla por esto para obtener el consumo real en KWh. Se muestran los dos datos: la lectura cruda
+  // (con la formula) y, como cifra principal, el resultado ya multiplicado.
+  var RPG_FACTOR_EMPALME = 1200;
 
   function rpgMesActual(){ var d = new Date(); return { y: d.getFullYear(), m: d.getMonth() + 1 }; }
   function rpgDosDig(n){ return (n < 10 ? '0' : '') + n; }
@@ -5460,12 +5467,14 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     rpgEl('rpg-empalme-mes').textContent = rpgNombreMes(rpgMes.y, rpgMes.m);
     rpgEl('rpg-tabla').innerHTML = '<tr><td colspan="3" class="empty">Calculando…</td></tr>';
     rpgEl('rpg-empalme-valor').textContent = '…';
+    rpgEl('rpg-empalme-detalle').textContent = '';
     rpgEl('rpg-detalle-cuerpo').innerHTML = '';
     rpgEl('rpg-grafico').innerHTML = '';
     if(!fbReady || !fbDb || !currentUser){
       rpgNota('Se necesita conexión a la nube para calcular el reporte.');
       rpgEl('rpg-tabla').innerHTML = '';
       rpgEl('rpg-empalme-valor').textContent = '';
+      rpgEl('rpg-empalme-detalle').textContent = '';
       return;
     }
     rpgNota('');
@@ -5483,6 +5492,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       rpgNota('No se pudo calcular el reporte. Revisa tu conexión.');
       rpgEl('rpg-tabla').innerHTML = '';
       rpgEl('rpg-empalme-valor').textContent = '';
+      rpgEl('rpg-empalme-detalle').textContent = '';
     });
   }
 
@@ -5490,6 +5500,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     if(!docsMes.length){
       rpgEl('rpg-tabla').innerHTML = '<tr><td colspan="3" class="empty">No hay pautas guardadas en este mes.</td></tr>';
       rpgEl('rpg-empalme-valor').textContent = 'Sin dato';
+      rpgEl('rpg-empalme-detalle').textContent = '';
       rpgEl('rpg-detalle-cuerpo').innerHTML = '<tr><td colspan="10" class="empty">No hay pautas guardadas en este mes.</td></tr>';
       rpgEl('rpg-grafico').innerHTML = '<div class="empty">Sin datos.</div>';
       return;
@@ -5498,7 +5509,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     var consumoG2 = rpgDelta(docsMes, docPrevio, 'gen_consumo.g2');
     var horasG1 = rpgDelta(docsMes, docPrevio, 'gen_horometro.g1');
     var horasG2 = rpgDelta(docsMes, docPrevio, 'gen_horometro.g2');
-    var kwh = rpgDelta(docsMes, docPrevio, 'elec_consumo.valor');
+    // Lectura cruda del medidor (lo que se anota en la pauta) y consumo real (multiplicado por el factor del hospital).
+    var kwhMedidor = rpgDelta(docsMes, docPrevio, 'elec_consumo.valor');
+    var kwh = kwhMedidor === null ? null : kwhMedidor * RPG_FACTOR_EMPALME;
 
     // Tabla de generadores (G1/G2). El empalme NO va aqui: es otra fuente (el suministro general del
     // hospital, no un generador), por eso tiene su propia tarjeta y su propia columna en el detalle.
@@ -5507,6 +5520,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       + rpgFila('Consumo de combustible', consumoG1, consumoG2, 'Lt')
       + rpgFila('Horas de funcionamiento', horasG1, horasG2, 'hrs');
     rpgEl('rpg-empalme-valor').textContent = rpgFmt(kwh, 'KWh');
+    rpgEl('rpg-empalme-detalle').textContent = kwhMedidor === null ? '' :
+      'Lectura del medidor: ' + rpgFmt(kwhMedidor, '') + ' × ' + RPG_FACTOR_EMPALME.toLocaleString('es-CL') + ' = ' + rpgFmt(kwh, 'KWh');
 
     rpgEl('rpg-detalle-cuerpo').innerHTML = docsMes.map(function(d){
       return '<tr>'
