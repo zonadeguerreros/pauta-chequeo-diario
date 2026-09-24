@@ -9,9 +9,9 @@
      guardados (p. ej. el estado "Stop" de un generador podia mostrarse como "Detener"). -->
 <meta name="google" content="notranslate">
 <!-- Politica de seguridad de contenido: la genera build.ps1 (incluye los hashes de los scripts en linea). -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-nlGOgkX+RSoS+4JTJE8bGxP4CYcnLbYAN8QtX9GSyH0=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=' https://www.gstatic.com/firebasejs/10.14.1/; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://zonadeguerreros.github.io; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-PJ4rUFJ/mcxuL7dE+a/vj6SFy78RSnT0fH9guQyZZbc=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=' https://www.gstatic.com/firebasejs/10.14.1/; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://zonadeguerreros.github.io; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'none'; form-action 'none'">
 <title>Pauta de Chequeo Diario</title>
-<meta name="app-version" content="2026-09-24.1229-e60c67eb">
+<meta name="app-version" content="2026-09-24.2023-a55f8aa9">
 <style>
   @font-face{
     font-family:"Roboto";
@@ -1958,9 +1958,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       var doc = new ctor({ orientation: 'portrait', unit: 'mm', format: 'a4' });
       var els = host.querySelectorAll('.rep-page, .sol-page');
       for(var i = 0; i < els.length; i++){
-        var canvas = await html2canvas(els[i], { scale: 2, backgroundColor: '#ffffff', useCORS: true });
+        var canvas = await html2canvas(els[i], { scale: 3, backgroundColor: '#ffffff', useCORS: true });
         if(i > 0) doc.addPage();
-        doc.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, 210, 297);
+        // PNG (sin perdida) en vez de JPEG: el JPEG comprimido se veia "como una foto borrosa", sobre todo en el texto.
+        // 'FAST' es obligatorio: sin pedirle compresion, jsPDF guarda el PNG sin comprimir dentro del PDF (~40x mas pesado).
+        doc.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, 210, 297, undefined, 'FAST');
       }
       await Promise.resolve(deliverPdf(doc, nombreArchivo));
     }catch(err){
@@ -1984,7 +1986,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   }
 
   // ---------- version y aviso de actualizacion ----------
-  // Cada version publicada lleva un identificador (2026-09-24.1229-e60c67eb, lo genera compilar.js). Se compara contra la version
+  // Cada version publicada lleva un identificador (2026-09-24.2023-a55f8aa9, lo genera compilar.js). Se compara contra la version
   // publicada de la web (mismo origen para todos: PC, celular o navegador) leyendo su etiqueta <meta name="app-version">.
   // Es una lectura publica de una pagina de solo texto: no requiere Firebase ni maneja datos del usuario.
   var APP_VERSION = (document.querySelector('meta[name="app-version"]') || {}).content || '';
@@ -2794,13 +2796,16 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     }));
   }
 
+  // PNG (sin perdida) en vez de JPEG: el JPEG comprimido se veia "como una foto borrosa", sobre todo en el texto.
+  // OJO: jsPDF, si no se le pide compresion explicita, guarda el PNG pixel por pixel SIN comprimir dentro del PDF
+  // (una hoja normal pasa de ~650 KB a ~26 MB) — por eso el 'FAST' al final de addImage() es obligatorio, no opcional.
   function addCanvasPaginated(doc, canvas, pageW, pageH, margin){
     var usableW = pageW - margin*2;
     var usableH = pageH - margin*2;
     var imgWmm = usableW;
     var imgHmm = canvas.height * (imgWmm / canvas.width);
     if(imgHmm <= usableH){
-      doc.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', margin, margin, imgWmm, imgHmm);
+      doc.addImage(canvas.toDataURL('image/png'), 'PNG', margin, margin, imgWmm, imgHmm, undefined, 'FAST');
       return;
     }
     var pxPerMm = canvas.width / imgWmm;
@@ -2813,7 +2818,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       sliceCanvas.width = canvas.width;
       sliceCanvas.height = sliceH;
       sliceCanvas.getContext('2d').drawImage(canvas, 0, i*pageHeightPx, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
-      doc.addImage(sliceCanvas.toDataURL('image/jpeg', 0.92), 'JPEG', margin, margin, imgWmm, sliceH / pxPerMm);
+      doc.addImage(sliceCanvas.toDataURL('image/png'), 'PNG', margin, margin, imgWmm, sliceH / pxPerMm, undefined, 'FAST');
     }
   }
 
@@ -2840,13 +2845,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       var margin = 8;
 
       var sheetWrap = root.querySelector('.sheet-wrap');
-      var canvas1 = await html2canvas(sheetWrap, { scale:2, backgroundColor:'#ffffff', useCORS:true });
+      var canvas1 = await html2canvas(sheetWrap, { scale:3, backgroundColor:'#ffffff', useCORS:true });
       addCanvasPaginated(doc, canvas1, pageW, pageH, margin);
 
       var appendixNode = root.querySelector('.photo-appendix');
       if(appendixNode){
         doc.addPage();
-        var canvas2 = await html2canvas(appendixNode, { scale:2, backgroundColor:'#ffffff', useCORS:true });
+        var canvas2 = await html2canvas(appendixNode, { scale:3, backgroundColor:'#ffffff', useCORS:true });
         addCanvasPaginated(doc, canvas2, pageW, pageH, margin);
       }
 
@@ -5978,7 +5983,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       var margin = 8;
 
       var sheetWrap = root.querySelector('.sheet-wrap');
-      var canvas1 = await html2canvas(sheetWrap, { scale: 2, backgroundColor: '#ffffff', useCORS: true });
+      var canvas1 = await html2canvas(sheetWrap, { scale: 3, backgroundColor: '#ffffff', useCORS: true });
       addCanvasPaginated(doc, canvas1, pageW, pageH, margin);
 
       deliverPdf(doc, 'pauta-generadores-' + st.date + '.pdf');
