@@ -9,9 +9,9 @@
      guardados (p. ej. el estado "Stop" de un generador podia mostrarse como "Detener"). -->
 <meta name="google" content="notranslate">
 <!-- Politica de seguridad de contenido: la genera build.ps1 (incluye los hashes de los scripts en linea). -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-+Bq7X3Du0IJC2nOeD0Ij6kM4FnmUqzlqsdZL/Pv5Vgo=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=' https://www.gstatic.com/firebasejs/10.14.1/; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://zonadeguerreros.github.io; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-enwGc4ZfUzOCFg7ZXGY7HTrhYI6D7nRYpmB1Vs+HcSg=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=' https://www.gstatic.com/firebasejs/10.14.1/; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://zonadeguerreros.github.io; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'none'; form-action 'none'">
 <title>Pauta de Chequeo Diario</title>
-<meta name="app-version" content="2026-09-26.1212-444199d4">
+<meta name="app-version" content="2026-10-06.1131-d4489e43">
 <style>
   @font-face{
     font-family:"Roboto";
@@ -604,6 +604,18 @@
   }
   /* Tabla del detalle diario dentro del PDF/impresion (.rep-t): mas compacta para que quepan los ~31 dias en una sola hoja A4. */
   .rep-t.rpg-rep-detalle td{ font-size:6.5pt; padding:2pt 3pt; }
+  /* Reporte completo en UNA sola hoja A4: margenes laterales mas chicos y todo mas compacto. */
+  .rpg-una-hoja .rep-head, .rpg-una-hoja .rep-foot{ left:10mm; right:10mm; }
+  .rpg-una-hoja .rep-body{ left:10mm; right:10mm; top:28mm; height:242mm; }
+  .rpg-una-hoja .rep-t{ width:100%; }
+  .rpg-una-hoja .rep-t td{ font-size:7.5pt; padding:2.5pt 4pt; }
+  .rpg-una-hoja .rep-t.rpg-rep-detalle td{ font-size:6.3pt; padding:1.5pt 2.5pt; }
+  .rpg-una-hoja .rep-h2{ font-size:9.5pt; padding:0 0 3pt; margin:0 0 3pt; }
+  .rpg-una-hoja .rpg-nota-sec{ display:none; }
+  .rpg-u-row{ display:flex; gap:5mm; align-items:flex-start; }
+  .rpg-u-row > .rpg-u-blk{ flex:1; min-width:0; }
+  .rpg-u-blk{ margin-bottom:4mm; }
+  .rpg-una-hoja .rpg-svg{ width:100%; height:42mm; max-height:none; }
 
 
   /* ---- Pauta Diaria de Generadores: reusa la mayoria de estilos de la pauta de chequeo diario (table.sheet, chk-mark, dfield,
@@ -2003,7 +2015,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   }
 
   // ---------- version y aviso de actualizacion ----------
-  // Cada version publicada lleva un identificador (2026-09-26.1212-444199d4, lo genera compilar.js). Se compara contra la version
+  // Cada version publicada lleva un identificador (2026-10-06.1131-d4489e43, lo genera compilar.js). Se compara contra la version
   // publicada de la web (mismo origen para todos: PC, celular o navegador) leyendo su etiqueta <meta name="app-version">.
   // Es una lectura publica de una pagina de solo texto: no requiere Firebase ni maneja datos del usuario.
   var APP_VERSION = (document.querySelector('meta[name="app-version"]') || {}).content || '';
@@ -5695,7 +5707,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     var formula = d.kwhMedidor === null ? 'Sin dato' :
       'Lectura del medidor: ' + rpgFmt(d.kwhMedidor, '') + ' × ' + RPG_FACTOR_EMPALME.toLocaleString('es-CL') + ' = ' + rpgFmt(d.kwh, 'KWh');
     return repH2(RPG_SECCIONES.empalme.titulo)
-      + '<p class="rep-p">Diferencia entre la última lectura del mes y la última lectura anterior a él, multiplicada por 1200 (factor de medición del hospital).</p>'
+      + '<p class="rep-p rpg-nota-sec">Diferencia entre la última lectura del mes y la última lectura anterior a él, multiplicada por 1200 (factor de medición del hospital).</p>'
       + '<table class="rep-t">' + repColsN([45, 55])
       + '<tr class="h"><td>Consumo real de energía · ' + esc(rpgNombreMes(d.mes.y, d.mes.m)) + '</td><td>' + esc(rpgFmt(d.kwh, 'KWh')) + '</td></tr>'
       + '<tr><td>Fórmula</td><td>' + esc(formula) + '</td></tr>'
@@ -5718,7 +5730,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
         + '</tr>';
     }).join('');
     return repH2(RPG_SECCIONES.detalle.titulo)
-      + '<table class="rep-t rpg-rep-detalle">' + repColsN([10, 10, 10, 10, 10, 10, 10, 10, 10, 10])
+      + '<table class="rep-t rpg-rep-detalle">' + repColsN([10, 17, 8, 8, 9, 9, 10, 10, 10, 9])
       + '<tr class="h"><td>Fecha</td><td>Técnico</td><td>Estado G1</td><td>Estado G2</td>'
       + '<td>Consumo G1 (Lt)</td><td>Consumo G2 (Lt)</td><td>Horómetro G1 (hrs)</td><td>Horómetro G2 (hrs)</td>'
       + '<td>Estanque enterrado (Lt)</td><td>Empalme (KWh)</td></tr>'
@@ -5726,7 +5738,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   }
   function rpgGraficoSeccionHtml(d){
     return repH2(RPG_SECCIONES.grafico.titulo)
-      + '<p class="rep-p">Litros registrados cada día del mes en la pauta de chequeo.</p>'
+      + '<p class="rep-p rpg-nota-sec">Litros registrados cada día del mes en la pauta de chequeo.</p>'
       + rpgGraficoSvgHtml(d.docsMes);
   }
   function rpgSeccionHtml(nombre, d){
@@ -5740,10 +5752,23 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       + '<div class="pg">' + esc(rpgNombreMes(d.mes.y, d.mes.m)) + '</div></div>'
       + '<div class="rep-body">' + rpgSeccionHtml(nombre, d) + '</div><div class="rep-foot">' + esc(REP_FOOTER) + '</div></div>';
   }
+  // Todo el reporte del mes en UNA sola hoja A4 (version compacta: resumen y empalme lado a lado, luego el detalle y el grafico).
+  function rpgPaginaUnicaHtml(d){
+    var cuerpo;
+    if(!d.docsMes.length){
+      cuerpo = repH2('Reportes de generadores · ' + rpgNombreMes(d.mes.y, d.mes.m)) + rpgSinDatosHtml();
+    } else {
+      cuerpo = '<div class="rpg-u-row"><div class="rpg-u-blk">' + rpgResumenSeccionHtml(d) + '</div><div class="rpg-u-blk">' + rpgEmpalmeSeccionHtml(d) + '</div></div>'
+        + '<div class="rpg-u-blk">' + rpgDetalleSeccionHtml(d) + '</div>'
+        + '<div class="rpg-u-blk">' + rpgGraficoSeccionHtml(d) + '</div>';
+    }
+    return '<div class="rep-page rpg-una-hoja"><div class="rep-head"><div class="logos"><img src="' + REP_LOGO1 + '"/><img src="' + REP_LOGO2 + '"/></div>'
+      + '<div class="pg">' + esc(rpgNombreMes(d.mes.y, d.mes.m)) + '</div></div>'
+      + '<div class="rep-body">' + cuerpo + '</div><div class="rep-foot">' + esc(REP_FOOTER) + '</div></div>';
+  }
   function rpgNombreArchivo(sufijo, d){
     return 'reporte-generadores-' + sufijo + '-' + d.mes.y + '-' + rpgDosDig(d.mes.m) + '.pdf';
   }
-  var RPG_ORDEN_SECCIONES = ['resumen', 'empalme', 'detalle', 'grafico'];
 
   function rpgDescargarSeccion(nombre, btn){
     if(!rpgDatos){ avisar('Espera a que termine de cargar el reporte.'); return; }
@@ -5756,14 +5781,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   function rpgDescargarTodo(btn){
     if(!rpgDatos){ avisar('Espera a que termine de cargar el reporte.'); return; }
     var d = rpgDatos;
-    var paginas = RPG_ORDEN_SECCIONES.map(function(n){ return rpgPaginaHtml(n, d); }).join('');
-    return generarPdfDePaginas(paginas, rpgNombreArchivo('completo', d), btn);
+    return generarPdfDePaginas(rpgPaginaUnicaHtml(d), rpgNombreArchivo('completo', d), btn);
   }
   function rpgImprimirTodo(){
     if(!rpgDatos){ avisar('Espera a que termine de cargar el reporte.'); return; }
     var d = rpgDatos;
-    var paginas = RPG_ORDEN_SECCIONES.map(function(n){ return rpgPaginaHtml(n, d); }).join('');
-    return imprimirPaginas(paginas);
+    return imprimirPaginas(rpgPaginaUnicaHtml(d));
   }
 
   document.querySelectorAll('[data-rpg-pdf]').forEach(function(btn){
