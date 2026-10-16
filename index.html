@@ -9,9 +9,9 @@
      guardados (p. ej. el estado "Stop" de un generador podia mostrarse como "Detener"). -->
 <meta name="google" content="notranslate">
 <!-- Politica de seguridad de contenido: la genera build.ps1 (incluye los hashes de los scripts en linea). -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2BcN0wA8uRzGcKKYUZXU+pZmotROlgujaChRVDDUV50=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=' https://www.gstatic.com/firebasejs/10.14.1/; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://zonadeguerreros.github.io; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-3K1cklTODkbJw2yTkfc2wZukd3EhMt/o/aLsCgrsdJk=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=' https://www.gstatic.com/firebasejs/10.14.1/; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://zonadeguerreros.github.io; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'none'; form-action 'none'">
 <title>Pauta de Chequeo Diario</title>
-<meta name="app-version" content="2026-10-08.0001-d4489e43">
+<meta name="app-version" content="2026-10-16.1037-a62d2d7a">
 <style>
   @font-face{
     font-family:"Roboto";
@@ -476,6 +476,16 @@
   .sol-off{ display:none !important; }
   .sol-sheet input:disabled, .sol-sheet select:disabled, .sol-sheet textarea:disabled{ opacity:1; -webkit-text-fill-color:currentColor; background:#F6F6F6; cursor:default; }
 
+  /* Sugerencias del listado de materiales (cuadro flotante bajo "Descripcion del material") */
+  .sol-sug{ position:fixed; z-index:60; background:#fff; color:#1A1A1A; border:1px solid #9A9A9A; border-radius:6px; box-shadow:0 8px 24px rgba(0,0,0,.18); overflow-y:auto; font-family:var(--font); font-size:13px; }
+  .sol-sug[hidden]{ display:none; }
+  .sol-sug-tit{ position:sticky; top:0; background:#F3F3F3; color:#555; font-size:11px; padding:5px 10px; border-bottom:1px solid #E0E0E0; }
+  .sol-sug-op{ padding:7px 10px; border-bottom:1px solid #EEE; cursor:pointer; line-height:1.3; }
+  .sol-sug-op:last-child{ border-bottom:none; }
+  .sol-sug-op b{ display:block; font-weight:600; }
+  .sol-sug-op span{ display:block; font-size:12px; color:#666; }
+  .sol-sug-op:hover, .sol-sug-op.activo{ background:#EAF2FB; }
+
   /* Hoja para PDF / impresion / vista previa (una pagina A4) */
   .sol-page{ position:relative; width:210mm; height:296.5mm; background:#fff; overflow:hidden; box-sizing:border-box; page-break-after:always; break-after:page; font-family:var(--font); color:#000; padding:16mm 15mm 10mm 15mm; font-size:10.5pt; }
   .sol-page .p-head{ display:flex; align-items:center; justify-content:space-between; gap:8mm; margin-bottom:9mm; }
@@ -504,6 +514,28 @@
   .sol-page .p-firmas .f-nom{ font-size:9pt; color:#333; margin-top:.6mm; }
   .sol-page .p-notas{ margin-top:13mm; font-size:9.5pt; line-height:1.5; position:relative; }
   .sol-page .p-notas img{ position:absolute; right:0; top:-6mm; height:36mm; width:auto; }
+  /* Si la tabla no cabe (descripciones largas), solPaginaAjustada aplica uno de estos pasos: letra mas chica en la tabla y menos aire */
+  .sol-page.sol-fit1 table.p-tabla td, .sol-page.sol-fit2 table.p-tabla td, .sol-page.sol-fit3 table.p-tabla td, .sol-page.sol-fit4 table.p-tabla td{ border-bottom:.3pt solid #C8C8C8; }
+  .sol-page.sol-fit1 table.p-tabla td{ padding:.3mm 1.2mm; }
+  .sol-page.sol-fit1 table.p-tabla td.w{ font-size:8pt; line-height:1.1; }
+  .sol-page.sol-fit2 table.p-tabla td{ padding:.2mm 1mm; height:5mm; }
+  .sol-page.sol-fit2 table.p-tabla td.w{ font-size:7pt; line-height:1.08; }
+  .sol-page.sol-fit2 .p-firmas{ margin-top:6mm; }
+  .sol-page.sol-fit2 .p-notas{ margin-top:10mm; }
+  .sol-page.sol-fit3 table.p-tabla{ font-size:8pt; }
+  .sol-page.sol-fit3 table.p-tabla td{ padding:.1mm 1mm; height:4.4mm; }
+  .sol-page.sol-fit3 table.p-tabla td.w{ font-size:6.3pt; line-height:1.05; }
+  .sol-page.sol-fit3 .p-head{ margin-bottom:5mm; }
+  .sol-page.sol-fit3 .p-firmas{ margin-top:4mm; }
+  .sol-page.sol-fit3 .p-notas{ margin-top:8mm; }
+  .sol-page.sol-fit4 table.p-tabla{ font-size:7.5pt; }
+  .sol-page.sol-fit4 table.p-tabla td{ padding:0 .8mm; height:4mm; }
+  .sol-page.sol-fit4 table.p-tabla td.w{ font-size:5.6pt; line-height:1.02; }
+  .sol-page.sol-fit4 .p-head{ margin-bottom:3mm; }
+  .sol-page.sol-fit4 .p-head img.l1, .sol-page.sol-fit4 .p-head img.l2{ height:19mm; }
+  .sol-page.sol-fit4 .p-fields{ margin-bottom:3mm; }
+  .sol-page.sol-fit4 .p-firmas{ margin-top:3mm; }
+  .sol-page.sol-fit4 .p-notas{ margin-top:7mm; }
   .sol-page .p-pie{ position:absolute; left:15mm; right:15mm; bottom:14mm; font-size:9pt; color:#333; }
 
   @media print{
@@ -1041,6 +1073,17 @@
         <button type="button" class="btn" id="cu-func-traer">Traer nombres de las cuentas</button>
       </div>
       <div class="inf-note" id="cu-func-msg"></div>
+    </div>
+    <div class="inf-card">
+      <h2>Listado de materiales</h2>
+      <div class="inf-note">Materiales que aparecen en el buscador de la Solicitud de materiales. Uno por línea, en este orden y separado por barras: <b>Nombre técnico | Medidas o formato | Marca de referencia</b> (las medidas y la marca son opcionales). Sin precios.</div>
+      <div class="inf-note" id="cu-mat-origen"></div>
+      <textarea id="cu-mat-lista" rows="10" spellcheck="false" style="width:100%;box-sizing:border-box;font-family:inherit;font-size:13px;padding:8px;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--ink)"></textarea>
+      <div class="inf-new-row">
+        <button type="button" class="btn primary" id="cu-mat-guardar">Guardar listado</button>
+        <button type="button" class="btn" id="cu-mat-base">Volver al listado base</button>
+      </div>
+      <div class="inf-note" id="cu-mat-msg"></div>
     </div>
     <div class="inf-card">
       <h2>Respaldo de datos</h2>
@@ -2015,7 +2058,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   }
 
   // ---------- version y aviso de actualizacion ----------
-  // Cada version publicada lleva un identificador (2026-10-08.0001-d4489e43, lo genera compilar.js). Se compara contra la version
+  // Cada version publicada lleva un identificador (2026-10-16.1037-a62d2d7a, lo genera compilar.js). Se compara contra la version
   // publicada de la web (mismo origen para todos: PC, celular o navegador) leyendo su etiqueta <meta name="app-version">.
   // Es una lectura publica de una pagina de solo texto: no requiere Firebase ni maneja datos del usuario.
   var APP_VERSION = (document.querySelector('meta[name="app-version"]') || {}).content || '';
@@ -4397,6 +4440,59 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     return solSnapshot(s);
   }
 
+  // ---------- listado de materiales (buscador de la descripcion) ----------
+  // Listado base: materiales-base.json (del presupuesto PPTO.xlsx, solo nombre, medidas y marca; sin precios), incrustado al compilar.
+  // Si el jefe guardo un listado propio en la nube (config/materiales, panel "Cuentas y accesos"), se usa ese.
+  // Se guarda una copia en el navegador para usarlo sin conexion; al cerrar sesion se borra.
+  var SOL_MATERIALES_BASE = [{"n":"Luz indicadora empotrada","m":"45x45x58,5 [mm]","r":"Bticino"},{"n":"Medidor de energía tipo riel DIN monofásico","m":"37x79x67 [mm]","r":"Lexo"},{"n":"Medidor de energía tipo riel DIN trifásico","m":"72x100x65±2 [mm]","r":"Chint"},{"n":"Foco tipo piscina IPX8","m":"ø 250x50 [mm]","r":"Vtec"},{"n":"Driver electrónico","m":"Standard (Unidad)","r":"Vtec"},{"n":"Equipo estanco hermético LED","m":"120 [cm]","r":"Halux"},{"n":"Cable libre de halógeno x metro","m":"6 [mm2]","r":"Revi"},{"n":"Kit de barra de tierra de cobre","m":"25 [cm]","r":"Genérica"},{"n":"Terminal de ojo redondo compresión","m":"6 [mm2]","r":"Genérica"},{"n":"Luz piloto color rojo","m":"22 [mm]","r":"Genérica"},{"n":"Prensa estopa PG-36","m":"PG-36","r":"Genérica"},{"n":"Prensa estopa PG-29","m":"PG-29","r":"Genérica"},{"n":"Tornillos autoperforante","m":"8x1/2\" (500 Uni)","r":"Genérica"},{"n":"Tornillos autoperforante","m":"8x3/4\" (500 Uni)","r":"Genérica"},{"n":"Cinta aislante de goma","m":"19[mm]x5[m]x0,76[mm]","r":"3M Scotch 23"},{"n":"Cinta aislante de goma","m":"19[mm]x20[m]x0,177[mm]","r":"3M Scotch 33+"},{"n":"Terminal Ferrule doble","m":"2 x 2,5 [mm2]","r":"Genérica"},{"n":"Terminal Ferrule aislado","m":"2,5 [mm2] 14 AWG","r":"Genérica"},{"n":"Conector Recto Para Flexible Metálico","m":"32 [mm]","r":"Genérica"},{"n":"Cable libre de halógenos color rojo","m":"2,5 [mm2] (100 metros)","r":"Genérica"},{"n":"Cable libre de halógenos color verde","m":"2,5 [mm2] (100 metros)","r":"Genérica"},{"n":"Cable libre de halógenos color azul","m":"2,5 [mm2] (100 metros)","r":"Genérica"},{"n":"Cable libre de halógenos color negro","m":"2,5 [mm2] (100 metros)","r":"Genérica"},{"n":"Cable libre de halógenos color blanco","m":"2,5 [mm2] (100 metros)","r":"Genérica"},{"n":"Cable libre de halógenos color rojo","m":"4 [mm2] (100 metros)","r":"Genérica"},{"n":"Cable libre de halógenos color blanco","m":"4 [mm2] (100 metros)","r":"Genérica"},{"n":"Cable libre de halógenos color verde","m":"4 [mm2] (100 metros)","r":"Genérica"},{"n":"Cable libre de halógenos color azul","m":"4 [mm2] (100 metros)","r":"Genérica"},{"n":"Cable libre de halógenos color negro","m":"4 [mm2] (100 metros)","r":"Genérica"},{"n":"Conector plástico cónico para cable","m":"Bolsa 100 unidades","r":"Genérica"},{"n":"Conector de resorte Scotchlock azul/gris","m":"Bolsa 100 unidades","r":"Genérica"},{"n":"Conector de resorte Scotchlock amarillo/rojo","m":"Bolsa 100 unidades","r":"Genérica"},{"n":"Broca copa para metal","m":"32 [mm]","r":"Kwb"},{"n":"Enchufe macho industrial volante","m":"220 [V] 63 [A]","r":"Genérica"},{"n":"Enchufe hembra industrial sobre puesto","m":"220 [V] 63 [A]","r":"Genérica"},{"n":"Amarra cable c/placa rectangular","m":"100x2,5[mm] (100 unidades)","r":"Genérica"},{"n":"Cable libre de halógeno multipolar","m":"3x10 [mm2] x metro","r":"Genérica"},{"n":"Extractor de aire pared/techo","m":"4\"","r":"Genérica"},{"n":"Palmeta de cielo americano 600x600 [mm].","m":"Caja 12 unidades","r":"Genérica"},{"n":"Panel luminaria Led","m":"605x605 [mm]","r":"Genérica"},{"n":"Kit de emergencia para panel Led","m":"3-40 [W]","r":"Darlux"},{"n":"Kit de emergencia tubo LED 18 [W]","m":"3-40 [W]","r":"Vtec"},{"n":"Kit de emergencia panel LED 72 [W]","m":"72 [W]","r":"Vtec"},{"n":"Kit de emergencia driver 2.5 [A]","m":"6 [W]","r":"ByP"},{"n":"Chasis plegable para tableros faena","m":"Unidad","r":"Legrand"},{"n":"Bandeja DLP tipo ZH","m":"100x50x2000 [mm]","r":"Legrand"},{"n":"Tapa final para bandeja DLP tipo ZH","m":"100x50 [mm]","r":"Legrand"},{"n":"Canaleta libre de halógenos","m":"40x60x2000 [mm]","r":"Genérica"},{"n":"Tablero de faena portátil IP65","m":"Unidad","r":"Lexo"},{"n":"Tablero de faena Estanco ABS","m":"Unidad","r":"Vitel"},{"n":"Foco Led embutido 19 [W]","m":"Unidad","r":"Phillips"},{"n":"Tubería EMT 20 [mm] x 3 [m]","m":"20 [mm] x 3 [m]","r":"Genérica"},{"n":"Tubería acero galvanizado RMC roscado","m":"20 [mm] x 3 [m]","r":"Genérica"},{"n":"Curva 90° EMT 20 [mm]","m":"20 [mm]","r":"Genérica"},{"n":"Curva 90° galvanizada RMC roscada","m":"20 [mm]","r":"Genérica"},{"n":"Copla EMT 20 [mm]","m":"20 [mm]","r":"Genérica"},{"n":"Copla galvanizada RMC","m":"20 [mm]","r":"Genérica"},{"n":"Terminal recto EMT 20 [mm]","m":"20 [mm]","r":"Genérica"},{"n":"Conector curvo 90° para flexible metálico","m":"20 [mm]","r":"Genérica"},{"n":"Conector recto para tuberia flexible metálico","m":"20 [mm]","r":"Genérica"},{"n":"Conector EMT a flexible metálico","m":"20 [mm]","r":"Genérica"},{"n":"Conector tubería RMC flexible metálico","m":"20 [mm]","r":"Genérica"},{"n":"Conector HUB recto RMC","m":"20 [mm]","r":"Genérica"},{"n":"Dobladora curvadora de tubos","m":"Unidad","r":"Gutstark"},{"n":"Caja galvanizada en caliente","m":"100x100x65 [mm]","r":"Genérica"},{"n":"Caja galvanizada en caliente estanca","m":"100x100x65 [mm]","r":"Genérica"},{"n":"Caja Chuqui pre galvanizada","m":"12x7,5x4 [cm]","r":"Genérica"},{"n":"Abrazadera tipo Caddy","m":"20 [mm] Bolsa 100 Unidades","r":"Genérica"},{"n":"Ventilador industrial","m":"120x120x38 [mm]","r":"Genérica"},{"n":"Selector maneta 3 posiciones","m":"22 [mm] 2 contactos","r":"Schneider Electric"},{"n":"Cinta blanca-texto negro","m":"12 [mm] x 8 [m]","r":"Brother"},{"n":"Soporte universal DLPZH/S BLCO","m":"100x50 [mm]","r":"Legrand"},{"n":"Placa 2 módulos color blanco","m":"12x7,5x1 [cm]","r":"Bticino Matix"},{"n":"Placa 1 módulo color blanco","m":"12x7,5x1 [cm]","r":"Bticino Matix"},{"n":"Placa 3 módulos color blanco","m":"12x7,5x1 [cm]","r":"Bticino Matix"},{"n":"Soporte placa 3 módulos","m":"7.1x11.9x0.8 [cm]","r":"Bticino Matix"},{"n":"Módulo enchufe toma corriente","m":"2.3x4.7x3.8 [cm]","r":"Bticino Matix"},{"n":"Placa ciega color blanco","m":"118x82.8x7.7 [mm]","r":"Bticino Matix"},{"n":"Módulo enchufe Schuko blanco","m":"10 [A] 250 [V]","r":"Bticino Matix"},{"n":"Módulo interruptor 9/12","m":"47x23x37 [mm]","r":"Bticino Matix"},{"n":"Toma seguridad blanca","m":"2.2x4x3.6 [mm]","r":"Bticino Matix"},{"n":"Panel LED empotrado 5400 lm luz fria 60[w]","m":"600x1200 [mm]","r":"Genérico"},{"n":"Enchufe volante macho direccionable","m":"16 [A] 2p+T 250 [V]","r":"Legrand"},{"n":"Adaptador shuko blanco macho","m":"16 [A] 2p+T 250 [V]","r":"Gewiss"},{"n":"Tuberia flexible metalica corrugada libre de halogeno","m":"20 [mm] 30 [mts]","r":"Crompton"},{"n":"Tuberia flexible metalica corrugada libre de halogeno","m":"25 [mm] 30 [mts]","r":"Crompton"},{"n":"Tuberia flexible metalica corrugada libre de halogeno","m":"32 [mm] 30 [mts]","r":"Crompton"},{"n":"Tarugo nylon con tope","m":"6 [mm] (100 uni)","r":"Genérico"},{"n":"Marcadores numericos","m":"14-16AWG (200 uni)","r":"Genérico"},{"n":"Marcadores numericos","m":"8-10AWG (200 uni)","r":"Genérico"},{"n":"Fotocelda con base exterior","m":"1800 [W]","r":"LED"},{"n":"Manga termocontraible libre de halogeno rojo","m":"4 [mm] 1 [mts]","r":"RoHS"},{"n":"Manga termocontraible libre de halogeno rojo","m":"6 [mm] 1 [mts]","r":"RoHS"},{"n":"Manga termocontraible libre de halogeno rojo","m":"10 [mm] 1 [mts]","r":"RoHS"},{"n":"Manga termocontraible libre de halogeno blanco","m":"4 [mm] 1 [mts]","r":"RoHS"},{"n":"Manga termocontraible libre de halogeno blanco","m":"6 [mm] 1 [mts]","r":"RoHS"},{"n":"Manga termocontraible libre de halogeno blanco","m":"10 [mm] 1 [mts]","r":"RoHS"},{"n":"Manga termocontraible libre de halogeno verde","m":"4 [mm] 1 [mts]","r":"RoHS"},{"n":"Manga termocontraible libre de halogeno verde","m":"6 [mm] 1 [mts]","r":"RoHS"},{"n":"Manga termocontraible libre de halogeno verde","m":"10 [mm] 1 [mts]","r":"RoHS"},{"n":"Contactor Modular","m":"2p 25A 240 [V] AC","r":"Schneider Electric"},{"n":"Cable libre de halogeno RZ1-K multipolar","m":"5x16[mm2] x metro","r":"cables RCT"},{"n":"Cable libre de halogeno RZ1-K multipolar","m":"3x2.5[mm2] x metro","r":"cables RCT"},{"n":"Tablero eléctrico metálico con chasis ranurado","m":"800x600x250 [mm]","r":"Genérico"},{"n":"Tablero eléctrico metálico con chasis ranurado","m":"1000x800x300 [mm]","r":"Genérico"},{"n":"Contactor trifásico","m":"3P 18 A AC-3 220 [V] AC 50/60 [Hz]","r":"Schneider Electric"},{"n":"Contactor trifásico","m":"3P 12 A AC-3 220 [V] AC 50/60 [Hz]","r":"Schneider Electric"},{"n":"Contactor trifásico","m":"3P 25 A AC-3 220 [V] AC 50/60 [Hz]","r":"Schneider Electric"},{"n":"Bloque de contacto auxiliar frontal","m":"Contactos 2NA+2NC 10A/690 [V] CA","r":"Schneider Electric"},{"n":"Relé térmico para contactor","m":"LC1D09/D38 clase 10 [A] 5,5-8 [A]","r":"Schneider Electric"},{"n":"Relé térmico para contactor","m":"LC1D09/D38 clase 10 [A] 7-10 [A]","r":"Schneider Electric"},{"n":"Relé térmico para contactor","m":"LC1D09/D38 clase 10 [A] 9-13 [A]","r":"Schneider Electric"},{"n":"Relé térmico para contactor","m":"LC1D09/D38 clase 10 [A] 1.6-2.5 [A]","r":"Schneider Electric"},{"n":"Interruptor automático","m":"Acti9 iC60N 1P 20 [A]","r":"Schneider Electric"},{"n":"Interruptor automático","m":"Acti9 iC60N 1P 10 [A]","r":"Schneider Electric"},{"n":"Interruptor automático","m":"Acti9 iC60N 1P 16 [A]","r":"Schneider Electric"},{"n":"Interruptor diferencial","m":"Acti iID 2P 25 [A] 30 [mA] AC","r":"Schneider Electric"},{"n":"Barra repartidor tetrapolar","m":"125[A] 7 polos","r":"Kersting"},{"n":"Barra repartidor tetrapolar","m":"125[A] 11 polos","r":"Kersting"},{"n":"Barra repartidor tetrapolar","m":"180[A] 15P + 1","r":"Sungko"},{"n":"Bornes de conexión push","m":"Cable 2.5 [mm2] x unidad","r":"Leipold"},{"n":"Bornes de conexión push","m":"Cable 4 [mm2] x unidad","r":"Leipold"},{"n":"Bornes de conexión push","m":"Cable 6 [mm2] x unidad","r":"Leipold"},{"n":"Bornes de conexión push","m":"Cable 10 [mm2] x unidad","r":"Leipold"},{"n":"Bornes de conexión push","m":"Cable 16 [mm2] x unidad","r":"Leipold"},{"n":"Terminal de punta ferruler","m":"Cable 1.5 [mm2] x 100 unidades","r":"General conector"},{"n":"Terminal de punta ferruler","m":"Cable 4 [mm2] x 100 unidades","r":"General conector"},{"n":"Terminal de punta ferruler doble","m":"Cable 4 [mm2] x 100 unidades","r":"General conector"},{"n":"Terminal de punta ferruler","m":"Cable 6 [mm2] x 100 unidades","r":"General conector"},{"n":"Terminal de punta ferruler","m":"Cable 10 [mm2] x 100 unidades","r":"General conector"},{"n":"Terminal de punta ferruler","m":"Cable 16 [mm2] x 100 unidades","r":"General conector"},{"n":"Marco de sierra","m":"300 [mm]","r":"Genérico"},{"n":"Hoja de sierra","m":"24 dientes","r":"Bahco"},{"n":"Knock-OUT hidráulico","m":"22mm a 60 [mm]","r":"Tosun"},{"n":"Broca paleta madera","m":"20mm x 152 [mm]","r":"Bosch"},{"n":"Broca paleta madera","m":"22mm x 152 [mm]","r":"Bosch"},{"n":"Broca paleta madera","m":"25mm x 152 [mm]","r":"Bosch"},{"n":"Broca paleta madera","m":"32mm x 152 [mm]","r":"Bosch"},{"n":"Puntas Philips cruz","m":"PH2 1/4x50 [mm]","r":"Genérico"},{"n":"Módulo pulsador timbre 10[A]","m":"modelo am 5005","r":"Bticino Matix"},{"n":"Cable flexible multipolar RV-K","m":"5x4[mm] x metro","r":"Revi"},{"n":"Caja derivacion embutida tabiquera","m":"105x68x50 [mm]","r":"Schneider Electric"},{"n":"Caja chuqui derivación","m":"124x85x44 [mm]","r":"Bticino"},{"n":"Conector recto para cordón","m":"ip68 5-10mm 16[A] 4p+T","r":"Bekam"},{"n":"Tornillo roscalata metal","m":"6x1¨ x 100 unidades","r":"Mamut"},{"n":"Selector tipo pacco","m":"63[A] 3 posiciones 1-0-2","r":"Globaltronic"},{"n":"Aceite 15w40","m":"6 litros","r":"Hyundai"},{"n":"Conector estereo plug jack","m":"6.3mm 90°","r":"Genérico"},{"n":"Juego 3 brocas escalonadas","m":"1/8 a 7/8","r":"milwaukee"},{"n":"Interruptor diferencial","m":"4P 63 A 300 [mA]","r":"Schneider Electric"}];
+  var SOL_MAX_SUGERENCIAS = 12;
+  var solMatNube = ls.json('pe_materiales', null);   // null = no hay listado propio en la nube: se usa el base
+  function solLimpiarMateriales(lista){
+    var vistos = {}, out = [];
+    (lista || []).forEach(function(x){
+      if(!x || typeof x !== 'object') return;
+      var m = { n: String(x.n || '').replace(/\s+/g, ' ').trim(), m: String(x.m || '').replace(/\s+/g, ' ').trim(), r: String(x.r || '').replace(/\s+/g, ' ').trim() };
+      var k = normNombre(m.n + '|' + m.m + '|' + m.r);
+      if(m.n && !vistos[k]){ vistos[k] = true; out.push(m); }
+    });
+    return out;
+  }
+  function materiales(){ return (Array.isArray(solMatNube) && solMatNube.length) ? solMatNube : SOL_MATERIALES_BASE; }
+  function materialesSonBase(){ return materiales() === SOL_MATERIALES_BASE; }
+  function fijarMateriales(lista){
+    if(lista === null){ solMatNube = null; ls.del('pe_materiales'); return null; }
+    solMatNube = solLimpiarMateriales(lista);
+    ls.set('pe_materiales', JSON.stringify(solMatNube));
+    return solMatNube;
+  }
+  function cargarMateriales(){
+    if(!fbReady || !fbDb || !currentUser) return Promise.resolve();
+    return withTimeout(fbDb.collection('config').doc('materiales').get(), 8000).then(function(snap){
+      fijarMateriales(snap.exists && Array.isArray(snap.data().lista) && snap.data().lista.length ? snap.data().lista : null);
+    }).catch(function(err){ registrarError('cargarMateriales', err); });   // sin conexion o reglas antiguas: se sigue con lo que habia
+  }
+  // Texto que queda en "Descripcion del material": nombre · medidas · Ref. marca (una marca "generica" no aporta y se omite)
+  function solTextoMaterial(x){
+    var p = [x.n];
+    if(x.m) p.push(x.m);
+    if(x.r && !/^gen[eé]ric[oa]s?$/i.test(x.r)) p.push('Ref. ' + x.r);
+    return p.join(' · ');
+  }
+  // Busca sin importar mayusculas ni tildes; todas las palabras escritas deben aparecer (en cualquier orden).
+  // Primero los que empiezan con lo escrito, luego el resto, cada grupo por orden alfabetico.
+  function solBuscarMateriales(q){
+    var palabras = normNombre(q).split(' ').filter(Boolean);
+    if(!palabras.length || palabras.join('').length < 2) return [];
+    var res = [];
+    materiales().forEach(function(x){
+      var nom = normNombre(x.n), todo = nom + ' ' + normNombre(x.m) + ' ' + normNombre(x.r);
+      if(palabras.every(function(p){ return todo.indexOf(p) >= 0; })) res.push({ x: x, inicio: nom.indexOf(palabras[0]) === 0 ? 0 : 1, clave: nom + ' ' + normNombre(x.m) });
+    });
+    // Mismo nombre: por medidas, con los numeros en orden natural (10 A, 16 A, 20 A)
+    res.sort(function(a, b){ return a.inicio - b.inicio || a.clave.localeCompare(b.clave, 'es', { numeric: true }); });
+    return res.slice(0, SOL_MAX_SUGERENCIAS).map(function(r){ return r.x; });
+  }
+
   // ---------- estado y permisos ----------
   function solEsAutor(s){ return !!(currentUser && s.solicitanteUid && s.solicitanteUid === currentUser.uid); }
   // El jefe ya empezo a revisar (algun material decidido o mensaje): el tecnico ya no puede cambiar la solicitud.
@@ -4644,7 +4740,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   // =====================================================================
   //  Hoja en pagina A4 (vista previa, PDF, impresion)
   // =====================================================================
-  function solPaginaHtml(s){
+  function solPaginaHtml(s, ajuste){
     var c = solConteo(s);
     var filas = '', items = (s.items || []).filter(function(it){ return it.descripcion || it.codigo || it.cantSolicitada; });
     for(var i = 0; i < SOL_MAX; i++){
@@ -4657,7 +4753,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     }
     var jefe = s.autorizadoPor && s.autorizadoPor.nombre;
     var recNom = s.recepcionadoNombre || (s.firmaRecepcion ? s.solicitadoPor : '');
-    return '<div class="sol-page">'
+    return '<div class="sol-page' + (ajuste ? ' ' + ajuste : '') + '">'
       + '<div class="p-head"><img class="l1" src="' + SOL_LOGO1 + '"/><div class="p-title">Hoja de Salida de Materiales – Bodega Eléctrica</div><img class="l2" src="' + SOL_LOGO2 + '"/></div>'
       + '<div class="p-fields"><div><b>Fecha: </b><span class="v">' + esc(solFecha(s.fecha)) + '</span></div><div><b>N° de Documento: </b><span class="v">' + esc(s.numero || 'por asignar') + '</span></div>'
       + '<div class="wide"><b>Obra/Proyecto: </b><span class="v">' + esc(s.obra || '') + '</span></div>'
@@ -4676,18 +4772,40 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   }
   function solNombreArchivo(s){ return 'solicitud-materiales-' + String(s.numero || s.id).replace(/[^A-Za-z0-9_-]/g, '_') + '.pdf'; }
 
+  // Hoja que cabe en una pagina A4: con descripciones largas (p. ej. elegidas del listado de materiales) la tabla crece y empujaria
+  // las firmas y notas fuera de la hoja. Se mide fuera de pantalla y, solo si hace falta, se achica de a un paso la letra de la tabla.
+  var SOL_AJUSTES = ['', 'sol-fit1', 'sol-fit2', 'sol-fit3', 'sol-fit4'];
+  function solCabe(pagina){
+    var pie = pagina.querySelector('.p-pie'), limite = pie ? pie.getBoundingClientRect().top - 2 : pagina.getBoundingClientRect().bottom;
+    var fondo = 0;
+    pagina.querySelectorAll('.p-tabla, .p-leyenda, .p-msg, .p-firmas, .p-notas, .p-notas img').forEach(function(el){ fondo = Math.max(fondo, el.getBoundingClientRect().bottom); });
+    return fondo <= limite;
+  }
+  async function solPaginaAjustada(s){
+    var host = solEl('rep-measure'), html = '';
+    try{
+      for(var i = 0; i < SOL_AJUSTES.length; i++){
+        html = solPaginaHtml(s, SOL_AJUSTES[i]);
+        host.innerHTML = html;
+        if(i === 0) await waitForImages(host);
+        if(solCabe(host.firstElementChild)) break;
+      }
+    }finally{ host.innerHTML = ''; }
+    return html;
+  }
+
   async function solDescargarPdf(s, btn){
-    await generarPdfDePaginas(solPaginaHtml(s), solNombreArchivo(s), btn);
+    await generarPdfDePaginas(await solPaginaAjustada(s), solNombreArchivo(s), btn);
   }
   async function solImprimir(s){
-    await imprimirPaginas(solPaginaHtml(s));
+    await imprimirPaginas(await solPaginaAjustada(s));
   }
   async function solVistaPrevia(s){
     solPreviewState = s;
     await mostrarVistaPrevia({
       overlayId: 'sol-preview', tituloId: 'sol-pv-title', pagesId: 'sol-pv-pages', boxId: 'sol-pv-box', bodyId: 'sol-pv-body',
       titulo: 'Vista previa · N° ' + (s.numero || 'por asignar'),
-      generarHtml: async function(){ return solPaginaHtml(s); }
+      generarHtml: function(){ return solPaginaAjustada(s); }
     });
   }
 
@@ -4706,7 +4824,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     return '<div class="sol-row ' + (e === 'aprobado' ? 'aprobado' : (e === 'espera' ? 'espera' : '')) + '" data-item="' + esc(it.id) + '">'
       + '<div class="c-n">' + (i + 1) + '</div>'
       + '<label class="c-cod"><span>Código/ID</span><input type="text" data-if="codigo" data-z="campos" value="' + esc(it.codigo) + '"/></label>'
-      + '<label class="c-desc"><span>Descripción del material</span><input type="text" data-if="descripcion" data-z="campos" value="' + esc(it.descripcion) + '" placeholder="Ej.: Cable THHN 12 AWG negro"/></label>'
+      + '<label class="c-desc"><span>Descripción del material</span><input type="text" data-if="descripcion" data-z="campos" value="' + esc(it.descripcion) + '" placeholder="Escribe para buscar: cable, enchufe, medidor…" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="sol-sug"/></label>'
       + '<label class="c-uni"><span>Unidad</span>' + solSelectHtml('unidad', it.unidad, SOL_UNIDADES, 'campos', 'data-if') + '</label>'
       + '<label class="c-cs"><span>Cant. solicitada</span><input type="number" min="0" step="any" data-if="cantSolicitada" data-z="campos" value="' + esc(it.cantSolicitada) + '"/></label>'
       + '<label class="c-ce"><span>Cant. entregada</span><input type="number" min="0" step="any" data-if="cantEntregada" data-z="revision" value="' + esc(it.cantEntregada) + '"/></label>'
@@ -4779,6 +4897,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
 
   function solRenderEditor(){
     var s = solState; if(!s) return;
+    solSugCerrar();
     solPerm = solPermisos(s);
     var scroll = window.pageYOffset;
     solEl('sol-sheet').innerHTML = solEditorHtml(s);
@@ -4837,12 +4956,96 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       solTouch();
     }
   }
+  // ---------- sugerencias del listado de materiales (al escribir la descripcion) ----------
+  // Un solo cuadro flotante (fuera de la hoja, para que no lo corte el borde de la tabla) que se ubica bajo el campo que se
+  // esta escribiendo. Se puede seguir escribiendo libremente; elegir una opcion completa la descripcion del renglon.
+  var solSug = { el: null, input: null, items: [], activo: -1 };
+  function solSugEl(){
+    if(solSug.el) return solSug.el;
+    var el = document.createElement('div');
+    el.id = 'sol-sug'; el.className = 'sol-sug'; el.setAttribute('role', 'listbox'); el.hidden = true;
+    // mousedown: el campo no pierde el foco (ni se cierra el teclado del celular) al tocar una opcion
+    el.addEventListener('mousedown', function(e){ e.preventDefault(); });
+    el.addEventListener('click', function(e){
+      var op = e.target.closest('[data-sug]'); if(op) solSugElegir(parseInt(op.getAttribute('data-sug'), 10));
+    });
+    document.body.appendChild(el);
+    solSug.el = el;
+    return el;
+  }
+  function solSugCerrar(){
+    if(solSug.input){ solSug.input.setAttribute('aria-expanded', 'false'); solSug.input.removeAttribute('aria-activedescendant'); }
+    if(solSug.el){ solSug.el.hidden = true; solSug.el.innerHTML = ''; }
+    solSug.input = null; solSug.items = []; solSug.activo = -1;
+  }
+  // Debajo del campo; si abajo no cabe y arriba hay mas espacio, encima.
+  function solSugUbicar(){
+    var el = solSug.el, inp = solSug.input; if(!el || el.hidden || !inp) return;
+    if(!document.body.contains(inp)){ solSugCerrar(); return; }
+    var r = inp.getBoundingClientRect(), vw = document.documentElement.clientWidth, vh = window.innerHeight;
+    var ancho = Math.min(Math.max(r.width, 360), vw - 16);
+    el.style.width = ancho + 'px';
+    el.style.left = Math.max(8, Math.min(r.left, vw - ancho - 8)) + 'px';
+    var abajo = vh - r.bottom - 8, arriba = r.top - 8;
+    if(abajo < 200 && arriba > abajo){ el.style.top = 'auto'; el.style.bottom = (vh - r.top + 2) + 'px'; el.style.maxHeight = Math.min(340, arriba) + 'px'; }
+    else { el.style.bottom = 'auto'; el.style.top = (r.bottom + 2) + 'px'; el.style.maxHeight = Math.min(340, Math.max(abajo, 120)) + 'px'; }
+  }
+  function solSugMostrar(input){
+    if(input.disabled || !solPerm.campos){ solSugCerrar(); return; }
+    var items = solBuscarMateriales(input.value);
+    if(!items.length){ solSugCerrar(); return; }
+    var el = solSugEl();
+    if(solSug.input && solSug.input !== input) solSugCerrar();
+    solSug.input = input; solSug.items = items; solSug.activo = -1;
+    el.innerHTML = '<div class="sol-sug-tit">Listado de materiales · toca uno para agregarlo o sigue escribiendo</div>'
+      + items.map(function(x, i){
+        var det = [x.m, x.r ? 'Ref. ' + x.r : ''].filter(Boolean).join(' · ');
+        return '<div class="sol-sug-op" role="option" aria-selected="false" id="sol-sug-' + i + '" data-sug="' + i + '"><b>' + esc(x.n) + '</b>' + (det ? '<span>' + esc(det) + '</span>' : '') + '</div>';
+      }).join('');
+    el.hidden = false;
+    input.setAttribute('aria-expanded', 'true');
+    solSugUbicar();
+  }
+  function solSugMarcar(i){
+    solSug.activo = i;
+    solSug.el.querySelectorAll('.sol-sug-op').forEach(function(op, k){
+      op.classList.toggle('activo', k === i); op.setAttribute('aria-selected', k === i ? 'true' : 'false');
+      if(k === i) op.scrollIntoView({ block: 'nearest' });
+    });
+    solSug.input.setAttribute('aria-activedescendant', 'sol-sug-' + i);
+  }
+  // Completa la descripcion del renglon con el material elegido (el codigo queda como estaba) y pasa a la cantidad.
+  function solSugElegir(i){
+    var x = solSug.items[i], input = solSug.input; if(!x || !input) return;
+    solSugCerrar();
+    var r = solBuscarItem(input); if(!r || !solPerm.campos) return;
+    r.it.descripcion = solTextoMaterial(x);
+    input.value = r.it.descripcion;
+    solTouch();
+    var cant = r.row.querySelector('[data-if=cantSolicitada]'); if(cant && !cant.disabled) cant.focus();
+  }
+  function solSugTeclas(e){
+    if(!solSug.input || e.target !== solSug.input) return;
+    var n = solSug.items.length;
+    if(e.key === 'ArrowDown'){ e.preventDefault(); solSugMarcar((solSug.activo + 1) % n); }
+    else if(e.key === 'ArrowUp'){ e.preventDefault(); solSugMarcar(solSug.activo <= 0 ? n - 1 : solSug.activo - 1); }
+    else if(e.key === 'Enter'){ if(solSug.activo >= 0){ e.preventDefault(); solSugElegir(solSug.activo); } }
+    else if(e.key === 'Escape'){ e.preventDefault(); solSugCerrar(); }
+  }
+
   function solBind(){
     if(solDelegated) return;
     solDelegated = true;
     var sheet = solEl('sol-sheet');
     sheet.addEventListener('input', solCambio);
     sheet.addEventListener('change', solCambio);
+    sheet.addEventListener('input', function(e){ if(e.target.getAttribute('data-if') === 'descripcion') solSugMostrar(e.target); });
+    sheet.addEventListener('keydown', solSugTeclas);
+    sheet.addEventListener('focusout', function(e){
+      if(e.target === solSug.input) setTimeout(function(){ if(solSug.input && document.activeElement !== solSug.input) solSugCerrar(); }, 150);
+    });
+    window.addEventListener('resize', solSugUbicar);
+    window.addEventListener('scroll', solSugUbicar, true);
     sheet.addEventListener('click', function(e){
       var b = e.target.closest('button'); if(!b || b.disabled) return;
       var s = solState;
@@ -4969,6 +5172,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     if(masBtn) masBtn.addEventListener('click', function(){ masBtn.disabled = true; masBtn.textContent = 'Cargando…'; solLimite += 100; solCargarLista().then(function(l){ solLista = l; solRenderHistorial(); }); });
   }
   function solMostrarLista(){
+    solSugCerrar();
     solEl('sol-editor').hidden = true; solEl('sol-list').hidden = false;
     solEl('sol-intro').textContent = isJefe()
       ? 'Aquí llegan las solicitudes de los técnicos. Abre una para aprobar cada material o dejarlo en espera de adquisición, y agrega un mensaje si hace falta.'
@@ -5033,9 +5237,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     showView('solicitudes');
     solBind();
     infAsegurarNombre().then(function(){ solMostrarLista(); });
+    cargarMateriales();
   }
-  function solIniciarSesion(){ solSyncPending(); solActualizarBadge(); }
+  function solIniciarSesion(){ solSyncPending(); solActualizarBadge(); cargarMateriales(); }
   function solReiniciar(){
+    solSugCerrar();
+    fijarMateriales(null);   // el listado propio de la nube no queda guardado en el navegador despues de cerrar sesion
     solState = null; solMostrarLista.visto = false; solFiltro = 'todas';
     if(solSaveTimer){ clearTimeout(solSaveTimer); solSaveTimer = null; }
     if(solCloudTimer){ clearTimeout(solCloudTimer); solCloudTimer = null; }
@@ -5328,6 +5535,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   }
   function cuCargar(){
     cuMostrarFuncionarios();
+    cuMostrarMateriales();
     cuEl('cu-pendientes').innerHTML = '<div class="empty">Cargando…</div>'; cuEl('cu-oficiales').innerHTML = '';
     var p1 = withTimeout(fbDb.collection('users').get(), 10000);
     var p2 = withTimeout(fbDb.collection('config').doc('registro').get(), 8000).catch(function(){ return null; });
@@ -5417,6 +5625,50 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       cuEl('cu-func-lista').value = actuales.concat(nuevos).join('\n');
       cuEl('cu-func-msg').textContent = nuevos.length ? 'Se agregaron ' + nuevos.length + ' nombre(s) de las cuentas. Revisa la lista y pulsa «Guardar lista».' : 'No hay nombres nuevos en las cuentas.';
     }).catch(function(err){ registrarError('traer nombres', err); avisar('No se pudieron leer las cuentas. Revisa tu conexión.'); });
+  });
+
+  // ---------- listado de materiales (buscador de la solicitud de materiales; ver solicitudes.js) ----------
+  // Una linea por material: "Nombre | Medidas | Marca". Se guarda en config/materiales; "Volver al listado base" borra ese documento.
+  var CU_MSG_MAT_PERM = 'La nube todavía no permite guardar el listado de materiales: falta publicar las reglas nuevas de Firestore (ver LEEME, "Reglas de Firestore"). Mientras tanto se sigue usando el listado base.';
+  function cuMaterialesTexto(){
+    return materiales().map(function(x){ return [x.n, x.m, x.r].join(' | ').replace(/(\s\|\s)+$/, ''); }).join('\n');
+  }
+  function cuMaterialesOrigen(){
+    var n = materiales().length;
+    cuEl('cu-mat-origen').textContent = (materialesSonBase() ? 'En uso: listado base (presupuesto PPTO), ' : 'En uso: listado propio guardado en la nube, ') + n + (n === 1 ? ' material.' : ' materiales.');
+  }
+  function cuMostrarMateriales(){
+    var caja = cuEl('cu-mat-lista');
+    caja.value = cuMaterialesTexto(); cuMaterialesOrigen();
+    cuEl('cu-mat-msg').textContent = '';
+    // Igual que con los funcionarios: si el jefe ya empezo a escribir, la respuesta de la nube no le pisa lo que edita.
+    cargarMateriales().then(function(){ cuMaterialesOrigen(); if(document.activeElement !== caja) caja.value = cuMaterialesTexto(); });
+  }
+  function cuLeerMateriales(){
+    return cuEl('cu-mat-lista').value.split(/\r?\n/).map(function(l){ var p = l.split('|'); return { n: p[0], m: p[1], r: p.slice(2).join('|') }; });
+  }
+  function cuErrorMateriales(donde, err){
+    registrarError(donde, err);
+    avisar(err && err.code === 'permission-denied' ? CU_MSG_MAT_PERM : 'No se pudo guardar el listado de materiales. Revisa tu conexión.');
+  }
+  cuEl('cu-mat-guardar').addEventListener('click', function(){
+    var lista = solLimpiarMateriales(cuLeerMateriales());
+    if(!lista.length){ avisar('El listado está vacío. Si quieres usar el listado base, pulsa «Volver al listado base».'); return; }
+    withTimeout(fbDb.collection('config').doc('materiales').set({ lista: lista, updatedAt: new Date().toISOString(), updatedBy: (currentUser && currentUser.email) || '' }), 10000).then(function(){
+      fijarMateriales(lista);
+      cuEl('cu-mat-lista').value = cuMaterialesTexto(); cuMaterialesOrigen();
+      cuEl('cu-mat-msg').textContent = 'Listado guardado: ' + lista.length + (lista.length === 1 ? ' material.' : ' materiales.');
+    }).catch(function(err){ cuErrorMateriales('guardar materiales', err); });
+  });
+  cuEl('cu-mat-base').addEventListener('click', function(){
+    confirmar('¿Volver al listado base (' + SOL_MATERIALES_BASE.length + ' materiales del presupuesto)? Se borra el listado propio guardado en la nube.', { aceptar: 'Volver al listado base' }).then(function(ok){
+      if(!ok) return;
+      withTimeout(fbDb.collection('config').doc('materiales').delete(), 10000).then(function(){
+        fijarMateriales(null);
+        cuEl('cu-mat-lista').value = cuMaterialesTexto(); cuMaterialesOrigen();
+        cuEl('cu-mat-msg').textContent = 'Se volvió al listado base.';
+      }).catch(function(err){ cuErrorMateriales('volver al listado base', err); });
+    });
   });
 
   // ---------- respaldo de datos ----------
