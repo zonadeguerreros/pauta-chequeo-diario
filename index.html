@@ -9,9 +9,9 @@
      guardados (p. ej. el estado "Stop" de un generador podia mostrarse como "Detener"). -->
 <meta name="google" content="notranslate">
 <!-- Politica de seguridad de contenido: la genera build.ps1 (incluye los hashes de los scripts en linea). -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-PX29JaCXLAJN1kuTE617aupz7vhFA0I0rbk41B5PgjM=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=' https://www.gstatic.com/firebasejs/10.14.1/; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://zonadeguerreros.github.io; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-hOG2WBnVvGSKEYaHSb1eBNHr3WmFvIEPvw7UVKV4WOs=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=' https://www.gstatic.com/firebasejs/10.14.1/; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://zonadeguerreros.github.io; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'none'; form-action 'none'">
 <title>Pauta de Chequeo Diario</title>
-<meta name="app-version" content="2026-10-22.1502-adb6afe1">
+<meta name="app-version" content="2026-10-26.1158-0f636706">
 <style>
   @font-face{
     font-family:"Roboto";
@@ -586,6 +586,7 @@
   .ent-row .c-chk input{ width:20px; height:20px; cursor:pointer; accent-color:#1F7A3A; }
   .ent-row .c-chk input:disabled{ cursor:default; }
   .ent-row .c-obs input{ padding:4px 6px !important; font-size:12px !important; }
+  .ent-sinfirma{ border:1px dashed #B5B5B5; border-radius:4px; padding:14px 12px; font-size:12.5px; color:#666; background:#FAFAFA; max-width:340px; }
   .ent-sep{ height:14px; background:#F3F3F3; border-top:1px solid #1A1A1A; border-bottom:1px solid #1A1A1A; }
 
   @media print{
@@ -627,6 +628,7 @@
   .ent-page .e-firma{ text-align:center; }
   .ent-page .e-firma-img{ height:15mm; display:flex; align-items:flex-end; justify-content:center; }
   .ent-page .e-firma-img img{ max-height:15mm; max-width:60mm; }
+  .ent-page .e-falta{ font-size:8pt; font-style:italic; color:#777; padding-bottom:1mm; }
   .ent-page .e-firma-nom{ font-size:8pt; min-height:3.2mm; border-bottom:.6pt solid #000; padding-bottom:.6mm; }
   .ent-page .e-firma-tit{ font-weight:700; font-size:8.5pt; margin-top:1mm; }
   .ent-page .e-pag{ position:absolute; right:10mm; bottom:6mm; font-size:8pt; color:#555; }
@@ -1135,14 +1137,11 @@
 
     <div id="ent-list">
       <div class="inf-card">
-        <h2>Nueva entrega de herramientas inventariadas</h2>
-        <div class="inf-note">El técnico que sale marca cada herramienta como entregada, firma y la entrega. El técnico que entra la abre desde su propia cuenta, marca cada herramienta como recibida conforme y firma.</div>
+        <h2>Entrega de herramientas inventariadas</h2>
+        <div class="inf-note">A cualquier hora: con «Nueva entrega» marcas las herramientas que entregas y firmas; si quien recibe está presente, puede firmar ahí mismo, y si no, queda «Por recibir» para el siguiente que llegue. Con «Recibir» eliges una entrega pendiente, o registras una recepción aunque no haya entrega previa. Se guarda con la fecha y hora del momento.</div>
         <div class="inf-new-row">
-          <label>Fecha en que inicia el turno que entrega <input type="date" id="ent-new-date"/></label>
-        </div>
-        <div class="inf-new-row">
-          <button type="button" class="btn primary" id="ent-new-dia">Entrega del turno día · 08:00 a 20:00</button>
-          <button type="button" class="btn primary" id="ent-new-noche">Entrega del turno noche · 20:00 a 08:00</button>
+          <button type="button" class="btn primary" id="ent-new-entrega">＋ Nueva entrega</button>
+          <button type="button" class="btn primary" id="ent-new-recepcion">Recibir herramientas</button>
         </div>
         <div class="inf-note" id="ent-new-note"></div>
       </div>
@@ -2223,7 +2222,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   }
 
   // ---------- version y aviso de actualizacion ----------
-  // Cada version publicada lleva un identificador (2026-10-22.1502-adb6afe1, lo genera compilar.js). Se compara contra la version
+  // Cada version publicada lleva un identificador (2026-10-26.1158-0f636706, lo genera compilar.js). Se compara contra la version
   // publicada de la web (mismo origen para todos: PC, celular o navegador) leyendo su etiqueta <meta name="app-version">.
   // Es una lectura publica de una pagina de solo texto: no requiere Firebase ni maneja datos del usuario.
   var APP_VERSION = (document.querySelector('meta[name="app-version"]') || {}).content || '';
@@ -5432,9 +5431,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
 
   // =====================================================================
   //  ENTREGA DE HERRAMIENTAS — inventario de Operaciones (correo neumatico) en cada cambio de turno
-  //  Tecnico saliente: marca cada herramienta como entregada, firma y la entrega (queda "por recibir").
-  //  Tecnico entrante (otra cuenta): marca cada herramienta como recibida conforme y firma (queda cerrada).
-  //  Jefe: ve y corrige todo. Firestore: entregasHerramientas/{AAAA-MM-DD_tipo} (el turno que entrega).
+  //  A cualquier hora, cada tecnico elige que registrar:
+  //   - "Nueva entrega": marca las herramientas como entregadas y firma (saliente). Si el entrante esta presente,
+  //     puede firmar ahi mismo (quedan las dos firmas); si no, queda "Por recibir" para el siguiente que llegue.
+  //   - "Recibir": elige una entrega pendiente y la recibe conforme, o registra una recepcion sin entrega previa
+  //     (la firma de entrega queda vacia). Una firma que falte no bloquea nada: queda vacia en ese registro.
+  //  Cada registro lleva la fecha y hora del momento (el turno dia/noche sale de la hora). Jefe: ve y corrige todo.
+  //  Firestore: entregasHerramientas/{id}  (id = 'AAAA-MM-DD_HHMMSS_xxx'; las de antes usaban 'AAAA-MM-DD_tipo')
   // =====================================================================
   var ENT_SERVICIO = 'Servicio de Salud Araucanía Sur';
   var ENT_ESTABLECIMIENTO = 'Hospital Villarrica';
@@ -5449,13 +5452,20 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
 
   function entEl(id){ return document.getElementById(id); }
   function entFecha(iso){ var p = String(iso || '').split('-'); return p.length === 3 ? p[2] + '-' + p[1] + '-' + p[0] : (iso || ''); }
-  function entTurnoTxt(e){ return (e.tipo === 'noche' ? 'Turno noche' : 'Turno día') + ' del ' + entFecha(e.fecha) + (e.tipo === 'noche' ? ' (20:00 a 08:00 del ' + entFecha(infAddDays(e.fecha, 1)) + ')' : ' (08:00 a 20:00)'); }
+  function entDos(n){ return ('0' + n).slice(-2); }
+  function entTipoDeHora(h){ return (h >= 8 && h < 20) ? 'dia' : 'noche'; }
+  // "26-10-2026 · 15:02 · Turno día". Las entregas de antes (sin hora) se muestran como antes: el turno completo.
+  function entTurnoTxt(e){
+    var turno = e.tipo === 'noche' ? 'Turno noche' : 'Turno día';
+    if(e.hora) return entFecha(e.fecha) + ' · ' + e.hora + ' · ' + turno;
+    return turno + ' del ' + entFecha(e.fecha) + (e.tipo === 'noche' ? ' (20:00 a 08:00 del ' + entFecha(infAddDays(e.fecha, 1)) + ')' : ' (08:00 a 20:00)');
+  }
   function entHora(iso){ if(!iso) return ''; var d = new Date(iso); return isNaN(d) ? '' : d.toLocaleString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
 
   // ---------- listado de herramientas (inventario) ----------
   // Listado base: inventario-base.json (del formato "Inventario correo neumatico"), incrustado al compilar.
   // Si el jefe guardo un listado propio en la nube (config/inventario, panel "Cuentas y accesos"), se usa ese.
-  // Cada entrega guarda su propia copia del listado: cambiar el inventario no altera las entregas ya hechas.
+  // Cada registro guarda su propia copia del listado: cambiar el inventario no altera los ya hechos.
   // Campos: i = N° de inventario, d = descripcion, ma = marca, mo = modelo, o = observacion, y = fila destacada (amarilla).
   var ENT_INVENTARIO_BASE = [{"i":"121121-002595","d":"DETECTOR DE VIGAS","ma":"BOSCH","mo":"D-TECT 200C PROFESIONAL","o":"Kimval","y":true},{"i":"121121-005992","d":"SISTEMA CORREO NEUMATICO","ma":"AEROCOM","mo":"AD110"},{"i":"121121-006282","d":"ASPIRADORA 1200W VERDE","ma":"THOMAS","mo":"1200W","o":"Kimval","y":true},{"i":"121121-009741","d":"SOPLADOR DE AIRE 600WATTS MAKITA","ma":"MAKITA","mo":"UB1103"},{"i":"121121-010731","d":"SIERRA CIRCULAR DE 7-1/4 INALAMBRICA DEWALT","ma":"DEWALT","mo":"DCS578","o":"Kimval","y":true},{"i":"121121-011083","d":"LINTERNA FENIX CL28R","ma":"TORCH CHILE LTDA","mo":"FENIX CL28R"},{"i":"121121-011790","d":"TERMOMETRO INFRAROJO COMPACTO EXTECH","ma":"EXTECH INSTRUMENTS","mo":"42510A"},{"i":"121121-011791","d":"ESCALERA FIBRA DE VIDRIO TIJERA 6 PELDAÑOS NARANJA","ma":"CUPRUM","mo":"530-06N"},{"i":"121121-011792","d":"DETECTOR DE GAS COMBUSTIBLE MASTECH","ma":"MASTECH","mo":"MS6310"},{"i":"121121-011793","d":"DETECTOR DE GAS ETANOL CERTIFICADO","ma":"NO APLICA","mo":"BX176"},{"i":"121121-011794","d":"MANOMETRO DE PRESIÓN DIFERENCIAL EXTECH","ma":"EXTECH INSTRUMENTS","mo":"HD750"},{"i":"121121-011795","d":"MEDIDOR DE RESISTENCIA DE AISLAMIENTO METREL","ma":"METREL","mo":"GIGAOHM 1KV MI 3103"},{"i":"121121-011796","d":"HIGROMETRO MEDIDOR DE HUMEDAD CON SONDA","ma":"NO APLICA","mo":"PSYCHROMETER AZ8723"},{"i":"121121-011797","d":"DETECTOR DE GASES COMBUSTIBLES FIREX","ma":"TIF","mo":"8900"},{"i":"121121-011798","d":"MEDIDOR DE PH PARA DIVERSAS SUSTANCIAS","ma":"EXTECH INSTRUMENTS","mo":"PH100"},{"i":"121121-011799","d":"TACOMETRO DIGITAL SMART SENSOR","ma":"SMART SENSOR","mo":"AR926"},{"i":"121121-011800","d":"SONOMETRO MEDIDOR DE NIVEL DE SONIDO DIGITAL BAWMED","ma":"BAWMED","mo":"WH1357"},{"i":"121121-011801","d":"ANEMOMETRO Y MANOMETRO CON TUBO PILOT EXTECH","ma":"EXTECH INSTRUMENTS","mo":"HD350"},{"i":"121121-011802","d":"DETECTOR DE FUGAS REFRIGERANTES ELECTRICO TIF","ma":"TIF","mo":"RX-1A"},{"i":"121121-011803","d":"UPS KAISE 3KVA 2700W","ma":"KAISE","mo":"KUE-T03-WB-CH"},{"i":"121121-011804","d":"UPS APC 700W","ma":"APC","mo":"BX1400UI"},{"i":"121121-011815","d":"TERMOMETRO INFRAROJO PROFESIONAL UNI-T","ma":"UNI-T","mo":"UT309C"},{"i":"121121-011816","d":"CAMARA INFRAROJA TERMOGRAFICA FLIR","ma":"FLIR","mo":"E6390"},{"i":"121121-011817","d":"CARGADOR DE BATERIA 12V HYUNDAI","ma":"HYUNDAI","mo":"HYBC-50"},{"i":"963-004223","d":"LUXOMETRO LIGHTMETER AEMC","ma":"AEMC","mo":"CA813"},{"i":"963-007047","d":"TALADRO MAKITA 1/2 HP2050H 720 W","ma":"MAKITA","mo":"HP2050H"},{"d":"ASPIRADORA COLOR AMARILLO","ma":"KARCHER","mo":"WD4"},{"d":"KIT TALADRO DESTORNILLADOR + TALADRO IMPACTO + CARGADOR + 2 BATERIAS + BOLSO","ma":"DEWALT"},{"d":"KIT TALADRO DESTORNILLADOR+ CARGADOR + 1 BATERIA + BOLSO","ma":"DEWALT"},{"d":"KIT LLAVES ALLEN AISLADAS (5 UN)","ma":"WIHA"},{"d":"KIT DESTORNILLADORES AISLADOS (ALICATE + PINZAS +2 MANGOS)","ma":"WERA","mo":"KRAFTFORM KOMPAKT"},{"d":"PRENSA TERMINALES"},{"d":"NAPOLEON"},{"d":"ESMERIL ANGULAR","ma":"MAKITA"},{"d":"LINTERNA CON IMAN","ma":"ENERGIZER"},{"d":"NIVEL","ma":"UBERMANN"},{"d":"AMPERIMETRO DE TENAZAS","ma":"MASTECH","mo":"MS 2001"},{"d":"CARRO LLEGUA GRIS","ma":"TECHNO PLUS"},{"d":"CARRO AMARILLO","ma":"STANLEY"},{"d":"MEDIDOR DE TIERRA","ma":"CATU","mo":"CATU HM DT-300"},{"d":"DIFERENCIAL DE PRESIÓN","ma":"HILTI","mo":"TA SCOPE"},{"d":"MONITOR LLAMADO DE ENFERMERIA","ma":"AUSTCO"},{"d":"MONITOR LLAMADO DE ENFERMERIA","ma":"AUSTCO"},{"d":"MULTIMETRO DIGITAL","ma":"FLUKE","mo":"233","o":"ANYELO","y":true},{"d":"MAQUINA DE SOLDAR","ma":"INDURA","mo":"INDURARC 151-i","o":"609270946."},{"d":"MASCARA DE SOLDAR","ma":"STEELPRO","mo":"OPTECH","o":"200402867."},{"d":"PRENSA TERMINALES AZUL 0,5-6MM2","ma":"TOSUNLUX","mo":"TH-30J"},{"d":"FERRULERA 0,25-6MM2","ma":"LEXO"},{"d":"PRENSA TERMINALES HIDRAULICA 16TON 16-300MM2","ma":"AMARILLA"}];
   var entInvNube = ls.json('pe_inventario', null);   // null = no hay listado propio en la nube: se usa el base
@@ -5485,34 +5495,45 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   }
 
   // ---------- modelo ----------
-  function entId(fecha, tipo){ return fecha + '_' + tipo; }
-  function entPersona(){ return { uid: (currentUser && currentUser.uid) || null, email: (currentUser && currentUser.email) || '', nombre: miNombre(), firma: null, at: null }; }
-  function entNueva(tipo, fecha){
-    var iso = new Date().toISOString();
+  // estado: 'borrador' (solo en este equipo) | 'entregada' (firmo quien entrega: por recibir)
+  //         | 'recibida' (las dos firmas) | 'sinEntrega' (recepcion sin entrega previa: falta la firma de entrega)
+  // modo:   'entrega' (se abrio con "Nueva entrega") | 'recepcion' (con "Recibir" sin entrega previa)
+  function entPersona(nombre){ return { uid: (currentUser && currentUser.uid) || null, email: (currentUser && currentUser.email) || '', nombre: nombre || '', firma: null, at: null }; }
+  function entNueva(modo){
+    var d = new Date(), iso = d.toISOString(), fecha = todayStr(), hora = entDos(d.getHours()) + ':' + entDos(d.getMinutes());
     return {
-      id: entId(fecha, tipo), rev: 0, fecha: fecha, tipo: tipo, estado: 'borrador',
+      id: fecha + '_' + entDos(d.getHours()) + entDos(d.getMinutes()) + entDos(d.getSeconds()) + '_' + Math.random().toString(36).slice(2, 5),
+      rev: 0, fecha: fecha, hora: hora, tipo: entTipoDeHora(d.getHours()), modo: modo, estado: 'borrador',
       items: inventario().map(function(x, k){ return { k: 'h' + k, i: x.i || '', d: x.d, ma: x.ma || '', mo: x.mo || '', y: !!x.y, obs: x.o || '', ent: false, rec: false }; }),
-      obsGeneral: '', obsRecepcion: '', saliente: entPersona(), entrante: null,
+      obsGeneral: '', obsRecepcion: '',
+      saliente: modo === 'entrega' ? entPersona(miNombre()) : null,
+      entrante: modo === 'recepcion' ? entPersona(miNombre()) : null,
+      creadoPorUid: (currentUser && currentUser.uid) || null, creadoPor: (currentUser && currentUser.email) || '',
       createdAt: iso, entregadaAt: null, recibidaAt: null, updatedAt: iso, lastEditedBy: null, lastEditedByUid: null, editors: []
     };
   }
   function entNormalizar(e){
     e.items = (e.items || []).map(function(it, k){ return Object.assign({ k: 'h' + k, i: '', d: '', ma: '', mo: '', y: false, obs: '', ent: false, rec: false }, it); });
     e.estado = e.estado || 'borrador';
+    e.modo = e.modo || (e.estado === 'sinEntrega' ? 'recepcion' : 'entrega');
     e.rev = e.rev || 0;
     e.obsGeneral = e.obsGeneral || ''; e.obsRecepcion = e.obsRecepcion || '';
-    e.saliente = e.saliente || entPersona();
+    e.saliente = e.saliente || null;
     e.entrante = e.entrante || null;
     e.editors = e.editors || [];
     return e;
   }
   function entSnapshot(e){
-    return {
-      id: e.id, rev: e.rev || 0, fecha: e.fecha, tipo: e.tipo, estado: e.estado, items: e.items,
-      obsGeneral: e.obsGeneral || '', obsRecepcion: e.obsRecepcion || '', saliente: e.saliente, entrante: e.entrante || null,
+    var s = {
+      id: e.id, rev: e.rev || 0, fecha: e.fecha, tipo: e.tipo, modo: e.modo, estado: e.estado, items: e.items,
+      obsGeneral: e.obsGeneral || '', obsRecepcion: e.obsRecepcion || '', saliente: e.saliente || null, entrante: e.entrante || null,
       createdAt: e.createdAt, entregadaAt: e.entregadaAt || null, recibidaAt: e.recibidaAt || null, updatedAt: e.updatedAt,
       lastEditedBy: e.lastEditedBy || null, lastEditedByUid: e.lastEditedByUid || null, editors: e.editors || [], _dev: 'Cristhian Sandoval'
     };
+    // Solo los registros nuevos traen hora y autor del registro (las entregas de antes se guardan sin agregarles campos)
+    if(e.hora) s.hora = e.hora;
+    if(e.creadoPorUid){ s.creadoPorUid = e.creadoPorUid; s.creadoPor = e.creadoPor || ''; }
+    return s;
   }
   function entSerializable(e){
     var by = (currentUser && currentUser.email) || e.lastEditedBy || null;
@@ -5525,27 +5546,31 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     (e.items || []).forEach(function(it){ c.total++; if(it.ent) c.ent++; if(it.rec) c.rec++; });
     return c;
   }
+  function entCerrada(e){ return e.estado === 'recibida' || e.estado === 'sinEntrega'; }
+  // Quien registro la entrega (las de antes no tienen creadoPorUid: fue el saliente)
+  function entEsCreador(e){ var uid = currentUser && currentUser.uid; return !!uid && (e.creadoPorUid || (e.saliente && e.saliente.uid)) === uid; }
+  // El entrante ya empezo a recibir (marco algo, eligio su nombre o firmo)
+  function entRecepcionIniciada(e){ return !!(e.entrante && (e.entrante.firma || e.entrante.nombre)) || e.items.some(function(it){ return it.rec; }) || !!String(e.obsRecepcion || '').trim(); }
 
-  // ---------- estado y permisos ----------
-  function entEsSaliente(e){ return !!(currentUser && e.saliente && e.saliente.uid === currentUser.uid); }
-  // El entrante recibe el mismo dia o el siguiente al inicio del turno que se entrega (el turno noche termina al dia siguiente).
-  function entVentanaRecepcion(e){ var t = todayStr(); return t === e.fecha || t === infAddDays(e.fecha, 1); }
+  // ---------- permisos ----------
+  // sal = puede editar lo del que entrega; rec = puede editar lo del que recibe.
   function entPermisos(e){
-    var jefe = isJefe(), sal = entEsSaliente(e);
-    if(jefe) return { sal: e.estado !== 'recibida' ? sal || e.estado !== 'borrador' : true, rec: e.estado !== 'borrador' && (!sal || e.estado === 'recibida') };
-    return {
-      sal: sal && (e.estado === 'borrador' || e.estado === 'entregada') && infVentanaAbierta(e.tipo, e.fecha),
-      rec: !sal && e.estado === 'entregada' && entVentanaRecepcion(e)
-    };
+    var jefe = isJefe();
+    if(e.estado === 'borrador') return { sal: e.modo === 'entrega', rec: true };
+    if(e.estado === 'entregada') return { sal: jefe || entEsCreador(e), rec: true };
+    return { sal: jefe && e.estado === 'recibida', rec: jefe };
   }
   function entEtiqueta(e){
-    if(e.estado === 'borrador') return { txt: 'Borrador', clase: 'neutral' };
-    if(e.estado === 'recibida') return { txt: 'Recibida conforme', clase: 'done' };
+    if(e.estado === 'borrador') return { txt: e.modo === 'recepcion' ? 'Borrador de recepción' : 'Borrador', clase: 'neutral' };
+    if(e.estado === 'recibida') return { txt: 'Completa', clase: 'done' };
+    if(e.estado === 'sinEntrega') return { txt: 'Recibida sin entrega', clase: 'done' };
     return { txt: 'Por recibir', clase: 'progress' };
   }
   function entResumenTxt(e){
-    var c = entConteo(e);
-    return c.ent + ' de ' + c.total + ' entregadas' + (e.estado !== 'borrador' ? ' · ' + c.rec + ' de ' + c.total + ' recibidas conforme' : '');
+    var c = entConteo(e), p = [];
+    if(e.modo !== 'recepcion') p.push(c.ent + ' de ' + c.total + ' entregadas');
+    if(e.estado !== 'borrador' || e.modo === 'recepcion' || c.rec) p.push(c.rec + ' de ' + c.total + ' recibidas conforme');
+    return p.join(' · ');
   }
 
   // ---------- copia local (borradores, recepcion en curso y pendientes de subir; ver crearAlmacenLocal) ----------
@@ -5571,11 +5596,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     el.style.background = warn === true ? 'var(--warn-bg)' : (warn === 'info' ? 'var(--accent-bg)' : 'var(--surface-2)');
     el.style.color = warn === true ? 'var(--warn)' : (warn === 'info' ? 'var(--accent-strong)' : 'var(--ink-dim)');
   }
-  var ENT_MSG_OFFLINE = 'Sin conexión a la nube: la entrega quedó guardada en este dispositivo y se subirá automáticamente cuando vuelva la conexión.';
-  var ENT_MSG_PERM = 'La nube no aceptó guardar esta entrega (permiso denegado): revisa que sea del turno en curso, o faltan publicar las reglas de Firestore. Queda guardada en este dispositivo.';
+  var ENT_MSG_OFFLINE = 'Sin conexión a la nube: quedó guardado en este dispositivo y se subirá automáticamente cuando vuelva la conexión.';
+  var ENT_MSG_PERM = 'La nube no aceptó guardar este registro (permiso denegado): puede que falte publicar las reglas de Firestore o que otra persona ya lo haya cerrado. Queda guardado en este dispositivo.';
 
-  // Solo se sube lo que ya fue entregado (o recibido): el borrador del saliente y la recepcion en curso del entrante
-  // quedan en el equipo hasta que se firma y se pulsa el boton.
+  // Solo se sube lo que ya se guardo con el boton: el borrador y la recepcion en curso quedan en el equipo hasta firmar.
   function entSeSube(e){ return e.estado !== 'borrador' && !e._recepcion; }
   function entCloudSave(e, opciones){
     entCloudChain = entCloudChain.then(function(){ return entCloudSaveNow(e, opciones); }, function(){ return entCloudSaveNow(e, opciones); });
@@ -5587,8 +5611,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     var ref = fbDb.collection('entregasHerramientas').doc(e.id);
     return guardarSinPisar(ref, entSerializable(e), e, {
       sobrescribir: !!(opciones && opciones.sobrescribir),
-      // Un tecnico no pisa una entrega que otra persona ya dejo recibida
-      bloqueado: function(nube){ return !isJefe() && nube.estado === 'recibida' && e.estado !== 'recibida'; }
+      // Un tecnico no pisa un registro que otra persona ya cerro
+      bloqueado: function(nube){ return !isJefe() && entCerrada(nube) && !entCerrada(e); }
     }).then(function(){
       delete e._conflicto;
       return entLocalSave(e, false, true).then(function(){ return { ok: true, st: e }; });
@@ -5599,7 +5623,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       entCloudPend = false;
       entSetStatus(res.soloLocal ? 'Guardado en este dispositivo' : 'Guardado en la nube · ' + new Date().toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }));
     } else if(res.locked){
-      entSetBanner('Esta entrega ya fue recibida por otra persona mientras la editabas. Vuelve a abrirla desde la lista para ver el estado actual.', true);
+      entSetBanner('Otra persona ya recibió esta entrega mientras la editabas. Vuelve a la lista para ver el estado actual.', true);
       entPerm = { sal: false, rec: false }; entAplicarZonas();
     } else if(res.conflicto){
       entSetStatus('Cambios sin subir'); entAlConflicto(res.st, res.nube);
@@ -5692,11 +5716,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   var entLimite = 120;
   function entCargarLista(){
     return entLocalList().then(function(local){
-      var mio = function(x){ return !x.saliente || !x.saliente.uid || !currentUser || x.saliente.uid === currentUser.uid; };
+      var mio = function(x){ return !currentUser || (x.creadoPorUid || (x.saliente && x.saliente.uid) || currentUser.uid) === currentUser.uid; };
       var porId = {};
       function agregarLocales(soloPropios){ local.forEach(function(x){ if(x.estado === 'borrador' ? mio(x) : (soloPropios ? x._pending : true)) porId[x.id] = x; }); }
       if(!infNubeLista()){ agregarLocales(false); return Object.keys(porId).map(function(k){ return porId[k]; }); }
-      return withTimeout(fbDb.collection('entregasHerramientas').orderBy('fecha', 'desc').limit(entLimite).get(), 10000).then(function(snap){
+      return withTimeout(fbDb.collection('entregasHerramientas').orderBy('createdAt', 'desc').limit(entLimite).get(), 10000).then(function(snap){
         agregarLocales(true);
         snap.forEach(function(d){
           var c = d.data(), l = porId[c.id];
@@ -5705,7 +5729,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
         return Object.keys(porId).map(function(k){ return porId[k]; });
       }).catch(function(){ agregarLocales(false); return Object.keys(porId).map(function(k){ return porId[k]; }); });
     }).then(function(arr){
-      arr.sort(function(a, b){ return a.id < b.id ? 1 : (a.id > b.id ? -1 : 0); });   // id = fecha_tipo ('noche' despues de 'dia')
+      arr.sort(function(a, b){ return (b.createdAt || '') < (a.createdAt || '') ? -1 : ((b.createdAt || '') > (a.createdAt || '') ? 1 : 0); });   // mas recientes primero
       return arr;
     });
   }
@@ -5713,10 +5737,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   // =====================================================================
   //  Hoja en pagina A4 (vista previa, PDF, impresion): el formato del inventario + entregado / recibido + firmas
   // =====================================================================
-  function entFirmaPdf(p, titulo){
+  function entFirmaPdf(p, titulo, faltante){
     var img = p && safeImg(p.firma);
-    return '<div class="e-firma"><div class="e-firma-img">' + (img ? '<img src="' + img + '"/>' : '') + '</div>'
-      + '<div class="e-firma-nom">' + esc((p && p.firma && p.nombre) || '') + (p && p.at ? ' · ' + esc(entHora(p.at)) : '') + '</div>'
+    return '<div class="e-firma"><div class="e-firma-img">' + (img ? '<img src="' + img + '"/>' : (faltante ? '<span class="e-falta">' + esc(faltante) + '</span>' : '')) + '</div>'
+      + '<div class="e-firma-nom">' + esc((img && p.nombre) || '') + (img && p.at ? ' · ' + esc(entHora(p.at)) : '') + '</div>'
       + '<div class="e-firma-tit">' + esc(titulo) + '</div></div>';
   }
   function entFilasPdf(items){
@@ -5748,7 +5772,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       h += '<div class="e-resumen">' + c.ent + ' de ' + c.total + ' entregadas · ' + c.rec + ' de ' + c.total + ' recibidas conforme</div>';
       if(e.obsGeneral) h += '<div class="e-obs"><b>Observaciones (entrega):</b> ' + escBr(e.obsGeneral) + '</div>';
       if(e.obsRecepcion) h += '<div class="e-obs"><b>Observaciones (recepción):</b> ' + escBr(e.obsRecepcion) + '</div>';
-      h += '<div class="e-firmas">' + entFirmaPdf(e.saliente, 'NOMBRE Y FIRMA TÉCNICO SALIENTE') + entFirmaPdf(e.entrante, 'NOMBRE Y FIRMA TÉCNICO ENTRANTE') + '</div>';
+      h += '<div class="e-firmas">' + entFirmaPdf(e.saliente, 'NOMBRE Y FIRMA TÉCNICO SALIENTE', e.estado === 'sinEntrega' ? 'Sin entrega registrada' : '')
+        + entFirmaPdf(e.entrante, 'NOMBRE Y FIRMA TÉCNICO ENTRANTE', e.estado === 'entregada' ? 'Pendiente de recepción' : '') + '</div>';
     }
     if(parte.total > 1) h += '<div class="e-pag">Página ' + parte.pagina + ' de ' + parte.total + '</div>';
     return h + '</div>';
@@ -5803,29 +5828,38 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       + '<label class="c-chk"><input type="checkbox" data-ef="rec" data-z="rec"' + (it.rec ? ' checked' : '') + '/><span class="lbl">Recibido conforme</span></label>'
       + '</div>';
   }
-  function entFirmaHtml(lado, p, titulo){
+  function entFirmaHtml(lado, p, titulo, nota){
     var nombre = (p && p.nombre) || '';
     return '<div><h3>' + esc(titulo) + '</h3>'
       + '<select data-eg="' + lado + 'Nombre" data-z="' + lado + '">' + opcionesFuncionarios(nombre, 'Seleccionar funcionario') + '</select>'
       + '<canvas id="ent-canvas-' + lado + '" class="sol-sig-canvas" width="640" height="240"></canvas>'
       + '<div class="sol-sig-actions" data-zh="' + lado + '"><button type="button" class="ghost-btn" id="ent-up-' + lado + '">Adjuntar imagen</button><button type="button" class="ghost-btn" id="ent-clr-' + lado + '">Limpiar firma</button></div>'
-      + (p && p.at ? '<div class="sol-sig-name">Firmado: ' + esc(entHora(p.at)) + '</div>' : '') + '</div>';
+      + (p && p.at && p.firma ? '<div class="sol-sig-name">Firmado: ' + esc(entHora(p.at)) + '</div>' : '')
+      + (nota ? '<div class="sol-sig-name">' + esc(nota) + '</div>' : '') + '</div>';
   }
+  function entSinFirmaHtml(titulo, texto){ return '<div><h3>' + esc(titulo) + '</h3><div class="ent-sinfirma">' + esc(texto) + '</div></div>'; }
   function entEditorHtml(e){
     var antes = null;
     var h = '<div class="ent-head"><div class="ent-serv">' + esc(ENT_SERVICIO) + '</div><div class="ent-datos">'
       + '<div><b>Establecimiento:</b> ' + esc(ENT_ESTABLECIMIENTO) + '</div><div><b>Sección:</b> ' + esc(ENT_SECCION) + '</div><div><b>Oficina:</b> ' + esc(ENT_OFICINA) + '</div></div></div>'
       + '<div class="ent-fecha"><b>Fecha:</b> ' + esc(entTurnoTxt(e)) + '</div>';
-    h += '<div class="ent-acciones"><button type="button" class="ghost-btn" data-todo="ent" data-zh="sal">✔ Marcar todo como entregado</button>'
+    h += '<div class="ent-acciones">'
+      + (e.modo !== 'recepcion' ? '<button type="button" class="ghost-btn" data-todo="ent" data-zh="sal">✔ Marcar todo como entregado</button>' : '')
       + '<button type="button" class="ghost-btn" data-todo="rec" data-zh="rec">✔ Marcar todo como recibido conforme</button>'
       + '<span class="ent-cuenta" id="ent-cuenta">' + esc(entResumenTxt(e)) + '</span></div>';
     h += '<div class="ent-tabla"><div class="ent-thead"><div>N° Inventario</div><div>Descripción</div><div>Marca</div><div>Modelo</div><div>Observaciones</div><div>Entregado</div><div>Recibido conforme</div></div>'
       + e.items.map(function(it){ var r = entFilaHtml(it, antes); antes = !!it.i; return r; }).join('') + '</div>';
-    h += '<div class="sol-msg"><label>Observaciones de la entrega (técnico saliente)<textarea data-eg="obsGeneral" data-z="sal" placeholder="Ej.: la sierra circular quedó en reparación.">' + esc(e.obsGeneral) + '</textarea></label></div>';
-    if(e.estado !== 'borrador') h += '<div class="sol-msg"><label>Observaciones de la recepción (técnico entrante)<textarea data-eg="obsRecepcion" data-z="rec" placeholder="Ej.: falta una batería del kit DeWalt.">' + esc(e.obsRecepcion) + '</textarea></label></div>';
-    h += '<div class="sol-firmas">' + entFirmaHtml('sal', e.saliente, 'Nombre y firma técnico saliente')
-      + (e.estado !== 'borrador' ? entFirmaHtml('rec', e.entrante || (entPerm.rec ? { nombre: miNombre() } : null), 'Nombre y firma técnico entrante') : '<div><h3>Nombre y firma técnico entrante</h3><div class="sol-sig-name">La completa el técnico que recibe, desde su propia cuenta, después de la entrega.</div></div>')
-      + '</div>';
+    if(e.modo !== 'recepcion') h += '<div class="sol-msg"><label>Observaciones de la entrega (técnico saliente)<textarea data-eg="obsGeneral" data-z="sal" placeholder="Ej.: la sierra circular quedó en reparación.">' + esc(e.obsGeneral) + '</textarea></label></div>';
+    h += '<div class="sol-msg"><label>Observaciones de la recepción (técnico entrante)<textarea data-eg="obsRecepcion" data-z="rec" placeholder="Ej.: falta una batería del kit DeWalt.">' + esc(e.obsRecepcion) + '</textarea></label></div>';
+    // Nombre propuesto para el que recibe: quien usa el programa, salvo que sea el mismo que entrego (firman juntos en su equipo)
+    var entrante = e.entrante;
+    if(!entrante && entPerm.rec && e.estado !== 'borrador'){
+      var yo = miNombre();
+      entrante = { nombre: (e.saliente && normNombre(e.saliente.nombre) === normNombre(yo)) ? '' : yo };
+    }
+    var salTxt = e.modo === 'recepcion' ? entSinFirmaHtml('Nombre y firma técnico saliente', 'Sin entrega registrada: este registro es solo de recepción.') : entFirmaHtml('sal', e.saliente, 'Nombre y firma técnico saliente');
+    var recNota = e.estado === 'borrador' && e.modo === 'entrega' ? 'Si el técnico que recibe está presente, puede marcar y firmar ahora mismo. Si no, queda «Por recibir» para el siguiente que llegue.' : '';
+    h += '<div class="sol-firmas">' + salTxt + entFirmaHtml('rec', entrante, 'Nombre y firma técnico entrante', recNota) + '</div>';
     return h;
   }
   function entAplicarZonas(){
@@ -5836,23 +5870,24 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     sheet.querySelectorAll('.sol-sig-canvas').forEach(function(cv){ cv.classList.toggle('off', !z[cv.id === 'ent-canvas-sal' ? 'sal' : 'rec']); });
   }
   function entActualizarBarra(){
-    var e = entState, et = entEtiqueta(e), jefe = isJefe();
+    var e = entState, et = entEtiqueta(e);
     var pill = entEl('ent-pill'); pill.className = 'pill ' + et.clase; pill.textContent = et.txt;
     var main = entEl('ent-btn-main'), desc = entEl('ent-btn-descartar');
     desc.style.display = (e.estado === 'borrador' || e._recepcion) ? '' : 'none';
     desc.textContent = e._recepcion ? 'Descartar recepción' : 'Descartar borrador';
-    if(e.estado === 'borrador' && entPerm.sal){ main.style.display = ''; main.textContent = 'Entregar herramientas'; }
-    else if(e.estado === 'entregada' && entPerm.rec){ main.style.display = ''; main.textContent = 'Recibir conforme'; }
-    else if(jefe && e.estado !== 'borrador'){ main.style.display = ''; main.textContent = 'Guardar cambios'; }
-    else { main.style.display = 'none'; }
+    main.style.display = '';
+    if(e.estado === 'borrador') main.textContent = e.modo === 'recepcion' ? 'Guardar recepción' : 'Guardar entrega';
+    else if(e.estado === 'entregada') main.textContent = 'Recibir conforme';
+    else if(isJefe()) main.textContent = 'Guardar cambios';
+    else main.style.display = 'none';
   }
   function entMensajeEstado(){
-    var e = entState, sal = entEsSaliente(e);
-    if(e.estado === 'borrador') return entSetBanner('Borrador: aún no se entrega. Marca cada herramienta como entregada (o anota en Observaciones por qué no), firma y pulsa «Entregar herramientas».', false);
-    if(e.estado === 'recibida') return entSetBanner('Entrega cerrada: recibida conforme por ' + ((e.entrante && e.entrante.nombre) || 'el técnico entrante') + (e.recibidaAt ? ' el ' + entHora(e.recibidaAt) : '') + '.', false);
-    if(entPerm.rec) return entSetBanner('Entregada por ' + ((e.saliente && e.saliente.nombre) || 'el técnico saliente') + '. Revisa cada herramienta, márcala como recibida conforme (o anota en Observaciones lo que falte), firma y pulsa «Recibir conforme».', 'info');
-    if(sal) return entSetBanner('Entregada: espera que el técnico entrante la reciba desde su propia cuenta. Puedes corregirla mientras nadie la reciba.', false);
-    return entSetBanner('Entregada por ' + ((e.saliente && e.saliente.nombre) || 'el técnico saliente') + ', pendiente de recepción.', false);
+    var e = entState, nomSal = (e.saliente && e.saliente.nombre) || 'el técnico saliente';
+    if(e.estado === 'borrador' && e.modo === 'recepcion') return entSetBanner('Recepción sin entrega previa: marca cada herramienta como recibida conforme (o anota en Observaciones lo que falte), firma y pulsa «Guardar recepción». La firma de entrega quedará vacía.', false);
+    if(e.estado === 'borrador') return entSetBanner('Nueva entrega: marca cada herramienta como entregada (o anota en Observaciones por qué no), firma y pulsa «Guardar entrega». Si el técnico que recibe está presente, también puede firmar ahora.', false);
+    if(e.estado === 'recibida') return entSetBanner('Entrega completa: entregada por ' + nomSal + ' y recibida conforme por ' + ((e.entrante && e.entrante.nombre) || 'el técnico entrante') + (e.recibidaAt ? ' (' + entHora(e.recibidaAt) + ')' : '') + '.', false);
+    if(e.estado === 'sinEntrega') return entSetBanner('Recepción registrada sin entrega previa por ' + ((e.entrante && e.entrante.nombre) || 'el técnico entrante') + '. La firma de entrega queda vacía.', false);
+    return entSetBanner('Entregada por ' + nomSal + ', pendiente de recepción. Quien recibe marca cada herramienta como recibida conforme (o anota lo que falte), elige su nombre, firma y pulsa «Recibir conforme».', 'info');
   }
   function entRenderEditor(){
     var e = entState; if(!e) return;
@@ -5860,7 +5895,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     var scroll = window.pageYOffset;
     entEl('ent-sheet').innerHTML = entEditorHtml(e);
     entAplicarZonas(); entActualizarBarra();
-    entSetupFirma('sal'); if(e.estado !== 'borrador') entSetupFirma('rec');
+    if(e.modo !== 'recepcion') entSetupFirma('sal');
+    entSetupFirma('rec');
     window.scrollTo(0, scroll);
   }
   function entSetupFirma(lado){
@@ -5871,14 +5907,19 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       alCambiar: function(dataUrl){ var p = entParte(lado); p.firma = dataUrl; p.at = dataUrl ? new Date().toISOString() : null; entTouch(); }
     });
   }
-  // Datos del lado que se esta editando; el entrante queda registrado recien cuando empieza a recibir.
+  // Datos del lado que se esta editando. El que recibe queda registrado recien cuando empieza a recibir; su nombre lo
+  // elige el (pueden firmar juntos en el equipo del que entrega). En una entrega ya guardada, recibir es local hasta firmar.
   function entParte(lado){
     var e = entState;
     if(lado === 'rec'){
-      if(!e.entrante || (!isJefe() && e.entrante.uid !== (currentUser && currentUser.uid))) e.entrante = entPersona();
+      if(!e.entrante){
+        var sel = entEl('ent-sheet').querySelector('[data-eg=recNombre]');
+        e.entrante = entPersona(sel ? sel.value : '');
+      }
       if(e.estado === 'entregada' && !isJefe()) e._recepcion = true;
       return e.entrante;
     }
+    if(!e.saliente) e.saliente = entPersona(miNombre());
     return e.saliente;
   }
 
@@ -5889,14 +5930,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     for(var i = 0; i < entState.items.length; i++){ if(entState.items[i].k === k) return entState.items[i]; }
     return null;
   }
-  function entMarcaLado(){ return entPerm.rec && !entPerm.sal ? 'rec' : (entPerm.sal ? 'sal' : null); }
   function entCambio(ev){
     var t = ev.target, e = entState; if(!e) return;
     if(t.hasAttribute('data-eg')){
       var g = t.getAttribute('data-eg');
       if(g === 'obsGeneral'){ if(!entPerm.sal) return; e.obsGeneral = t.value; }
       else if(g === 'obsRecepcion'){ if(!entPerm.rec) return; entParte('rec'); e.obsRecepcion = t.value; }
-      else if(g === 'salNombre'){ if(!entPerm.sal) return; e.saliente.nombre = t.value; }
+      else if(g === 'salNombre'){ if(!entPerm.sal) return; entParte('sal').nombre = t.value; }
       else if(g === 'recNombre'){ if(!entPerm.rec) return; entParte('rec').nombre = t.value; }
       entTouch(); return;
     }
@@ -5905,7 +5945,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     var f = t.getAttribute('data-ef');
     if(f === 'ent'){ if(!entPerm.sal) return; it.ent = t.checked; }
     else if(f === 'rec'){ if(!entPerm.rec) return; entParte('rec'); it.rec = t.checked; }
-    else if(f === 'obs'){ if(!(entPerm.sal || entPerm.rec)) return; if(entMarcaLado() === 'rec') entParte('rec'); it.obs = t.value; }
+    else if(f === 'obs'){ if(!(entPerm.sal || entPerm.rec)) return; if(!entPerm.sal) entParte('rec'); it.obs = t.value; }
     var cuenta = entEl('ent-cuenta'); if(cuenta) cuenta.textContent = entResumenTxt(e);
     entTouch();
   }
@@ -5927,42 +5967,57 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     });
   }
 
-  // ---------- entregar / recibir ----------
+  // ---------- guardar entrega / recibir ----------
   // Cada herramienta debe quedar marcada, o con una observacion que explique por que no (p. ej. "en reparacion").
   async function entValidar(lado){
-    var e = entState, campo = lado === 'sal' ? 'ent' : 'rec', p = lado === 'sal' ? e.saliente : e.entrante;
+    var e = entState, campo = lado === 'sal' ? 'ent' : 'rec', p = lado === 'sal' ? e.saliente : e.entrante, quien = lado === 'sal' ? 'saliente' : 'entrante';
     var falta = e.items.filter(function(it){ return !it[campo] && !String(it.obs || '').trim(); });
     if(falta.length){
       await avisar((falta.length === 1 ? 'Falta 1 herramienta' : 'Faltan ' + falta.length + ' herramientas') + ' por marcar como ' + (lado === 'sal' ? 'entregada' : 'recibida conforme')
         + ' (por ejemplo: ' + falta[0].d + '). Márcala, o escribe en Observaciones por qué no' + (lado === 'sal' ? ' se entrega.' : ' se recibe conforme.'));
       return false;
     }
-    if(!p || !String(p.nombre || '').trim()){ await avisar('Elige el nombre del técnico ' + (lado === 'sal' ? 'saliente.' : 'entrante.')); return false; }
-    if(!safeImg(p.firma)){ await avisar('Falta la firma del técnico ' + (lado === 'sal' ? 'saliente.' : 'entrante.')); return false; }
+    if(!p || !String(p.nombre || '').trim()){ await avisar('Elige el nombre del técnico ' + quien + '.'); return false; }
+    if(!safeImg(p.firma)){ await avisar('Falta la firma del técnico ' + quien + '.'); return false; }
+    return true;
+  }
+  async function entNombresDistintos(){
+    var e = entState;
+    if(e.saliente && e.entrante && normNombre(e.saliente.nombre) && normNombre(e.saliente.nombre) === normNombre(e.entrante.nombre)){
+      await avisar('El técnico que entrega y el que recibe deben ser personas distintas. Elige el nombre de quien recibe.');
+      return false;
+    }
     return true;
   }
   async function entBotonPrincipal(){
     var e = entState; if(!e) return;
-    var btn = entEl('ent-btn-main');
-    if(e.estado === 'borrador'){
-      if(!entPerm.sal || !(await entValidar('sal'))) return;
-      e.estado = 'entregada'; e.entregadaAt = new Date().toISOString(); e.updatedAt = e.entregadaAt;
-      e.saliente.uid = (currentUser && currentUser.uid) || e.saliente.uid; e.saliente.email = (currentUser && currentUser.email) || e.saliente.email;
-      entGuardarYAvisar(btn, 'Entregando…', function(res){
-        entRenderEditor(); entMensajeEstado();
-        if(res.ok) entSetBanner('Herramientas entregadas. Ahora el técnico entrante debe abrir esta entrega desde su cuenta, revisarla y firmar «Recibir conforme».', false);
-      });
-    } else if(e.estado === 'entregada' && entPerm.rec){
-      if(entEsSaliente(e) && !isJefe()){ await avisar('La recepción la firma otro técnico (el entrante), desde su propia cuenta.'); return; }
-      entParte('rec');
-      if(!(await entValidar('rec'))) return;
-      e.estado = 'recibida'; e.recibidaAt = new Date().toISOString(); e.updatedAt = e.recibidaAt; delete e._recepcion;
+    var btn = entEl('ent-btn-main'), ahora = new Date().toISOString();
+    if(e.estado === 'borrador' && e.modo === 'entrega'){
+      if(!(await entValidar('sal'))) return;
+      var firmanJuntos = entRecepcionIniciada(e);
+      if(firmanJuntos && !((await entValidar('rec')) && (await entNombresDistintos()))) return;
+      e.estado = firmanJuntos ? 'recibida' : 'entregada'; e.entregadaAt = ahora; if(firmanJuntos) e.recibidaAt = ahora;
       entGuardarYAvisar(btn, 'Guardando…', function(res){
         entRenderEditor(); entMensajeEstado();
-        if(res.ok) entSetBanner('Recepción conforme registrada. La entrega quedó cerrada.', false);
+        if(res.ok) entSetBanner(firmanJuntos ? 'Entrega completa: quedaron las dos firmas.' : 'Entrega guardada: queda «Por recibir» para el siguiente técnico que llegue.', false);
+      });
+    } else if(e.estado === 'borrador'){
+      if(!(await entValidar('rec'))) return;
+      e.estado = 'sinEntrega'; e.recibidaAt = ahora;
+      entGuardarYAvisar(btn, 'Guardando…', function(res){
+        entRenderEditor(); entMensajeEstado();
+        if(res.ok) entSetBanner('Recepción guardada (sin entrega previa).', false);
+      });
+    } else if(e.estado === 'entregada'){
+      entParte('rec');
+      if(!(await entValidar('rec')) || !(await entNombresDistintos())) return;
+      e.estado = 'recibida'; e.recibidaAt = ahora; e.updatedAt = ahora; delete e._recepcion;
+      entGuardarYAvisar(btn, 'Guardando…', function(res){
+        entRenderEditor(); entMensajeEstado();
+        if(res.ok) entSetBanner('Recepción conforme registrada. La entrega quedó completa.', false);
       });
     } else if(isJefe()){
-      e.updatedAt = new Date().toISOString();
+      e.updatedAt = ahora;
       entGuardarYAvisar(btn, 'Guardando…', function(){ entRenderEditor(); entMensajeEstado(); });
     }
   }
@@ -6002,43 +6057,49 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     },
     alFiltrar: function(){ entRenderHistorial(); }
   });
+  function entQuienes(e){
+    var sal = e.saliente && e.saliente.nombre ? e.saliente.nombre : (e.estado === 'sinEntrega' ? 'sin entrega' : '—');
+    var rec = e.entrante && e.entrante.nombre && (e.estado === 'recibida' || e.estado === 'sinEntrega') ? e.entrante.nombre : (e.estado === 'entregada' ? 'pendiente' : '—');
+    return 'Entrega: ' + (sal || '—') + ' · Recibe: ' + (rec || '—');
+  }
   function entRenderHistorial(){
     var el = entEl('ent-history'), lista = entBarra.filtrar(entFiltrar(entLista));
     entMarcarFiltros();
-    if(!entLista.length){ el.innerHTML = '<div class="empty"><span class="bolt">🧰</span>Aún no hay entregas de herramientas.<br>Crea la primera con los botones de arriba.</div>'; return; }
+    if(!entLista.length){ el.innerHTML = '<div class="empty"><span class="bolt">🧰</span>Aún no hay entregas de herramientas.<br>Empieza con «Nueva entrega» o «Recibir».</div>'; return; }
     if(!lista.length){ el.innerHTML = entBarra.barraHtml + '<div class="empty">Sin resultados para esa búsqueda o ese filtro.</div>'; entBarra.activar(el); return; }
     el.innerHTML = entBarra.barraHtml + lista.map(function(e){
-      var et = entEtiqueta(e), puedeRecibir = e.estado === 'entregada' && !entEsSaliente(e);
+      var et = entEtiqueta(e);
       return '<div class="hist-card"><div class="hist-head">'
         + '<div style="flex:1;min-width:170px;"><div class="hist-date">' + esc(entTurnoTxt(e)) + '</div>'
-        + '<div class="hist-tech">Entrega: ' + esc((e.saliente && e.saliente.nombre) || '—') + (e.entrante && e.estado === 'recibida' ? ' · Recibe: ' + esc(e.entrante.nombre || '—') : '') + '</div>'
+        + '<div class="hist-tech">' + esc(entQuienes(e)) + '</div>'
         + '<div class="sol-resumen">' + esc(entResumenTxt(e)) + '</div></div>'
         + (e._pending ? '<span class="pill neutral">Pendiente de subir</span>' : '')
         + '<span class="pill ' + et.clase + '">' + esc(et.txt) + '</span></div>'
-        + '<div class="hist-actions"><button class="ghost-btn" data-ent-abrir="' + esc(e.id) + '">' + (puedeRecibir ? 'Recibir' : 'Abrir') + '</button>'
+        + '<div class="hist-actions"><button class="ghost-btn" data-ent-abrir="' + esc(e.id) + '">' + (e.estado === 'entregada' ? 'Recibir' : 'Abrir') + '</button>'
         + '<button class="ghost-btn" data-ent-pdf="' + esc(e.id) + '">Descargar PDF</button>'
         + '<button class="ghost-btn" data-ent-print="' + esc(e.id) + '">Imprimir</button></div></div>';
-    }).join('') + (entLista.length >= entLimite ? '<div class="hist-mas"><button type="button" class="ghost-btn" id="ent-cargar-mas">Cargar más entregas</button></div>' : '');
+    }).join('') + (entLista.length >= entLimite ? '<div class="hist-mas"><button type="button" class="ghost-btn" id="ent-cargar-mas">Cargar más registros</button></div>' : '');
     entBarra.activar(el);
     var mas = entEl('ent-cargar-mas');
     if(mas) mas.addEventListener('click', function(){ mas.disabled = true; mas.textContent = 'Cargando…'; entLimite += 100; entCargarLista().then(function(l){ entLista = l; entRenderHistorial(); }); });
   }
+  function entActualizarPendientesTxt(){
+    var n = entLista.filter(function(e){ return e.estado === 'entregada'; }).length, el = entEl('ent-new-note');
+    el.textContent = n ? 'Hay ' + n + (n === 1 ? ' entrega pendiente de recibir.' : ' entregas pendientes de recibir.') + ' Con «Recibir» eliges cuál.' : 'No hay entregas pendientes de recibir.';
+  }
   function entMostrarLista(){
     entEl('ent-editor').hidden = true; entEl('ent-list').hidden = false;
-    entEl('ent-new-note').textContent = '';
-    if(!entEl('ent-new-date').value) entEl('ent-new-date').value = infTurnoActual().fecha;
     entEl('ent-history').innerHTML = '<div class="empty">Cargando entregas…</div>';
-    entSyncPending().then(function(){ return entCargarLista(); }).then(function(lista){
+    return entSyncPending().then(function(){ return entCargarLista(); }).then(function(lista){
       entLista = lista;
-      if(entFiltro === 'todas' && !entMostrarLista.visto && lista.some(function(x){ return x.estado === 'entregada' && !entEsSaliente(x); })) entFiltro = 'porrecibir';
-      entMostrarLista.visto = true;
+      entActualizarPendientesTxt();
       entRenderHistorial();
+      entActualizarBadge();
     });
-    entActualizarBadge();
   }
   function entRefrescarLista(){
     if(entEl('view-entregas').hidden || entEl('ent-list').hidden) return;
-    entSyncPending().then(function(){ return entCargarLista(); }).then(function(lista){ entLista = lista; entRenderHistorial(); });
+    entSyncPending().then(function(){ return entCargarLista(); }).then(function(lista){ entLista = lista; entActualizarPendientesTxt(); entRenderHistorial(); });
   }
   function entAbrirEditor(e){
     entState = entNormalizar(e);
@@ -6047,22 +6108,36 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     entRenderEditor(); entMensajeEstado();
     window.scrollTo(0, 0);
   }
-  // Abre la entrega de ese turno si ya existe (en la nube o en este equipo); si no, crea un borrador nuevo.
-  function entAbrirOCrear(tipo, fecha){
-    if(!isJefe() && !infVentanaAbierta(tipo, fecha)){
-      entEl('ent-new-note').textContent = 'Solo el jefe supervisor puede crear entregas de otros turnos. Elige la fecha en que inició tu turno.';
-      return;
-    }
-    entCargar(entId(fecha, tipo)).then(function(e){ entAbrirEditor(e || entNueva(tipo, fecha)); });
-  }
   function entDeHistorial(id, accion, btn){
-    entCargar(id).then(function(e){
+    return entCargar(id).then(function(e){
       if(!e){ avisar('No se pudo cargar la entrega.'); return; }
       entNormalizar(e);
       if(accion === 'abrir') entAbrirEditor(e);
       else if(accion === 'pdf') entDescargarPdf(e, btn);
       else if(accion === 'print') entImprimir(e);
     });
+  }
+  function entNuevaEntrega(){ entAbrirEditor(entNueva('entrega')); }
+  // "Recibir": si hay entregas pendientes, el tecnico elige cual recibe (o una recepcion sin entrega previa);
+  // si no hay ninguna, se abre directo una recepcion nueva.
+  function entRecibir(){
+    var btn = entEl('ent-new-recepcion'); btn.disabled = true;
+    entSyncPending().then(function(){ return entCargarLista(); }).then(function(lista){
+      btn.disabled = false;
+      entLista = lista; entActualizarPendientesTxt(); entRenderHistorial();
+      var pend = lista.filter(function(e){ return e.estado === 'entregada'; });
+      if(!pend.length) return entAbrirEditor(entNueva('recepcion'));
+      return dialogo({
+        titulo: '¿Qué vas a recibir?',
+        mensaje: pend.length === 1 ? 'Hay 1 entrega pendiente de recibir.' : 'Hay ' + pend.length + ' entregas pendientes de recibir. Elige cuál vas a recibir.',
+        botones: pend.map(function(e){ return { texto: entTurnoTxt(e) + ' · entregó ' + ((e.saliente && e.saliente.nombre) || '—'), valor: e.id, tipo: 'primary' }; })
+          .concat([{ texto: 'Recibir sin entrega previa (registro nuevo)', valor: '__nueva', tipo: 'ghost' }, { texto: 'Cancelar', valor: '', tipo: 'ghost' }]),
+        cancelValor: ''
+      }).then(function(v){
+        if(v === '__nueva') entAbrirEditor(entNueva('recepcion'));
+        else if(v) entDeHistorial(v, 'abrir');
+      });
+    }, function(){ btn.disabled = false; });
   }
 
   entEl('ent-history').addEventListener('click', function(ev){
@@ -6072,8 +6147,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     else if(b.hasAttribute('data-ent-print')) entDeHistorial(b.getAttribute('data-ent-print'), 'print', b);
   });
   entEl('ent-filtros').addEventListener('click', function(ev){ var b = ev.target.closest('button'); if(!b) return; entFiltro = b.getAttribute('data-f'); entRenderHistorial(); });
-  entEl('ent-new-dia').addEventListener('click', function(){ entAbrirOCrear('dia', entEl('ent-new-date').value || todayStr()); });
-  entEl('ent-new-noche').addEventListener('click', function(){ entAbrirOCrear('noche', entEl('ent-new-date').value || todayStr()); });
+  entEl('ent-new-entrega').addEventListener('click', entNuevaEntrega);
+  entEl('ent-new-recepcion').addEventListener('click', entRecibir);
   entEl('ent-list-btn').addEventListener('click', function(){ entFlush().then(function(){ entMostrarLista(); }); });
   entEl('ent-back-btn').addEventListener('click', function(){ entFlush().then(function(){ showView('dashboard'); entActualizarBadge(); }); });
   entEl('ent-btn-main').addEventListener('click', entBotonPrincipal);
@@ -6095,7 +6170,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   function entIniciarSesion(){ entSyncPending(); entActualizarBadge(); cargarInventario(); }
   function entReiniciar(){
     fijarInventario(null);   // el listado propio de la nube no queda guardado en el navegador despues de cerrar sesion
-    entState = null; entMostrarLista.visto = false; entFiltro = 'todas';
+    entState = null; entFiltro = 'todas';
     if(entSaveTimer){ clearTimeout(entSaveTimer); entSaveTimer = null; }
     if(entCloudTimer){ clearTimeout(entCloudTimer); entCloudTimer = null; }
     var v = entEl('view-entregas'); if(v) v.hidden = true;
