@@ -9,9 +9,9 @@
      guardados (p. ej. el estado "Stop" de un generador podia mostrarse como "Detener"). -->
 <meta name="google" content="notranslate">
 <!-- Politica de seguridad de contenido: la genera build.ps1 (incluye los hashes de los scripts en linea). -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-hOG2WBnVvGSKEYaHSb1eBNHr3WmFvIEPvw7UVKV4WOs=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=' https://www.gstatic.com/firebasejs/10.14.1/; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://zonadeguerreros.github.io; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-iEo3a11pTnF+I6dZ4SoXwRg0TcPc62TYgWWptNDVpoc=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=' https://www.gstatic.com/firebasejs/10.14.1/; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://zonadeguerreros.github.io; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'none'; form-action 'none'">
 <title>Pauta de Chequeo Diario</title>
-<meta name="app-version" content="2026-10-26.1158-0f636706">
+<meta name="app-version" content="2026-10-28.0014-cfe73565">
 <style>
   @font-face{
     font-family:"Roboto";
@@ -391,6 +391,14 @@
   .inf-photo-count{ font-size:11px; color:#666; }
   .inf-ro .inf-edit-only{ display:none !important; }
   .inf-ro .inf-sig-canvas{ pointer-events:none; cursor:default; }
+  /* Firma de recepcion del turno: se puede firmar aunque el informe este bloqueado para editar */
+  .inf-ro .inf-rec-canvas{ pointer-events:auto; cursor:crosshair; }
+  .inf-rec select{ width:100%; max-width:440px; margin-bottom:4px; }
+  .inf-rec-btn{ margin-top:8px; }
+  .inf-rec-nota{ font-size:8.5pt; color:#666; margin-top:6px; }
+  .inf-rec-img{ height:70px; display:flex; align-items:flex-end; margin-top:6px; }
+  .inf-rec-img img{ max-height:70px; max-width:240px; }
+  .rep .rep-recat{ font-size:8pt; color:#555; }
   .inf-ro input:disabled, .inf-ro textarea:disabled, .inf-ro select:disabled{ opacity:1; -webkit-text-fill-color:currentColor; background:#F6F6F6; }
 
   /* Vista previa (paginas tal como saldran en el PDF) */
@@ -1037,6 +1045,7 @@
       <div class="inf-sheet rep" id="inf-sheet"></div>
       <input type="file" id="inf-photo-input" accept="image/*" multiple hidden/>
       <input type="file" id="inf-sig-file" accept="image/*" hidden/>
+      <input type="file" id="inf-rec-file" accept="image/*" hidden/>
     </div>
 
   </div>
@@ -2018,9 +2027,14 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   // contador de la nube con el de la version que se abrio: si es distinto, alguien mas guardo en el intertanto (conflicto) y NO se
   // pisa. (Un contador es mas seguro que comparar fechas, porque no depende de los relojes de cada equipo.)
   // o = { sobrescribir (ignora el conflicto: "guardar la mia encima"), bloqueado(nube) -> bool (ya no se puede editar: 'locked'),
-  //       parcial(nube) -> campos | null (actualizacion parcial en vez de reemplazar el documento) }
+  //       parcial(nube) -> campos | null (actualizacion parcial en vez de reemplazar el documento),
+  //       alCrear(datos) -> datos (ajusta lo que se guarda cuando el documento todavia no existe en la nube) }
+  // Firestore rechaza el guardado completo si algun campo vale 'undefined' (p. ej. un documento antiguo al que le falta un
+  // campo). Se limpian antes: los 'undefined' se omiten (en listas pasan a null). Aqui solo viajan textos, numeros y booleanos.
+  function sinIndefinidos(x){ return x == null ? x : JSON.parse(JSON.stringify(x)); }
   function guardarSinPisar(ref, datos, st, o){
     o = o || {};
+    datos = sinIndefinidos(datos);
     return withTimeout(fbDb.runTransaction(function(tx){
       return tx.get(ref).then(function(snap){
         var nube = snap.exists ? snap.data() : null;
@@ -2029,7 +2043,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
           if(!o.sobrescribir && (nube.rev || 0) !== (st.rev || 0)){ var e2 = new Error('conflicto'); e2.code = 'conflicto'; e2.nube = nube; throw e2; }
         }
         var rev = ((nube && nube.rev) || 0) + 1;
-        var parcial = nube && o.parcial ? o.parcial(nube) : null;
+        var parcial = nube && o.parcial ? sinIndefinidos(o.parcial(nube)) : null;
+        if(!nube && o.alCrear) datos = sinIndefinidos(o.alCrear(datos) || datos);
         if(parcial){ tx.update(ref, Object.assign({}, parcial, { rev: rev })); }
         else { tx.set(ref, Object.assign({}, datos, { rev: rev })); }
         return rev;
@@ -2222,7 +2237,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   }
 
   // ---------- version y aviso de actualizacion ----------
-  // Cada version publicada lleva un identificador (2026-10-26.1158-0f636706, lo genera compilar.js). Se compara contra la version
+  // Cada version publicada lleva un identificador (2026-10-28.0014-cfe73565, lo genera compilar.js). Se compara contra la version
   // publicada de la web (mismo origen para todos: PC, celular o navegador) leyendo su etiqueta <meta name="app-version">.
   // Es una lectura publica de una pagina de solo texto: no requiere Firebase ni maneja datos del usuario.
   var APP_VERSION = (document.querySelector('meta[name="app-version"]') || {}).content || '';
@@ -3490,6 +3505,16 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     var nombre = miNombre();
     return { uid: (currentUser && currentUser.uid) || null, email: (currentUser && currentUser.email) || '', nombre: nombre, cargo: infCargoDe(nombre) };
   }
+  // ---------- recepcion del turno (firma de quien recibe) ----------
+  // Cuando el informe ya esta guardado como final, cualquier funcionario distinto de quien entrega firma que recibio el turno,
+  // a cualquier hora (en el mismo equipo o desde su cuenta). Se guarda solo el campo 'recepcion'; una vez firmada no se cambia.
+  var infRec = null;   // firma de recepcion en curso, antes de pulsar "Firmar recepcion": { nombre, firma }
+  function infRecFirmada(st){ return !!(st && st.recepcion && safeImg(st.recepcion.firma)); }
+  function infPuedeRecibir(st){ return !!st && st.estado === 'final' && !infRecFirmada(st); }
+  function infFechaHora(iso){ var d = new Date(iso || ''); return isNaN(d) ? '' : d.toLocaleString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
+  // Nombre propuesto para quien recibe: quien usa el programa, salvo que sea el mismo que entrega (firman en su equipo)
+  function infRecNombreInicial(st){ var yo = miNombre(); return normNombre(yo) === normNombre(st.autor && st.autor.nombre) ? '' : yo; }
+
   // Listado de funcionarios (el mismo de la pauta); incluye a quien usa el programa y al autor actual si no estan en la lista
   function infNombresHtml(st){ return opcionesFuncionarios((st.autor && st.autor.nombre) || '', 'Seleccionar funcionario'); }
   // Desplegable con todas las opciones siempre visibles. Si habia un valor antiguo distinto, se conserva como opcion.
@@ -3510,7 +3535,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       id: fecha + '_' + tipo, tipo: tipo, fechaInicio: fecha, estado: 'borrador', autor: infAutor(), rev: 0,
       actividades: T.filas.map(function(f){ return { id: infNewId('a'), hora: f.hora, texto: f.texto, fotos: [] }; }),
       grupos: { g2: '', g1: '', comb1: '', comb2: '' },
-      figuraFotos: [], firma: null, photos: {},
+      figuraFotos: [], firma: null, recepcion: null, photos: {},
       createdAt: now, updatedAt: now, finalizadoAt: null, lastEditedBy: null, editors: []
     };
   }
@@ -3521,6 +3546,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     st.grupos = Object.assign({ g2: '', g1: '', comb1: '', comb2: '' }, st.grupos || {});
     st.figuraFotos = st.figuraFotos || [];
     st.photos = st.photos || {};
+    st.recepcion = st.recepcion || null;
     st.editors = st.editors || [];
     st.autor = st.autor || infAutor();
     st.estado = st.estado || 'borrador';
@@ -3539,7 +3565,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   function infSerializable(st){
     return {
       id: st.id, tipo: st.tipo, fechaInicio: st.fechaInicio, estado: st.estado, autor: st.autor, rev: st.rev || 0,
-      actividades: st.actividades, grupos: st.grupos, figuraFotos: st.figuraFotos, firma: st.firma || null,
+      actividades: st.actividades, grupos: st.grupos, figuraFotos: st.figuraFotos, firma: st.firma || null, recepcion: st.recepcion || null,
       createdAt: st.createdAt, updatedAt: st.updatedAt, finalizadoAt: st.finalizadoAt || null,
       lastEditedBy: st.lastEditedBy || null, lastEditedByUid: st.lastEditedByUid || null, editors: (st.editors || []).slice(), _dev: 'Cristhian Sandoval'
     };
@@ -3800,8 +3826,17 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       + '<tr class="h"><td>Funcionario que entrega el turno</td><td>Funcionario que recibe el turno</td></tr>'
       + '<tr><td class="pad">' + esc(au.nombre || '') + '<br>' + esc(au.cargo || 'Técnico eléctrico') + '<br>Departamento de Operaciones<br>'
       + (safeImg(st.firma) ? '<img class="rep-sigimg" src="' + safeImg(st.firma) + '"/>' : '<br>') + 'Nombre y firma</td>'
-      + '<td class="pad"><br><br><br>Nombre y firma</td></tr></table>' });
+      + '<td class="pad">' + repRecepcionHtml(st) + '</td></tr></table>' });
     return out;
+  }
+
+  // Celda "Funcionario que recibe el turno": con firma digital si ya se firmo; si no, en blanco para firmar a mano.
+  function repRecepcionHtml(st){
+    var r = st.recepcion;
+    if(!infRecFirmada(st)) return '<br><br><br>Nombre y firma';
+    return esc(r.nombre || '') + '<br>' + esc(r.cargo || 'Técnico eléctrico') + '<br>Departamento de Operaciones<br>'
+      + '<img class="rep-sigimg" src="' + safeImg(r.firma) + '"/>Nombre y firma'
+      + (r.at ? '<br><span class="rep-recat">Recibido: ' + esc(infFechaHora(r.at)) + '</span>' : '');
   }
 
   function repPortadaHtml(st){
@@ -3933,7 +3968,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       + '<canvas id="inf-sig-canvas" class="inf-sig-canvas" width="640" height="200"></canvas>'
       + '<div class="inf-sig-actions inf-edit-only"><button type="button" class="ghost-btn" id="inf-sig-upload">Adjuntar imagen</button><button type="button" class="ghost-btn" id="inf-sig-clear">Limpiar firma</button></div>'
       + '<div>Nombre y firma</div></div>'
-      + '<div><br><br><br><br>Nombre y firma</div></div>';
+      + '<div>' + infRecepcionEditorHtml(st) + '</div></div>';
     h += '<div class="inf-photo-count">Fotos del informe: ' + infFotoCount(st) + '</div>';
     return h;
   }
@@ -3947,6 +3982,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     if(!infEditable){ sheet.querySelectorAll('input, textarea, select').forEach(function(el){ el.disabled = true; }); }
     sheet.querySelectorAll('textarea').forEach(infAutoAltura);
     infSetupFirma();
+    infSetupRecepcion();
     var pill = infEl('inf-pill');
     pill.className = 'pill ' + (st.estado === 'final' ? 'done' : 'progress');
     pill.textContent = st.estado === 'final' ? 'Final' : 'Borrador';
@@ -3969,6 +4005,67 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       limpiar: infEl('inf-sig-clear'), subir: infEl('inf-sig-upload'), archivo: infEl('inf-sig-file'),
       alCambiar: function(dataUrl){ infState.firma = dataUrl; infTouch(); }
     });
+  }
+
+  // ---------- firma de recepcion del turno (seccion 4, columna "Funcionario que recibe el turno") ----------
+  function infRecepcionEditorHtml(st){
+    var r = st.recepcion;
+    if(infRecFirmada(st)){
+      return esc(r.nombre || '') + '<br>' + esc(r.cargo || 'Técnico eléctrico') + '<br>Departamento de Operaciones'
+        + '<div class="inf-rec-img"><img src="' + safeImg(r.firma) + '" alt="Firma de recepción"/></div><div>Nombre y firma</div>'
+        + (r.at ? '<div class="inf-rec-nota">Recibido: ' + esc(infFechaHora(r.at)) + '</div>' : '');
+    }
+    if(st.estado !== 'final') return '<br><br><br>Nombre y firma<div class="inf-rec-nota">Quien recibe el turno firma aquí una vez que el informe esté guardado.</div>';
+    if(!infRec) infRec = { nombre: infRecNombreInicial(st), firma: null };
+    return '<div class="inf-rec">'
+      + '<select data-rec-nombre aria-label="Funcionario que recibe el turno">' + opcionesFuncionarios(infRec.nombre, 'Seleccionar funcionario') + '</select>'
+      + '<span id="inf-rec-cargo">' + esc(infRec.nombre ? infCargoDe(infRec.nombre) : '') + '</span><br>Departamento de Operaciones'
+      + '<canvas id="inf-rec-canvas" class="inf-sig-canvas inf-rec-canvas" width="640" height="200"></canvas>'
+      + '<div class="inf-sig-actions"><button type="button" class="ghost-btn" id="inf-rec-upload">Adjuntar imagen</button><button type="button" class="ghost-btn" id="inf-rec-clear">Limpiar firma</button></div>'
+      + '<div>Nombre y firma</div>'
+      + '<button type="button" class="btn primary inf-rec-btn" id="inf-rec-btn">Firmar recepción del turno</button>'
+      + '<div class="inf-rec-nota">Quien recibe el turno elige su nombre, firma y pulsa «Firmar recepción del turno». Una vez firmada no se puede cambiar.</div></div>';
+  }
+  function infSetupRecepcion(){
+    var st = infState, sel = infEl('inf-sheet').querySelector('[data-rec-nombre]');
+    if(!sel || !infPuedeRecibir(st)) return;
+    sel.disabled = false;   // aunque el informe este bloqueado para editar, la recepcion se puede firmar
+    crearFirma({
+      canvas: infEl('inf-rec-canvas'), valor: infRec && infRec.firma, puede: function(){ return infPuedeRecibir(infState); },
+      limpiar: infEl('inf-rec-clear'), subir: infEl('inf-rec-upload'), archivo: infEl('inf-rec-file'),
+      alCambiar: function(dataUrl){ infRec.firma = dataUrl; }
+    });
+  }
+  async function infFirmarRecepcion(){
+    var st = infState; if(!st || !infPuedeRecibir(st) || !infRec) return;
+    if(!String(infRec.nombre || '').trim()){ await avisar('Elige el nombre de quien recibe el turno.'); return; }
+    if(normNombre(infRec.nombre) === normNombre(st.autor && st.autor.nombre)){ await avisar('Quien recibe el turno debe ser una persona distinta de quien lo entrega. Elige el nombre de quien recibe.'); return; }
+    if(!safeImg(infRec.firma)){ await avisar('Falta la firma de quien recibe el turno. Dibújala en el cuadro o adjunta una imagen.'); return; }
+    if(!infNubeLista()){ await avisar('Se necesita conexión a internet para firmar la recepción del turno.'); return; }
+    var rec = { uid: currentUser.uid, email: currentUser.email || '', nombre: infRec.nombre, cargo: infCargoDe(infRec.nombre), firma: infRec.firma, at: new Date().toISOString() };
+    var btn = infEl('inf-rec-btn'); btn.disabled = true; btn.textContent = 'Guardando…';
+    var ref = fbDb.collection('informes').doc(st.id);
+    function fallo(msg){ btn.disabled = false; btn.textContent = 'Firmar recepción del turno'; infSetBanner(msg, true); }
+    try{
+      var snap = await withTimeout(ref.get(), 8000);
+      if(!snap.exists){ fallo('Este informe todavía no está en la nube (se subirá solo cuando haya conexión en el equipo donde se hizo). La recepción se firma después.'); return; }
+      // Solo se agrega la firma de recepcion: no se toca nada mas del informe (ni se pisa lo que haya cambiado otra persona)
+      await guardarSinPisar(ref, infSerializable(st), st, {
+        sobrescribir: true,
+        bloqueado: function(nube){ return nube.estado !== 'final' || infRecFirmada(nube); },
+        parcial: function(){ return { recepcion: rec }; }
+      });
+    }catch(err){
+      var res = resultadoDeError(err);
+      if(res.locked) fallo('Este informe ya tiene la firma de recepción (o ya no está guardado como final). Vuelve a abrirlo desde la lista.');
+      else if(res.denied) fallo('NO se guardó la firma de recepción: la nube la rechazó. Recarga la página (Ctrl+F5) e inténtalo de nuevo; si sigue pasando, avisa al jefe.');
+      else fallo('NO se guardó la firma de recepción: sin conexión con la nube. Inténtalo de nuevo cuando haya internet.');
+      return;
+    }
+    st.recepcion = rec; infRec = null;
+    await infLocalSave(st, false);
+    infRenderEditor();
+    infSetBanner('Recepción del turno firmada por ' + rec.nombre + ' (' + infFechaHora(rec.at) + ').', false);
   }
 
   // ---------- eventos del editor ----------
@@ -4026,6 +4123,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     }
     sheet.addEventListener('input', cambio);
     sheet.addEventListener('change', cambio);
+    // Recepcion del turno: funciona aunque el informe ya este bloqueado para editar
+    sheet.addEventListener('change', function(e){
+      var t = e.target; if(!t.hasAttribute('data-rec-nombre') || !infRec) return;
+      infRec.nombre = t.value;
+      var c = infEl('inf-rec-cargo'); if(c) c.textContent = t.value ? infCargoDe(t.value) : '';
+    });
+    sheet.addEventListener('click', function(e){ if(e.target.closest('#inf-rec-btn')) infFirmarRecepcion(); });
     sheet.addEventListener('click', function(e){
       if(!infEditable) return;
       var st = infState, t = e.target;
@@ -4146,10 +4250,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       return '<div class="hist-card"><div class="hist-head">'
         + '<div style="flex:1;min-width:160px;"><div class="hist-date">Turno ' + esc(T.etiqueta.toLowerCase()) + ' · ' + esc(fmtDateLong(x.fechaInicio)) + '</div>'
         + '<div class="hist-tech">' + esc((x.autor && x.autor.nombre) || 'Sin funcionario') + ' · ' + esc(T.horario) + '</div>'
-        + (x.lastEditedBy ? '<div class="hist-tech">Último cambio: ' + esc(x.lastEditedBy) + (otros.length ? ' · también editó: ' + esc(otros.join(', ')) : '') + '</div>' : '') + '</div>'
+        + (x.lastEditedBy ? '<div class="hist-tech">Último cambio: ' + esc(x.lastEditedBy) + (otros.length ? ' · también editó: ' + esc(otros.join(', ')) : '') + '</div>' : '')
+        + (infRecFirmada(x) ? '<div class="hist-tech">Recibido por ' + esc(x.recepcion.nombre || '—') + (x.recepcion.at ? ' · ' + esc(infFechaHora(x.recepcion.at)) : '') + '</div>' : '') + '</div>'
         + (x._pending ? '<span class="pill neutral">Pendiente de subir</span>' : '')
+        + (fin && !infRecFirmada(x) ? '<span class="pill progress">Recepción pendiente</span>' : '')
         + '<span class="pill ' + (fin ? 'done' : 'progress') + '">' + (fin ? 'Final' : 'Borrador') + '</span></div>'
         + '<div class="hist-actions"><button class="ghost-btn" data-inf-ver="' + esc(x.id) + '">Ver informe</button>'
+        + (infPuedeRecibir(x) ? '<button class="ghost-btn" data-inf-recibir="' + esc(x.id) + '">Firmar recepción</button>' : '')
         + (infPuedeEditar(st) ? '<button class="ghost-btn" data-inf-edit="' + esc(x.id) + '">Editar</button>' : '')
         + '<button class="ghost-btn" data-inf-pdf="' + esc(x.id) + '">Descargar PDF</button>'
         + '<button class="ghost-btn" data-inf-word="' + esc(x.id) + '">Descargar Word</button>'
@@ -4160,13 +4267,18 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     if(masBtn) masBtn.addEventListener('click', function(){ masBtn.disabled = true; masBtn.textContent = 'Cargando…'; infLimite += 60; infCargarLista().then(infRenderHistorial); });
   }
 
-  function infAbrirEditor(st){
+  function infAbrirEditor(st, irARecepcion){
+    infRec = null;
     infState = infNormalizar(st);
     infEditable = infPuedeEditar(st);
     infEl('inf-list').hidden = true; infEl('inf-editor').hidden = false;
     infSetStatus(''); infSetBanner('', false);
     infRenderEditor();
     window.scrollTo(0, 0);
+    if(irARecepcion){
+      var c = infEl('inf-rec-canvas') || infEl('inf-sig-canvas'); if(c) c.scrollIntoView({ block: 'center' });
+      if(infPuedeRecibir(infState)) infSetBanner('Recepción del turno: revisa el informe, elige tu nombre, firma en la sección 4 y pulsa «Firmar recepción del turno».', 'info');
+    }
   }
 
   function infAbrirOCrear(tipo, fecha){
@@ -4190,6 +4302,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       else if(accion === 'word') infDescargarWord(st, btn);
       else if(accion === 'print') infImprimir(st);
       else if(accion === 'edit') infAbrirEditor(st);
+      else if(accion === 'recibir') infAbrirEditor(st, true);
     });
   }
 
@@ -4197,6 +4310,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     var b = e.target.closest('button'); if(!b) return;
     if(b.hasAttribute('data-inf-ver')) infDeHistorial(b.getAttribute('data-inf-ver'), 'ver', b);
     else if(b.hasAttribute('data-inf-edit')) infDeHistorial(b.getAttribute('data-inf-edit'), 'edit', b);
+    else if(b.hasAttribute('data-inf-recibir')) infDeHistorial(b.getAttribute('data-inf-recibir'), 'recibir', b);
     else if(b.hasAttribute('data-inf-pdf')) infDeHistorial(b.getAttribute('data-inf-pdf'), 'pdf', b);
     else if(b.hasAttribute('data-inf-word')) infDeHistorial(b.getAttribute('data-inf-word'), 'word', b);
     else if(b.hasAttribute('data-inf-print')) infDeHistorial(b.getAttribute('data-inf-print'), 'print', b);
@@ -4468,7 +4582,16 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       + wxRun('\nDepartamento de Operaciones', WX_F + '<w:sz w:val="18"/>')
       + (ctx.media.__firma ? '<w:r><w:br/></w:r>' + wxPic(ctx, '__firma', 4.6, 1.7) : '<w:r><w:br/></w:r><w:r><w:br/></w:r>')
       + wxRun('\nNombre y firma', WX_F + '<w:sz w:val="18"/>'));
-    var der = wxP('<w:spacing w:after="40"/>', '<w:r><w:br/></w:r><w:r><w:br/></w:r>' + wxRun('\nNombre y firma', WX_F + '<w:sz w:val="18"/>'));
+    // Funcionario que recibe el turno: con su firma digital si ya firmo la recepcion; si no, en blanco para firmar a mano
+    var rc = st.recepcion;
+    var der = (ctx.media.__firmaRec && rc) ? wxP('<w:spacing w:after="40"/>',
+      wxRun(rc.nombre || '', WX_F + '<w:sz w:val="18"/>')
+      + wxRun('\n' + (rc.cargo || 'Técnico eléctrico'), WX_F + '<w:sz w:val="18"/>')
+      + wxRun('\nDepartamento de Operaciones', WX_F + '<w:sz w:val="18"/>')
+      + '<w:r><w:br/></w:r>' + wxPic(ctx, '__firmaRec', 4.6, 1.7)
+      + wxRun('\nNombre y firma', WX_F + '<w:sz w:val="18"/>')
+      + (rc.at ? wxRun('\nRecibido: ' + infFechaHora(rc.at), WX_F + '<w:sz w:val="16"/>') : ''))
+      : wxP('<w:spacing w:after="40"/>', '<w:r><w:br/></w:r><w:r><w:br/></w:r>' + wxRun('\nNombre y firma', WX_F + '<w:sz w:val="18"/>'));
     x += wxTbl([4513, 4513],
       wxTr(wxTcTexto(4513, 'Funcionario que entrega el turno', { fill: 'D9EAF7', b: 1, color: '1F1F1F' }) + wxTcTexto(4513, 'Funcionario que recibe el turno', { fill: 'D9EAF7', b: 1, color: '1F1F1F' }), { cantSplit: true })
       + wxTr(wxTc(4513, izq, { vm: 200 }) + wxTc(4513, der, { vm: 200 }), { cantSplit: true }));
@@ -4480,8 +4603,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     var ctx = { media: {}, pid: 100 }, orden = [], n = 0;
     infPhotoIds(st).forEach(function(id){ if(st.photos[id]) orden.push(id); });
     if(st.firma) orden.push('__firma');
+    if(infRecFirmada(st)) orden.push('__firmaRec');
     for(var i = 0; i < orden.length; i++){
-      var key = orden[i], url = key === '__firma' ? st.firma : st.photos[key];
+      var key = orden[i], url = key === '__firma' ? st.firma : (key === '__firmaRec' ? st.recepcion.firma : st.photos[key]);
       var m = /^data:image\/(png|jpeg|jpg);base64,(.*)$/.exec(url); if(!m) continue;
       var d = await wxDims(url);
       n++;
@@ -4752,7 +4876,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
         var n = (sc.exists ? (sc.data().n || 0) : 0) + 1;
         var numero = 'SM-' + anio + '-' + ('000' + n).slice(-4);
         tx.set(refC, { n: n });
-        tx.set(ref, Object.assign({}, ser, { numero: numero, rev: 1 }));
+        tx.set(ref, sinIndefinidos(Object.assign({}, ser, { numero: numero, rev: 1 })));
         return numero;
       });
     }), 10000).then(function(numero){ s.numero = numero; s.rev = 1; }).catch(function(err){
@@ -5596,8 +5720,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     el.style.background = warn === true ? 'var(--warn-bg)' : (warn === 'info' ? 'var(--accent-bg)' : 'var(--surface-2)');
     el.style.color = warn === true ? 'var(--warn)' : (warn === 'info' ? 'var(--accent-strong)' : 'var(--ink-dim)');
   }
-  var ENT_MSG_OFFLINE = 'Sin conexión a la nube: quedó guardado en este dispositivo y se subirá automáticamente cuando vuelva la conexión.';
-  var ENT_MSG_PERM = 'La nube no aceptó guardar este registro (permiso denegado): puede que falte publicar las reglas de Firestore o que otra persona ya lo haya cerrado. Queda guardado en este dispositivo.';
+  var ENT_MSG_OFFLINE = 'Sin conexión a la nube: por ahora quedó guardado SOLO en este dispositivo. Se subirá automáticamente cuando vuelva la conexión (deja la página abierta o vuelve a entrar).';
+  var ENT_MSG_PERM = 'NO se guardó en la nube (la nube lo rechazó). Quedó SOLO en este dispositivo y los demás no lo ven. Recarga la página con Ctrl+F5 (o actualiza el programa de PC) e inténtalo de nuevo; si sigue pasando, avisa al jefe.';
 
   // Solo se sube lo que ya se guardo con el boton: el borrador y la recepcion en curso quedan en el equipo hasta firmar.
   function entSeSube(e){ return e.estado !== 'borrador' && !e._recepcion; }
@@ -5612,13 +5736,21 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     return guardarSinPisar(ref, entSerializable(e), e, {
       sobrescribir: !!(opciones && opciones.sobrescribir),
       // Un tecnico no pisa un registro que otra persona ya cerro
-      bloqueado: function(nube){ return !isJefe() && entCerrada(nube) && !entCerrada(e); }
+      bloqueado: function(nube){ return !isJefe() && entCerrada(nube) && !entCerrada(e); },
+      // Si todavia no esta en la nube (p. ej. quedo guardado solo en un equipo, o lo hizo una version anterior de la
+      // plataforma), lo sube quien lo esta subiendo, a su nombre (asi lo piden las reglas).
+      alCrear: function(datos){
+        var uid = currentUser && currentUser.uid, email = (currentUser && currentUser.email) || '';
+        e.creadoPorUid = uid; e.creadoPor = email;
+        return Object.assign({}, datos, { creadoPorUid: uid, creadoPor: email });
+      }
     }).then(function(){
       delete e._conflicto;
       return entLocalSave(e, false, true).then(function(){ return { ok: true, st: e }; });
     }).catch(function(err){ var r = resultadoDeError(err); r.st = e; return r; });
   }
   function entTrasNube(res){
+    if(res.st){ res.st._sinSubir = !res.ok && !res.soloLocal && res.st.estado !== 'borrador'; if(res.st === entState) entActualizarBarra(); }
     if(res.ok){
       entCloudPend = false;
       entSetStatus(res.soloLocal ? 'Guardado en este dispositivo' : 'Guardado en la nube · ' + new Date().toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }));
@@ -5627,8 +5759,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       entPerm = { sal: false, rec: false }; entAplicarZonas();
     } else if(res.conflicto){
       entSetStatus('Cambios sin subir'); entAlConflicto(res.st, res.nube);
-    } else if(res.denied){ entSetStatus('Guardado en este dispositivo'); entSetBanner(ENT_MSG_PERM, true); }
-    else { entSetStatus('Guardado en este dispositivo'); entSetBanner(ENT_MSG_OFFLINE, 'info'); }
+    } else if(res.denied){ entSetStatus('NO se guardó en la nube'); entSetBanner(ENT_MSG_PERM, true); }
+    else { entSetStatus('Sin conexión: solo en este dispositivo'); entSetBanner(ENT_MSG_OFFLINE, 'info'); }
   }
   var entConflictoAbierto = false;
   function entAlConflicto(e, nube){
@@ -5871,7 +6003,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   }
   function entActualizarBarra(){
     var e = entState, et = entEtiqueta(e);
-    var pill = entEl('ent-pill'); pill.className = 'pill ' + et.clase; pill.textContent = et.txt;
+    var pill = entEl('ent-pill'); pill.className = 'pill ' + (e._sinSubir ? 'neutral' : et.clase); pill.textContent = et.txt + (e._sinSubir ? ' · NO subida a la nube' : '');
     var main = entEl('ent-btn-main'), desc = entEl('ent-btn-descartar');
     desc.style.display = (e.estado === 'borrador' || e._recepcion) ? '' : 'none';
     desc.textContent = e._recepcion ? 'Descartar recepción' : 'Descartar borrador';
@@ -5998,14 +6130,14 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       if(firmanJuntos && !((await entValidar('rec')) && (await entNombresDistintos()))) return;
       e.estado = firmanJuntos ? 'recibida' : 'entregada'; e.entregadaAt = ahora; if(firmanJuntos) e.recibidaAt = ahora;
       entGuardarYAvisar(btn, 'Guardando…', function(res){
-        entRenderEditor(); entMensajeEstado();
+        entRenderEditor();   // si no se subio, queda a la vista el aviso de error (entTrasNube)
         if(res.ok) entSetBanner(firmanJuntos ? 'Entrega completa: quedaron las dos firmas.' : 'Entrega guardada: queda «Por recibir» para el siguiente técnico que llegue.', false);
       });
     } else if(e.estado === 'borrador'){
       if(!(await entValidar('rec'))) return;
       e.estado = 'sinEntrega'; e.recibidaAt = ahora;
       entGuardarYAvisar(btn, 'Guardando…', function(res){
-        entRenderEditor(); entMensajeEstado();
+        entRenderEditor();   // si no se subio, queda a la vista el aviso de error (entTrasNube)
         if(res.ok) entSetBanner('Recepción guardada (sin entrega previa).', false);
       });
     } else if(e.estado === 'entregada'){
@@ -6013,12 +6145,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       if(!(await entValidar('rec')) || !(await entNombresDistintos())) return;
       e.estado = 'recibida'; e.recibidaAt = ahora; e.updatedAt = ahora; delete e._recepcion;
       entGuardarYAvisar(btn, 'Guardando…', function(res){
-        entRenderEditor(); entMensajeEstado();
+        entRenderEditor();   // si no se subio, queda a la vista el aviso de error (entTrasNube)
         if(res.ok) entSetBanner('Recepción conforme registrada. La entrega quedó completa.', false);
       });
     } else if(isJefe()){
       e.updatedAt = ahora;
-      entGuardarYAvisar(btn, 'Guardando…', function(){ entRenderEditor(); entMensajeEstado(); });
+      entGuardarYAvisar(btn, 'Guardando…', function(res){ entRenderEditor(); if(res.ok) entMensajeEstado(); });
     }
   }
   function entGuardarYAvisar(btn, textoBtn, despues){
@@ -6073,7 +6205,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
         + '<div style="flex:1;min-width:170px;"><div class="hist-date">' + esc(entTurnoTxt(e)) + '</div>'
         + '<div class="hist-tech">' + esc(entQuienes(e)) + '</div>'
         + '<div class="sol-resumen">' + esc(entResumenTxt(e)) + '</div></div>'
-        + (e._pending ? '<span class="pill neutral">Pendiente de subir</span>' : '')
+        + (e._pending ? '<span class="pill neutral" title="Todavía no llega a la nube: solo está en este equipo">Solo en este equipo (sin subir)</span>' : '')
         + '<span class="pill ' + et.clase + '">' + esc(et.txt) + '</span></div>'
         + '<div class="hist-actions"><button class="ghost-btn" data-ent-abrir="' + esc(e.id) + '">' + (e.estado === 'entregada' ? 'Recibir' : 'Abrir') + '</button>'
         + '<button class="ghost-btn" data-ent-pdf="' + esc(e.id) + '">Descargar PDF</button>'
