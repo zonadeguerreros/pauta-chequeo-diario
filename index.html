@@ -9,9 +9,9 @@
      guardados (p. ej. el estado "Stop" de un generador podia mostrarse como "Detener"). -->
 <meta name="google" content="notranslate">
 <!-- Politica de seguridad de contenido: la genera build.ps1 (incluye los hashes de los scripts en linea). -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-iEo3a11pTnF+I6dZ4SoXwRg0TcPc62TYgWWptNDVpoc=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=' https://www.gstatic.com/firebasejs/10.14.1/; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://zonadeguerreros.github.io; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-zlFtODPvi5wkEP63njEYZ08AKRW9IITX5uwrm+BQxRE=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=' https://www.gstatic.com/firebasejs/10.14.1/; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://zonadeguerreros.github.io; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'none'; form-action 'none'">
 <title>Pauta de Chequeo Diario</title>
-<meta name="app-version" content="2026-10-28.0014-cfe73565">
+<meta name="app-version" content="2026-10-28.0149-f461b11c">
 <style>
   @font-face{
     font-family:"Roboto";
@@ -2237,7 +2237,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   }
 
   // ---------- version y aviso de actualizacion ----------
-  // Cada version publicada lleva un identificador (2026-10-28.0014-cfe73565, lo genera compilar.js). Se compara contra la version
+  // Cada version publicada lleva un identificador (2026-10-28.0149-f461b11c, lo genera compilar.js). Se compara contra la version
   // publicada de la web (mismo origen para todos: PC, celular o navegador) leyendo su etiqueta <meta name="app-version">.
   // Es una lectura publica de una pagina de solo texto: no requiere Firebase ni maneja datos del usuario.
   var APP_VERSION = (document.querySelector('meta[name="app-version"]') || {}).content || '';
@@ -2246,18 +2246,50 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     var el = document.getElementById('dash-version'); if(!el) return;
     el.textContent = APP_VERSION ? ('v' + APP_VERSION) : '';
   }
+  // Web desactualizada (alguien publico una version nueva mientras la pagina seguia abierta, p. ej. un celular que no se
+  // recargo en dias): se guarda lo que se este editando y la pagina se recarga sola. Asi nadie sigue trabajando con codigo
+  // antiguo que la nube ya no acepta (paso con la entrega de herramientas el 26-10-2026). Si la pestana esta a la vista se
+  // avisa antes; si esta en segundo plano se hace sin preguntar. En el programa de PC solo se avisa (su pagina viene del
+  // instalador: recargar no la actualiza).
+  var CLAVE_RECARGA_VERSION = 'pe_recarga_version';
+  var versionRecargando = false;
+  // Corre los "al ocultar" de todos los modulos (guardan en el equipo y suben a la nube lo pendiente), con un limite de tiempo.
+  function guardarTodoAntesDeRecargar(){
+    var tareas = CICLO.ocultar.map(function(fn){
+      try{ return Promise.resolve(fn()).catch(function(e){ registrarError('guardar antes de recargar', e); }); }
+      catch(e){ registrarError('guardar antes de recargar', e); return Promise.resolve(); }
+    });
+    return Promise.race([Promise.all(tareas), new Promise(function(r){ setTimeout(r, 10000); })]);
+  }
+  function recargarPorVersionNueva(nueva){
+    if(versionRecargando) return;
+    versionRecargando = true;
+    var antes = document.hidden ? Promise.resolve() : dialogo({
+      titulo: 'Hay una versión nueva de la plataforma',
+      mensaje: 'Se guardará lo que estás haciendo y la página se recargará para usar la versión nueva. No se pierde nada de lo que ya escribiste.',
+      botones: [{ texto: 'Actualizar ahora', valor: true, tipo: 'primary' }], cancelValor: true
+    });
+    antes.then(guardarTodoAntesDeRecargar).then(function(){
+      try{ sessionStorage.setItem(CLAVE_RECARGA_VERSION, nueva); }catch(e){ /* sin sessionStorage: igual se recarga */ }
+      location.reload();
+    });
+  }
   function verificarVersionNueva(){
-    if(!APP_VERSION) return Promise.resolve();
+    if(!APP_VERSION || !currentUser || versionRecargando) return Promise.resolve();   // en la pantalla de acceso no se interrumpe
     return fetch(URL_VERSION_ACTUAL, { cache: 'no-store' }).then(function(r){ return r.text(); }).then(function(html){
       var m = /<meta\s+name="app-version"\s+content="([^"]+)"/.exec(html);
-      var banner = document.getElementById('version-banner'); if(!banner) return;
+      var banner = document.getElementById('version-banner');
       if(m && m[1] && m[1] !== APP_VERSION){
+        // Para no recargar en bucle: si ya se recargo una vez por esta misma version y sigue llegando la antigua, solo se avisa.
+        var yaRecargada = false; try{ yaRecargada = sessionStorage.getItem(CLAVE_RECARGA_VERSION) === m[1]; }catch(e){ /* sin sessionStorage */ }
+        if(!ES_PC && !yaRecargada){ recargarPorVersionNueva(m[1]); return; }
+        if(!banner) return;
         banner.style.display = '';
         banner.style.background = 'var(--warn-bg)'; banner.style.color = 'var(--warn)';
         banner.textContent = ES_PC
           ? 'Hay una versión más nueva de la plataforma. Pídele al administrador el instalador o el zip actualizado.'
-          : 'Hay una versión más nueva de esta página. Guarda lo que estés haciendo y recarga (Ctrl+F5) para actualizar.';
-      } else {
+          : 'Hay una versión más nueva de esta página, pero el navegador sigue entregando la anterior. Cierra el navegador y vuelve a abrirla (o recarga con Ctrl+F5).';
+      } else if(banner){
         banner.style.display = 'none';
       }
     }).catch(function(err){ registrarError('verificarVersionNueva', err); });   // sin internet o bloqueado: no molesta a nadie
@@ -6658,7 +6690,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     cuEntrarConUsuario(currentUser);
   });
   cadaSegundos(60, cuActualizarBadge);
-  cadaSegundos(1200, verificarVersionNueva, { enSegundoPlano: true });   // cada 20 min, avisa si alguien publico una version nueva
+  // Si alguien publico una version nueva: cada 5 min, al volver a la pestana y al recuperar internet (ver verificarVersionNueva)
+  cadaSegundos(300, verificarVersionNueva, { enSegundoPlano: true });
+  alMostrarPagina(verificarVersionNueva);
+  alVolverConexion(verificarVersionNueva);
 
   // ---------- funcionarios (lista de nombres) ----------
   function cuMostrarFuncionarios(){
