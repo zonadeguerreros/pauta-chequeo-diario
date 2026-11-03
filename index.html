@@ -9,9 +9,9 @@
      guardados (p. ej. el estado "Stop" de un generador podia mostrarse como "Detener"). -->
 <meta name="google" content="notranslate">
 <!-- Politica de seguridad de contenido: la genera build.ps1 (incluye los hashes de los scripts en linea). -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-oURyvp7bq8tiINfi4ImRi6LJ14ArnaHQ6JeXyppENFM=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=' https://www.gstatic.com/firebasejs/10.14.1/; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://zonadeguerreros.github.io; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-3Q4xFirUXvM3uIrTOtlO/VKR5JQdohNKyqW2Db7RL1I=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=' https://www.gstatic.com/firebasejs/10.14.1/; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://zonadeguerreros.github.io; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'none'; form-action 'none'">
 <title>Pauta de Chequeo Diario</title>
-<meta name="app-version" content="2026-10-28.0241-5669280e">
+<meta name="app-version" content="2026-11-03.2248-0fbdd7ba">
 <style>
   @font-face{
     font-family:"Roboto";
@@ -763,6 +763,77 @@
   }
 
 
+  /* ---- Avisos de pendientes (arriba de todas las pantallas, con la sesion iniciada) ---- */
+  #avisos-bar{ display:flex; flex-direction:column; gap:6px; }
+  #avisos-bar[hidden]{ display:none; }
+  .avi-item{ display:flex; align-items:flex-start; gap:8px; background:var(--warn-bg); color:var(--warn); border:1px solid var(--warn); border-radius:8px; padding:9px 12px; font-size:13px; font-weight:600; line-height:1.4; }
+  .avi-item .avi-ico{ flex:none; }
+  @media screen and (max-width:640px){
+    #avisos-bar{ gap:4px; }
+    .avi-item{ font-size:11.5px; padding:6px 9px; gap:6px; }
+  }
+  @media print{ #avisos-bar{ display:none !important; } }
+
+
+  /* ---- Seguimiento de novedades ---- */
+  #view-seguimiento{ display:flex; flex-direction:column; gap:12px; }
+  #view-seguimiento[hidden], #seg-nueva[hidden]{ display:none; }
+  #seg-lista{ display:flex; flex-direction:column; gap:10px; }
+  #seg-filas{ display:flex; flex-direction:column; gap:10px; max-height:420px; overflow:auto; }
+  .seg-informe{ border:1px solid var(--line); border-radius:8px; padding:8px 10px; display:flex; flex-direction:column; gap:4px; }
+  .seg-informe-tit{ font-size:12.5px; font-weight:700; color:var(--ink); }
+  .seg-fila{ display:flex; gap:8px; align-items:flex-start; font-size:12.5px; color:var(--ink); cursor:pointer; }
+  .seg-fila input{ margin-top:2px; width:17px; height:17px; flex:none; accent-color:var(--accent-solid); }
+  .seg-fila .seg-hora{ font-family:var(--font-mono); color:var(--ink-dim); flex:none; }
+  .seg-fila.ya{ color:var(--ink-faint); cursor:default; }
+  .seg-manual{ display:flex; flex-direction:column; gap:8px; }
+  .seg-manual select, .seg-manual input[type="date"]{ font-family:var(--font); font-size:13px; padding:6px 8px; border-radius:7px; border:1px solid var(--line); background:var(--surface); color:var(--ink); }
+  #view-seguimiento textarea{ width:100%; box-sizing:border-box; font-family:inherit; font-size:13px; padding:8px; border:1px solid var(--line); border-radius:7px; background:var(--surface); color:var(--ink); }
+  .seg-card .hist-head{ cursor:default; }
+  .seg-desc{ font-size:13.5px; font-weight:600; color:var(--ink); white-space:pre-wrap; }
+  .seg-sub{ font-size:12px; color:var(--ink-dim); }
+  .seg-detalle{ padding:0 14px 10px; display:flex; flex-direction:column; gap:4px; font-size:12.5px; color:var(--ink); }
+  .seg-detalle b{ font-weight:700; }
+  .pill.seg-no{ background:var(--warn-bg); color:var(--warn); }
+  .seg-form{ margin:0 14px 12px; padding:10px; border:1px solid var(--line); border-radius:8px; background:var(--surface-2); display:flex; flex-direction:column; gap:8px; }
+  .seg-form[hidden], .seg-hist[hidden]{ display:none; }
+  .seg-opciones{ display:flex; gap:14px; flex-wrap:wrap; font-size:13px; font-weight:600; }
+  .seg-opciones label{ display:flex; gap:6px; align-items:center; cursor:pointer; }
+  .seg-hist{ margin:0 14px 12px; font-size:12px; color:var(--ink-dim); display:flex; flex-direction:column; gap:3px; }
+
+
+  /* ---- Analisis y gestion (solo jefe) ---- */
+  #view-analisis{ display:flex; flex-direction:column; gap:12px; }
+  #view-analisis[hidden]{ display:none; }
+  table.ana-tabla{ min-width:640px; }
+  table.ana-tabla td.ana-ok{ color:var(--ok); }
+  table.ana-tabla td.ana-tarde{ color:var(--accent-strong); font-weight:700; }
+  table.ana-tabla td.ana-no{ color:var(--warn); font-weight:700; }
+  table.ana-tabla td.ana-fuera{ background:var(--warn-bg); color:var(--warn); font-weight:700; }
+  table.ana-tabla th.ana-grupo{ text-align:left; background:var(--surface); color:var(--ink); font-size:12px; }
+  .ana-graficos{ display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:14px; }
+  .ana-graf{ border:1px solid var(--line); border-radius:8px; padding:8px 10px; }
+  .ana-graf h3{ font-size:12.5px; margin:0 0 4px; color:var(--ink); }
+  .ana-leyenda{ display:flex; gap:12px; font-size:11px; color:var(--ink-dim); flex-wrap:wrap; }
+  .ana-leyenda i{ display:inline-block; width:12px; height:3px; vertical-align:middle; margin-right:4px; border-radius:2px; }
+  .ana-s0{ stroke:#C0392B; } .ana-c0{ background:#C0392B; } .ana-p0{ fill:#C0392B; }
+  .ana-s1{ stroke:#2E6DB4; } .ana-c1{ background:#2E6DB4; } .ana-p1{ fill:#2E6DB4; }
+  .ana-s2{ stroke:#2F7A4F; } .ana-c2{ background:#2F7A4F; } .ana-p2{ fill:#2F7A4F; }
+  .ana-linea{ fill:none; stroke-width:2; stroke-linejoin:round; stroke-linecap:round; }
+  .ana-limite{ stroke:var(--ink-faint); stroke-width:1.2; stroke-dasharray:5 4; }
+  .ana-leyenda i.ana-cl{ background:none; border-top:2px dashed var(--ink-faint); height:0; }
+  .ana-cfg{ display:grid; grid-template-columns:minmax(180px, 1.3fr) repeat(2, minmax(80px, .6fr)) minmax(180px, 2fr); gap:6px 10px; align-items:center; font-size:12.5px; }
+  .ana-cfg .ana-cfg-h{ font-weight:700; color:var(--ink-dim); font-size:11px; text-transform:uppercase; letter-spacing:.03em; }
+  .ana-cfg input{ font-family:var(--font); font-size:13px; padding:5px 7px; border-radius:6px; border:1px solid var(--line); background:var(--surface); color:var(--ink); width:100%; box-sizing:border-box; }
+  .ana-cfg .ana-cfg-sep{ grid-column:1 / -1; font-weight:700; color:var(--ink); margin-top:6px; }
+  @media screen and (max-width:640px){
+    .ana-cfg{ grid-template-columns:1fr 1fr; }
+    .ana-cfg .ana-cfg-h{ display:none; }
+    .ana-cfg .ana-cfg-nom{ grid-column:1 / -1; font-weight:600; margin-top:4px; }
+    .ana-cfg .ana-cfg-fuente{ grid-column:1 / -1; }
+  }
+
+
   /* ---- Mobile / small screens (phones, small tablets) — screen only, never print ---- */
   @media screen and (max-width: 640px){
     body{ padding-inline:10px; padding-block:12px 40px; }
@@ -843,6 +914,10 @@
 
 <div class="wrap">
 
+  <!-- Avisos de pendientes (pautas del dia y novedades del turno): solo se ven con la sesion iniciada -->
+  <div id="avisos-bar" role="status" aria-live="polite" hidden></div>
+
+
   <div id="view-auth" class="auth-wrap">
     <div class="auth-card" id="auth-card" style="visibility:hidden">
       <img class="auth-logo" src="data:image/png;base64,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" alt="Ingeniería Eléctrica — Hospital Villarrica"/>
@@ -889,10 +964,19 @@
         <span class="dash-card-desc">Inventario de herramientas en cada cambio de turno</span>
         <span class="dash-card-tag alert" id="dash-ent-badge" hidden></span>
       </button>
+      <button type="button" class="dash-card" id="dash-card-seguimiento">
+        <span class="dash-card-title">Seguimiento de Novedades</span>
+        <span class="dash-card-desc">Novedades de turno pendientes: lista o no lista</span>
+        <span class="dash-card-tag alert" id="dash-seg-badge" hidden></span>
+      </button>
       <button type="button" class="dash-card" id="dash-card-cuentas" hidden>
         <span class="dash-card-title">Cuentas y accesos</span>
         <span class="dash-card-desc">Aprobar cuentas nuevas y controlar el registro</span>
         <span class="dash-card-tag alert" id="dash-cuentas-badge" hidden></span>
+      </button>
+      <button type="button" class="dash-card" id="dash-card-analisis" hidden>
+        <span class="dash-card-title">Análisis y Gestión</span>
+        <span class="dash-card-desc">Indicadores, avisos, alertas por rango y tendencias</span>
       </button>
     </div>
 
@@ -1303,6 +1387,107 @@
 
   <section id="gd-view-historial" class="pauta-historial" hidden></section>
 
+  </div>
+
+
+  <div id="view-seguimiento" hidden>
+    <div class="inf-bar">
+      <button type="button" class="ghost-btn" id="seg-back-btn">← Menú</button>
+      <div class="inf-title">Seguimiento de Novedades</div>
+    </div>
+
+    <div class="inf-card">
+      <h2>Novedades en seguimiento</h2>
+      <div class="inf-note">Agrega aquí las novedades de los informes de turno que necesitan seguimiento (por ejemplo, un trabajo que quedó pendiente) y marca si quedó lista o no. Si no quedó lista, escribe el motivo. El jefe supervisor revisa cada una y la deja cerrada o abierta.</div>
+      <div class="inf-new-row"><button type="button" class="btn primary" id="seg-agregar">＋ Agregar novedad</button></div>
+      <div class="info-banner" id="seg-banner" style="display:none"></div>
+    </div>
+
+    <div class="inf-card" id="seg-nueva" hidden>
+      <h2>Agregar novedades al seguimiento</h2>
+      <div class="inf-note">Marca las filas de los informes de los últimos 7 días que necesitan seguimiento, o escribe una novedad abajo.</div>
+      <div id="seg-filas"></div>
+      <div class="seg-manual">
+        <div class="inf-new-row">
+          <label>Fecha <input type="date" id="seg-m-fecha"/></label>
+          <label>Turno <select id="seg-m-turno"><option value="dia">Día</option><option value="noche">Noche</option></select></label>
+        </div>
+        <textarea id="seg-m-texto" rows="2" maxlength="600" placeholder="Escribir una novedad (opcional si marcaste filas arriba)"></textarea>
+      </div>
+      <div class="inf-new-row">
+        <button type="button" class="btn primary" id="seg-guardar-nuevas">Agregar al seguimiento</button>
+        <button type="button" class="ghost-btn" id="seg-cancelar">Cancelar</button>
+      </div>
+    </div>
+
+    <div class="inf-bar">
+      <div class="inf-title">Novedades</div>
+      <div class="spacer"></div>
+      <div class="sol-filtros" id="seg-filtros">
+        <button type="button" class="ghost-btn" data-f="abiertas" aria-pressed="true">Abiertas</button>
+        <button type="button" class="ghost-btn" data-f="cerradas" aria-pressed="false">Cerradas</button>
+        <button type="button" class="ghost-btn" data-f="todas" aria-pressed="false">Todas</button>
+      </div>
+    </div>
+    <div id="seg-lista"></div>
+  </div>
+
+
+  <div id="view-analisis" hidden>
+    <div class="inf-bar">
+      <button type="button" class="ghost-btn" id="ana-back-btn">← Menú</button>
+      <div class="inf-title">Análisis y Gestión</div>
+      <div class="spacer"></div>
+      <span class="pill neutral">Solo jefe supervisor</span>
+    </div>
+    <div class="rpg-mesbar">
+      <button type="button" class="ghost-btn" id="ana-mes-ant">‹ Mes anterior</button>
+      <div class="rpg-mes-actual" id="ana-mes"></div>
+      <button type="button" class="ghost-btn" id="ana-mes-sig">Mes siguiente ›</button>
+    </div>
+    <div class="info-banner" id="ana-nota" style="display:none"></div>
+
+    <div class="inf-card">
+      <h2>Indicadores de gestión</h2>
+      <div class="inf-note">«A tiempo» = completada entre las 08:00 y las 08:30. El tiempo de llenado va desde que se empieza a llenar hasta que queda completa (se registra desde noviembre de 2026; antes no existía ese dato).</div>
+      <div class="rpg-tabla-wrap"><table class="rpg-detalle ana-tabla"><tbody id="ana-indicadores"></tbody></table></div>
+    </div>
+
+    <div class="inf-card">
+      <h2>Registro de avisos</h2>
+      <div class="inf-note">✔ hecho antes del aviso · ⚠ el aviso estuvo activo (se hizo después de la hora) · ✖ no se hizo · ~ hora aproximada (registros antiguos, sin hora exacta de término). Avisos: pautas desde las 09:00; Novedades del turno noche desde las 07:00 y del turno día desde las 19:00.</div>
+      <div class="rpg-tabla-wrap"><table class="rpg-detalle ana-tabla">
+        <thead><tr><th>Fecha</th><th>Pauta Chequeo Diario</th><th>Pauta Generadores</th><th>Novedades noche</th><th>Novedades día</th></tr></thead>
+        <tbody id="ana-avisos"></tbody>
+      </table></div>
+    </div>
+
+    <div class="inf-card">
+      <h2>Alertas por rango</h2>
+      <div class="inf-note">Lecturas de las pautas del mes que quedaron fuera de los límites configurados abajo (en «Límites y datos de los equipos»).</div>
+      <div id="ana-alertas"></div>
+    </div>
+
+    <div class="inf-card">
+      <h2>Transformadores: desbalance y porcentaje de carga</h2>
+      <div class="inf-note">Desbalance de corriente = mayor diferencia de una fase respecto del promedio de las 3 fases, en %. Carga = corriente de la fase más cargada respecto de la corriente nominal del transformador (según su potencia en kVA y la tensión nominal).</div>
+      <div class="rpg-tabla-wrap"><table class="rpg-detalle ana-tabla">
+        <thead><tr><th>Fecha</th><th>T1 I prom. (A)</th><th>T1 desbalance</th><th>T1 carga</th><th>T1 V prom.</th><th>T2 I prom. (A)</th><th>T2 desbalance</th><th>T2 carga</th><th>T2 V prom.</th></tr></thead>
+        <tbody id="ana-trafos"></tbody>
+      </table></div>
+    </div>
+
+    <div class="inf-card">
+      <h2>Tendencias del mes</h2>
+      <div id="ana-graficos" class="ana-graficos"></div>
+    </div>
+
+    <div class="inf-card">
+      <h2>Límites y datos de los equipos</h2>
+      <div class="inf-note">Deja un campo vacío para no revisar ese límite. En «Fuente» anota de dónde sale cada límite (norma, pliego RIC, manual del fabricante), para respaldarlo.</div>
+      <div id="ana-config"></div>
+      <div class="inf-new-row"><button type="button" class="btn primary" id="ana-config-guardar">Guardar límites</button><span class="inf-note" id="ana-config-estado"></span></div>
+    </div>
   </div>
 
 
@@ -2031,6 +2216,27 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   //       alCrear(datos) -> datos (ajusta lo que se guarda cuando el documento todavia no existe en la nube) }
   // Firestore rechaza el guardado completo si algun campo vale 'undefined' (p. ej. un documento antiguo al que le falta un
   // campo). Se limpian antes: los 'undefined' se omiten (en listas pasan a null). Aqui solo viajan textos, numeros y booleanos.
+  // ---------- registro en silencio de la hora de llenado de una pauta (para los indicadores del jefe) ----------
+  // inicioAt: primera vez que alguien modifica la pauta del dia; completoAt: primera vez que queda completa.
+  // No se muestra en ninguna pantalla ni en el PDF. Solo se marca en la pauta de HOY (si el jefe corrige un dia pasado no cuenta).
+  function marcarTiemposPauta(st, completa){
+    if(!st || st._sinTiempos || st.date !== todayStr()) return;
+    var ahora = new Date().toISOString();
+    if(!st.inicioAt) st.inicioAt = ahora;
+    if(completa && !st.completoAt) st.completoAt = ahora;
+  }
+  // Agrega esos dos campos al documento que se guarda, solo si existen (las pautas antiguas quedan tal cual)
+  function conTiemposPauta(doc, st){
+    if(st && st.inicioAt) doc.inicioAt = st.inicioAt;
+    if(st && st.completoAt) doc.completoAt = st.completoAt;
+    return doc;
+  }
+  function copiarTiemposPauta(st, data){
+    st.inicioAt = (data && data.inicioAt) || null; st.completoAt = (data && data.completoAt) || null;
+    // Pauta que ya estaba completa antes de existir este registro: no se le inventa una hora (seria la de un cambio posterior)
+    st._sinTiempos = !!(data && data.status === 'completo' && !data.completoAt);
+  }
+
   function sinIndefinidos(x){ return x == null ? x : JSON.parse(JSON.stringify(x)); }
   function guardarSinPisar(ref, datos, st, o){
     o = o || {};
@@ -2237,7 +2443,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   }
 
   // ---------- version y aviso de actualizacion ----------
-  // Cada version publicada lleva un identificador (2026-10-28.0241-5669280e, lo genera compilar.js). Se compara contra la version
+  // Cada version publicada lleva un identificador (2026-11-03.2248-0fbdd7ba, lo genera compilar.js). Se compara contra la version
   // publicada de la web (mismo origen para todos: PC, celular o navegador) leyendo su etiqueta <meta name="app-version">.
   // Es una lectura publica de una pagina de solo texto: no requiere Firebase ni maneja datos del usuario.
   var APP_VERSION = (document.querySelector('meta[name="app-version"]') || {}).content || '';
@@ -2379,8 +2585,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     document.getElementById('view-entregas').hidden = name !== 'entregas';
     document.getElementById('view-cuentas').hidden = name !== 'cuentas';
     document.getElementById('view-pendiente').hidden = name !== 'pendiente';
+    document.getElementById('view-seguimiento').hidden = name !== 'seguimiento';
+    document.getElementById('view-analisis').hidden = name !== 'analisis' || !isJefe();
     // El reporte de generadores va directo en el panel (no es una pantalla aparte): se recalcula cada vez que se vuelve a el.
     if(name === 'dashboard') rpgCargar();
+    if(name === 'auth' || name === 'pendiente') aviReiniciar(); else if(name === 'dashboard'){ aviRevisar(); segActualizarBadge(); }
   }
 
   function showAuthError(msg){
@@ -2527,6 +2736,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
         solReiniciar();
         entReiniciar();
         cuReiniciar();
+        aviReiniciar();
+        segReiniciar();
+        anaReiniciar();
         showView('auth');
         cuRefrescarRegistro();
       }
@@ -3163,11 +3375,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     var eds = (state.editors || []).slice();
     if(by && eds.indexOf(by) === -1) eds.push(by);
     state.lastEditedBy = by; state.editors = eds;
-    return { date: state.date, rev: state.rev || 0, technician: state.technician || '', status: state.status, updatedAt: state.updatedAt, signature: state.signature || null, values: state.values, lastEditedBy: by, lastEditedByUid: (currentUser && currentUser.uid) || null, editors: eds, _dev: 'Cristhian Sandoval' };
+    return conTiemposPauta({ date: state.date, rev: state.rev || 0, technician: state.technician || '', status: state.status, updatedAt: state.updatedAt, signature: state.signature || null, values: state.values, lastEditedBy: by, lastEditedByUid: (currentUser && currentUser.uid) || null, editors: eds, _dev: 'Cristhian Sandoval' }, state);
   }
 
   function scheduleSave(delay){
     if(!editableDay) return;
+    marcarTiemposPauta(state, computeDone(state) === TOTAL_UNITS);
     savePending = true;
     updateSummary();
     if(saveTimer) clearTimeout(saveTimer);
@@ -3287,6 +3500,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
         state.rev = data.rev || 0;
         state.signature = data.signature || null;
         state.values = Object.assign(defaultValues(), data.values || {});
+        copiarTiemposPauta(state, data);
       }
       renderEditableSheet();
     }
@@ -5850,11 +6064,15 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     return entLocalSave(e, entSeSube(e)).then(function(){ return entCloudSave(e); }).then(entTrasNube);
   }
   // Sube lo que quedo pendiente por falta de conexion (ver sincronizarPendientes en comun.js)
+  // Si ya hay una subida en curso (p. ej. la que empieza al iniciar sesion), se devuelve esa misma: asi la lista
+  // espera a que termine y no muestra "Solo en este equipo" de algo que se esta subiendo en ese momento.
+  var entSyncPromesa = Promise.resolve();
   function entSyncPending(){
-    if(entSyncing || !infNubeLista()) return Promise.resolve();
+    if(entSyncing) return entSyncPromesa;
+    if(!infNubeLista()) return Promise.resolve();
     if(entState && entCloudPend && entSeSube(entState) && !entSaveTimer && !entCloudTimer){ entCloudSave(entState).then(entTrasNube); }
     entSyncing = true;
-    return sincronizarPendientes({
+    return entSyncPromesa = sincronizarPendientes({
       coleccion: 'entregasHerramientas', listar: entLocalList, obtener: function(meta){ return entLocalGet(meta.id); }, normalizar: entNormalizar,
       filtro: function(x){ return entSeSube(x) && !(entState && entState.id === x.id); },
       marcarConflicto: function(full){ return entLocalSave(full, true, true); },
@@ -6592,6 +6810,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       var roleLabel = currentProfile.role === 'jefe' ? 'Jefe supervisor' : 'Técnico';
       cuEl('dash-user-label').textContent = (currentProfile.nombre || currentProfile.email || user.email) + ' · ' + roleLabel;
       cuEl('dash-card-cuentas').hidden = !isJefe();
+      anaIniciarSesion();
       mostrarVersion(); verificarVersionNueva();
       showView('dashboard');
       cargarFuncionarios();
@@ -6599,6 +6818,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       infSyncPending();
       solIniciarSesion();
       entIniciarSesion();
+      aviIniciarSesion();
+      segIniciarSesion();
       cuActualizarBadge();
     });
   }
@@ -6843,7 +7064,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       .then(function(){ return cuLeerColeccion('contadores'); }).then(function(x){ partes.contadores = x; })
       .then(function(){ return cuLeerColeccion('checklists'); }).then(function(x){ partes.checklists = x; avisarProgreso('Pautas (' + Object.keys(x).length + ')… '); })
       .then(function(){ return cuLeerColeccion('solicitudes'); }).then(function(x){ partes.solicitudes = x; avisarProgreso('Solicitudes (' + Object.keys(x).length + ')… '); })
+      .then(function(){ return cuLeerColeccion('checklistsGeneradores'); }).then(function(x){ partes.checklistsGeneradores = x; avisarProgreso('Pautas de generadores (' + Object.keys(x).length + ')… '); })
       .then(function(){ return cuLeerColeccion('entregasHerramientas'); }).then(function(x){ partes.entregasHerramientas = x; avisarProgreso('Entregas de herramientas (' + Object.keys(x).length + ')… '); })
+      .then(function(){ return cuLeerColeccion('seguimientos'); }).then(function(x){ partes.seguimientos = x; avisarProgreso('Seguimiento de novedades (' + Object.keys(x).length + ')… '); })
       .then(function(){ return cuLeerColeccion('informes'); }).then(function(informes){
         avisarProgreso('Informes (' + Object.keys(informes).length + ')… fotos…');
         var ids = Object.keys(informes);
@@ -7575,11 +7798,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     var eds = (gdState.editors || []).slice();
     if(by && eds.indexOf(by) === -1) eds.push(by);
     gdState.lastEditedBy = by; gdState.editors = eds;
-    return { date: gdState.date, rev: gdState.rev || 0, technician: gdState.technician || '', status: gdState.status, updatedAt: gdState.updatedAt, signature: gdState.signature || null, values: gdState.values, lastEditedBy: by, lastEditedByUid: (currentUser && currentUser.uid) || null, editors: eds, _dev: 'Cristhian Sandoval' };
+    return conTiemposPauta({ date: gdState.date, rev: gdState.rev || 0, technician: gdState.technician || '', status: gdState.status, updatedAt: gdState.updatedAt, signature: gdState.signature || null, values: gdState.values, lastEditedBy: by, lastEditedByUid: (currentUser && currentUser.uid) || null, editors: eds, _dev: 'Cristhian Sandoval' }, gdState);
   }
 
   function gdScheduleSave(delay){
     if(!gdEditableDay) return;
+    marcarTiemposPauta(gdState, gdComputeDone(gdState) === GD_TOTAL_UNITS);
     gdSavePending = true;
     gdUpdateSummary();
     if(gdSaveTimer) clearTimeout(gdSaveTimer);
@@ -7691,6 +7915,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
         gdState.rev = data.rev || 0;
         gdState.signature = data.signature || null;
         gdState.values = Object.assign(gdDefaultValues(), data.values || {});
+        copiarTiemposPauta(gdState, data);
       }
       gdRenderEditableSheet();
     }
@@ -7853,6 +8078,707 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   alVolverConexion(gdSyncPending);
   alMostrarPagina(gdSyncPending);
   cadaSegundos(30, gdSyncPending, { enSegundoPlano: true });
+
+
+  // =====================================================================
+  //  AVISOS DE PENDIENTES — recordatorios en pantalla para quien tenga la sesion abierta (tecnicos y jefe):
+  //  - desde las 09:00, si no esta guardada la Pauta de Chequeo Diario o la Pauta Diaria de Generadores de hoy
+  //    (se deben hacer entre las 08:00 y las 08:30);
+  //  - desde las 07:00, si el informe de Novedades del turno noche (el que termina hoy a las 08:00) no se ha empezado;
+  //  - desde las 19:00, si el informe de Novedades del turno dia de hoy no se ha empezado.
+  //  Solo se ven mientras la pagina esta abierta (no son notificaciones del celular) y desaparecen solos al hacerse.
+  //  No guardan nada: el registro de avisos que ve el jefe se calcula con la hora en que se completo cada cosa.
+  // =====================================================================
+  var AVI_HORA_PAUTAS = 9, AVI_HORA_NOCHE = 7, AVI_HORA_DIA = 19;
+  var aviHechos = {};        // clave -> true: ya se comprobo que esta hecho (no se vuelve a consultar ese dia)
+  var aviActivos = [];
+  var aviRevisando = false;
+
+  function aviEl(id){ return document.getElementById(id); }
+
+  // Lo que deberia estar hecho a esta hora (cada clave lleva la fecha, asi al dia siguiente se vuelve a revisar)
+  function aviEsperados(ahora){
+    var h = ahora.getHours(), hoy = todayStr(), lista = [];
+    if(h >= AVI_HORA_PAUTAS){
+      lista.push({ clave: 'checklists/' + hoy, col: 'checklists', id: hoy, local: function(){ return almacenPautas.obtener(hoy); },
+        texto: 'Falta guardar la Pauta de Chequeo Diario de hoy (se debe hacer entre las 08:00 y las 08:30).' });
+      lista.push({ clave: 'checklistsGeneradores/' + hoy, col: 'checklistsGeneradores', id: hoy, local: function(){ return almacenGeneradores.obtener(hoy); },
+        texto: 'Falta guardar la Pauta Diaria de Generadores de hoy (se debe hacer entre las 08:00 y las 08:30).' });
+    }
+    // Turno noche que empezo ayer a las 20:00: se avisa desde las 07:00 hasta que empieza el siguiente turno noche
+    if(h >= AVI_HORA_NOCHE && h < 20){
+      var idNoche = infAddDays(hoy, -1) + '_noche';
+      lista.push({ clave: 'informes/' + idNoche, col: 'informes', id: idNoche, informe: true, local: function(){ return infLocalGet(idNoche); },
+        texto: 'No se ha empezado el informe de Novedades del Turno de la noche (del ' + infDMY(infAddDays(hoy, -1)) + ').' });
+    }
+    if(h >= AVI_HORA_DIA){
+      var idDia = hoy + '_dia';
+      lista.push({ clave: 'informes/' + idDia, col: 'informes', id: idDia, informe: true, local: function(){ return infLocalGet(idDia); },
+        texto: 'No se ha empezado el informe de Novedades del Turno del día de hoy.' });
+    }
+    return lista;
+  }
+
+  // Hecho = esta en la nube (las pautas solo suben completas; un informe sube apenas se empieza) o quedo en este
+  // equipo esperando subirse por falta de conexion. Si no se puede saber (sin conexion), no se avisa.
+  function aviEstaHecho(e){
+    return Promise.resolve().then(e.local).catch(function(){ return null; }).then(function(local){
+      if(local && (e.informe || local._pending)) return true;
+      // Una pauta en la nube cuenta solo si esta completa (hay borradores antiguos de prueba guardados como 'draft')
+      return withTimeout(fbDb.collection(e.col).doc(e.id).get(), 8000).then(function(s){ return s.exists && (e.informe || s.data().status === 'completo'); });
+    });
+  }
+
+  function aviPintar(){
+    var bar = aviEl('avisos-bar'); if(!bar) return;
+    bar.innerHTML = aviActivos.map(function(e){ return '<div class="avi-item"><span class="avi-ico">⚠</span><span>' + esc(e.texto) + '</span></div>'; }).join('');
+    bar.hidden = !aviActivos.length;
+  }
+
+  function aviRevisar(){
+    if(aviRevisando || !fbReady || !fbDb || !currentUser || !currentProfile || currentProfile.aprobado === false) return Promise.resolve();
+    var esperados = aviEsperados(new Date()).filter(function(e){ return !aviHechos[e.clave]; });
+    if(!esperados.length){ aviActivos = []; aviPintar(); return Promise.resolve(); }
+    aviRevisando = true;
+    return Promise.all(esperados.map(function(e){
+      return aviEstaHecho(e).then(function(hecho){ if(hecho) aviHechos[e.clave] = true; return hecho ? null : e; }, function(err){ registrarError('avisos', err); return null; });
+    })).then(function(r){
+      aviRevisando = false;
+      if(!currentUser) return;
+      aviActivos = r.filter(Boolean);
+      aviPintar();
+    }, function(){ aviRevisando = false; });
+  }
+
+  function aviIniciarSesion(){ aviHechos = {}; aviRevisar(); }
+  function aviReiniciar(){ aviHechos = {}; aviActivos = []; var b = aviEl('avisos-bar'); if(b){ b.hidden = true; b.innerHTML = ''; } }
+
+  cadaSegundos(120, aviRevisar);
+  alMostrarPagina(aviRevisar);
+  alVolverConexion(aviRevisar);
+
+
+  // =====================================================================
+  //  SEGUIMIENTO DE NOVEDADES (coleccion "seguimientos") — lo ven y usan todos.
+  //  - El tecnico agrega al seguimiento filas de los informes de turno recientes (elige cuales) o escribe una novedad.
+  //  - Cualquier tecnico marca si quedo "Lista" o "No lista" (con justificacion obligatoria si no quedo lista).
+  //  - El jefe supervisor la deja "Cerrada" o "Abierta", siempre con su motivo (si la reabre, vuelve a quedar pendiente).
+  //  - Cada cambio queda en el historial (quien, cuando, que). El informe de turno no cambia en nada.
+  //  Las reglas de Firestore hacen cumplir que el tecnico no toque lo que decide el jefe.
+  // =====================================================================
+  var SEG_DIAS_INFORMES = 7;
+  var segLista = [], segFiltro = 'abiertas', segCargando = false;
+
+  function segEl(id){ return document.getElementById(id); }
+  function segNubeLista(){ return !!(fbReady && fbDb && currentUser); }
+  function segFechaCorta(iso){ var p = String(iso || '').split('-'); return p.length === 3 ? p[2] + '-' + p[1] + '-' + p[0] : String(iso || ''); }
+  function segCuando(iso){ var d = new Date(iso || ''); return isNaN(d) ? '' : d.toLocaleString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
+  function segTurnoTxt(s){ return 'Turno ' + (s.turnoOrigen === 'noche' ? 'noche' : 'día') + ' del ' + segFechaCorta(s.fechaOrigen) + (s.origen && s.origen.hora ? ' · ' + s.origen.hora : ''); }
+  function segYo(){ return { uid: (currentUser && currentUser.uid) || null, email: (currentUser && currentUser.email) || '', nombre: miNombre() }; }
+  function segNuevoId(){ return 'seg_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+  function segCerrada(s){ return s.estadoJefe === 'cerrada'; }
+  // Pendiente para los tecnicos = abierta y todavia no marcada como lista
+  function segPendiente(s){ return !segCerrada(s) && s.estadoTec !== 'lista'; }
+
+  var segBannerError = false;   // el aviso actual es un error de carga (se borra solo cuando la carga vuelve a funcionar)
+  function segBanner(msg, warn){
+    var el = segEl('seg-banner'); if(!el) return;
+    segBannerError = !!(msg && warn);
+    el.textContent = msg || ''; el.style.display = msg ? '' : 'none';
+    el.style.background = warn ? 'var(--warn-bg)' : 'var(--surface-2)';
+    el.style.color = warn ? 'var(--warn)' : 'var(--ink-dim)';
+  }
+  function segMsgError(err){
+    var c = (err && err.code) || '';
+    if(c === 'permission-denied') return 'La nube no aceptó el cambio (permisos). Si la novedad ya está cerrada por el jefe, solo él puede cambiarla.';
+    if(c === 'not-found') return 'Esa novedad ya no existe (puede que el jefe la haya borrado).';
+    if(c === 'locked') return 'Esa novedad ya fue cerrada por el jefe supervisor: solo él puede cambiarla.';
+    return 'No se pudo guardar: revisa tu conexión a internet e inténtalo de nuevo.';
+  }
+
+  // ---------- nube ----------
+  function segCargar(){
+    if(!segNubeLista()) return Promise.reject(new Error('offline'));
+    return withTimeout(fbDb.collection('seguimientos').orderBy('createdAt', 'desc').limit(300).get(), 10000).then(function(snap){
+      var a = []; snap.forEach(function(d){ a.push(Object.assign({ id: d.id }, d.data())); });
+      return a;
+    });
+  }
+  // Cambia una novedad sobre la version que hay en la nube (asi nunca se pierde lo que otro anoto en el historial).
+  // fn(nube) -> campos a cambiar, o null si ya no se puede.
+  function segActualizar(id, fn){
+    var ref = fbDb.collection('seguimientos').doc(id);
+    return withTimeout(fbDb.runTransaction(function(tx){
+      return tx.get(ref).then(function(s){
+        if(!s.exists){ var e = new Error('no existe'); e.code = 'not-found'; throw e; }
+        var nube = s.data(), p = fn(nube);
+        if(!p){ var e2 = new Error('cerrada'); e2.code = 'locked'; throw e2; }
+        p.rev = (nube.rev || 0) + 1;
+        tx.update(ref, sinIndefinidos(p));
+      });
+    }), 10000);
+  }
+  function segEntrada(tipo, estado, texto){ var yo = segYo(); return { at: new Date().toISOString(), uid: yo.uid, nombre: yo.nombre, tipo: tipo, estado: estado || '', texto: texto || '' }; }
+  function segCrear(datos){
+    var yo = segYo(), ahora = new Date().toISOString(), id = segNuevoId();
+    var doc = Object.assign({
+      id: id, rev: 1, descripcion: '', fechaOrigen: todayStr(), turnoOrigen: 'dia', origen: null,
+      registradoPor: yo, createdAt: ahora, updatedAt: ahora,
+      estadoTec: '', justificacion: '', tecPor: null, tecAt: null,
+      estadoJefe: 'abierta', motivoJefe: '', jefePor: null, jefeAt: null,
+      historial: [segEntrada('registro', '', 'Agregada al seguimiento')], _dev: 'Cristhian Sandoval'
+    }, datos);
+    return withTimeout(fbDb.collection('seguimientos').doc(id).set(sinIndefinidos(doc)), 10000).then(function(){ return doc; });
+  }
+
+  // ---------- lista ----------
+  function segEstadoPills(s){
+    if(segCerrada(s)) return '<span class="pill done">Cerrada</span>';
+    if(s.estadoTec === 'lista') return '<span class="pill progress">Lista · falta revisión del jefe</span>';
+    if(s.estadoTec === 'no_lista') return '<span class="pill seg-no">No lista</span>';
+    return '<span class="pill neutral">Pendiente</span>';
+  }
+  function segTarjeta(s){
+    var jefe = isJefe(), puedeTec = !segCerrada(s);
+    var det = '';
+    if(s.estadoTec && s.tecPor) det += '<div><b>' + (s.estadoTec === 'lista' ? 'Lista' : 'No lista') + '</b> · ' + esc(s.tecPor.nombre || '') + ' · ' + esc(segCuando(s.tecAt)) + (s.justificacion ? '<br>Justificación: ' + esc(s.justificacion) : '') + '</div>';
+    if(s.jefePor) det += '<div><b>Jefe supervisor: ' + (segCerrada(s) ? 'Cerrada' : 'Abierta') + '</b> · ' + esc(s.jefePor.nombre || '') + ' · ' + esc(segCuando(s.jefeAt)) + (s.motivoJefe ? '<br>Motivo: ' + esc(s.motivoJefe) : '') + '</div>';
+    var hist = (s.historial || []).slice().reverse().map(function(h){
+      var que = h.tipo === 'registro' ? 'Agregó la novedad' : (h.tipo === 'jefe' ? 'Jefe: ' + (h.estado === 'cerrada' ? 'Cerrada' : 'Abierta') : (h.estado === 'lista' ? 'Marcó lista' : 'Marcó no lista'));
+      return '<div>' + esc(segCuando(h.at)) + ' · ' + esc(h.nombre || '') + ' · ' + esc(que) + (h.texto && h.tipo !== 'registro' ? ': ' + esc(h.texto) : '') + '</div>';
+    }).join('');
+    return '<div class="hist-card seg-card" data-seg="' + esc(s.id) + '">'
+      + '<div class="hist-head"><div style="flex:1;min-width:200px;"><div class="seg-desc">' + esc(s.descripcion) + '</div>'
+      + '<div class="seg-sub">' + esc(segTurnoTxt(s)) + ' · agregó ' + esc((s.registradoPor && s.registradoPor.nombre) || '—') + '</div></div>'
+      + segEstadoPills(s) + '</div>'
+      + (det ? '<div class="seg-detalle">' + det + '</div>' : '')
+      + '<div class="hist-actions">'
+      + (puedeTec ? '<button type="button" class="ghost-btn" data-seg-abrir="tec">Actualizar estado</button>' : '')
+      + (jefe ? '<button type="button" class="ghost-btn" data-seg-abrir="jefe">Revisión del jefe</button>' : '')
+      + '<button type="button" class="ghost-btn" data-seg-abrir="hist">Historial</button></div>'
+      + (puedeTec ? '<div class="seg-form" data-form="tec" hidden><div class="seg-opciones">'
+        + '<label><input type="radio" name="tec-' + esc(s.id) + '" value="lista"' + (s.estadoTec === 'lista' ? ' checked' : '') + '/> Quedó lista</label>'
+        + '<label><input type="radio" name="tec-' + esc(s.id) + '" value="no_lista"' + (s.estadoTec === 'no_lista' ? ' checked' : '') + '/> No quedó lista</label></div>'
+        + '<textarea rows="2" maxlength="600" data-campo="justificacion" placeholder="Justificación (obligatoria si no quedó lista)">' + esc(s.estadoTec === 'no_lista' ? s.justificacion : '') + '</textarea>'
+        + '<div class="inf-new-row"><button type="button" class="btn primary" data-seg-guardar="tec">Guardar estado</button><button type="button" class="ghost-btn" data-seg-cerrar-form>Cancelar</button></div></div>' : '')
+      + (jefe ? '<div class="seg-form" data-form="jefe" hidden><div class="seg-opciones">'
+        + '<label><input type="radio" name="jefe-' + esc(s.id) + '" value="cerrada"' + (segCerrada(s) ? ' checked' : '') + '/> Cerrada</label>'
+        + '<label><input type="radio" name="jefe-' + esc(s.id) + '" value="abierta"' + (!segCerrada(s) && s.jefePor ? ' checked' : '') + '/> Abierta</label></div>'
+        + '<textarea rows="2" maxlength="600" data-campo="motivo" placeholder="Motivo (obligatorio)"></textarea>'
+        + '<div class="inf-new-row"><button type="button" class="btn primary" data-seg-guardar="jefe">Guardar revisión</button><button type="button" class="ghost-btn" data-seg-cerrar-form>Cancelar</button></div></div>' : '')
+      + '<div class="seg-hist" hidden>' + (hist || '<div>Sin cambios.</div>') + '</div>'
+      + '</div>';
+  }
+  function segFiltrar(){
+    return segLista.filter(function(s){ return segFiltro === 'todas' || (segFiltro === 'cerradas' ? segCerrada(s) : !segCerrada(s)); });
+  }
+  function segPintar(){
+    segEl('seg-filtros').querySelectorAll('button').forEach(function(b){ b.setAttribute('aria-pressed', b.getAttribute('data-f') === segFiltro ? 'true' : 'false'); });
+    var el = segEl('seg-lista'), lista = segFiltrar();
+    if(!segLista.length){ el.innerHTML = '<div class="empty"><span class="bolt">📋</span>Aún no hay novedades en seguimiento.<br>Usa «Agregar novedad» para empezar.</div>'; return; }
+    el.innerHTML = lista.length ? lista.map(segTarjeta).join('') : '<div class="empty">No hay novedades en este filtro.</div>';
+  }
+  function segMostrarLista(){
+    if(segCargando) return Promise.resolve();
+    segCargando = true;
+    if(!segLista.length) segEl('seg-lista').innerHTML = '<div class="empty">Cargando…</div>';
+    return segCargar().then(function(a){ segLista = a; if(segBannerError) segBanner(''); segPintar(); segActualizarBadge(); }, function(err){
+      registrarError('seguimiento: cargar', err);
+      segBanner('No se pudo cargar el seguimiento: el seguimiento de novedades necesita conexión a internet.', true);
+      if(!segLista.length) segEl('seg-lista').innerHTML = '';
+    }).then(function(){ segCargando = false; });
+  }
+
+  // ---------- agregar ----------
+  function segAbrirNueva(){
+    var box = segEl('seg-nueva'); box.hidden = false;
+    var t = infTurnoActual();
+    segEl('seg-m-fecha').value = t.fecha; segEl('seg-m-turno').value = t.tipo; segEl('seg-m-texto').value = '';
+    var filas = segEl('seg-filas'); filas.innerHTML = '<div class="inf-note">Cargando informes recientes…</div>';
+    if(!segNubeLista()){ filas.innerHTML = '<div class="inf-note">Sin conexión: no se pueden leer los informes. Puedes escribir la novedad abajo.</div>'; return; }
+    var desde = infAddDays(todayStr(), -SEG_DIAS_INFORMES);
+    var ya = {};
+    segLista.forEach(function(s){ if(s.origen && s.origen.informeId) ya[s.origen.informeId + '|' + s.origen.actId] = true; });
+    withTimeout(fbDb.collection('informes').where('fechaInicio', '>=', desde).get(), 10000).then(function(snap){
+      var infs = []; snap.forEach(function(d){ infs.push(d.data()); });
+      infs.sort(function(a, b){ return a.id < b.id ? 1 : -1; });
+      var html = infs.map(function(inf){
+        var acts = (inf.actividades || []).filter(function(a){ return String(a.texto || '').trim(); });
+        if(!acts.length) return '';
+        return '<div class="seg-informe"><div class="seg-informe-tit">Turno ' + (inf.tipo === 'noche' ? 'noche' : 'día') + ' del ' + esc(segFechaCorta(inf.fechaInicio)) + ' · ' + esc((inf.autor && inf.autor.nombre) || '') + '</div>'
+          + acts.map(function(a){
+            var clave = inf.id + '|' + a.id;
+            if(ya[clave]) return '<div class="seg-fila ya"><span class="seg-hora">' + esc(a.hora || '') + '</span><span>' + esc(a.texto) + ' <i>(ya está en seguimiento)</i></span></div>';
+            return '<label class="seg-fila"><input type="checkbox" data-inf="' + esc(inf.id) + '" data-act="' + esc(a.id) + '"/><span class="seg-hora">' + esc(a.hora || '') + '</span><span>' + esc(a.texto) + '</span></label>';
+          }).join('') + '</div>';
+      }).join('');
+      filas.innerHTML = html || '<div class="inf-note">No hay informes de turno en los últimos ' + SEG_DIAS_INFORMES + ' días. Puedes escribir la novedad abajo.</div>';
+      filas._informes = infs;
+    }).catch(function(err){
+      registrarError('seguimiento: informes', err);
+      filas.innerHTML = '<div class="inf-note">No se pudieron leer los informes. Puedes escribir la novedad abajo.</div>';
+    });
+  }
+  function segGuardarNuevas(){
+    var btn = segEl('seg-guardar-nuevas'), filas = segEl('seg-filas'), infs = filas._informes || [];
+    var porId = {}; infs.forEach(function(i){ porId[i.id] = i; });
+    var nuevas = [];
+    filas.querySelectorAll('input[type=checkbox]:checked').forEach(function(c){
+      var inf = porId[c.getAttribute('data-inf')]; if(!inf) return;
+      var act = (inf.actividades || []).filter(function(a){ return a.id === c.getAttribute('data-act'); })[0]; if(!act) return;
+      nuevas.push({ descripcion: String(act.texto).trim(), fechaOrigen: inf.fechaInicio, turnoOrigen: inf.tipo, origen: { informeId: inf.id, actId: act.id, hora: act.hora || '' } });
+    });
+    var texto = segEl('seg-m-texto').value.trim(), fechaM = segEl('seg-m-fecha').value || todayStr();
+    if(texto && fechaM > todayStr()){ avisar('La fecha de la novedad no puede ser posterior a hoy.'); return; }
+    if(texto) nuevas.push({ descripcion: texto, fechaOrigen: fechaM, turnoOrigen: segEl('seg-m-turno').value === 'noche' ? 'noche' : 'dia', origen: null });
+    if(!nuevas.length){ avisar('Marca al menos una fila de los informes o escribe una novedad.'); return; }
+    if(!segNubeLista()){ avisar('Sin conexión a internet: no se puede agregar al seguimiento ahora.'); return; }
+    btn.disabled = true; btn.textContent = 'Guardando…';
+    nuevas.reduce(function(c, n){ return c.then(function(){ return segCrear(n); }); }, Promise.resolve()).then(function(){
+      segEl('seg-nueva').hidden = true;
+      segBanner(nuevas.length === 1 ? 'Se agregó 1 novedad al seguimiento.' : 'Se agregaron ' + nuevas.length + ' novedades al seguimiento.');
+      segFiltro = 'abiertas';
+      return segMostrarLista();
+    }).catch(function(err){ registrarError('seguimiento: agregar', err); avisar(segMsgError(err)); })
+      .then(function(){ btn.disabled = false; btn.textContent = 'Agregar al seguimiento'; });
+  }
+
+  // ---------- cambiar estado ----------
+  function segGuardarForm(card, cual, btn){
+    var id = card.getAttribute('data-seg'), form = card.querySelector('[data-form="' + cual + '"]');
+    var marcado = form.querySelector('input[type=radio]:checked');
+    var texto = form.querySelector('textarea').value.trim();
+    if(!marcado){ avisar(cual === 'jefe' ? 'Elige si la novedad queda cerrada o abierta.' : 'Elige si la novedad quedó lista o no.'); return; }
+    var estado = marcado.value;
+    if(cual === 'tec' && estado === 'no_lista' && !texto){ avisar('Escribe la justificación de por qué no quedó lista.'); return; }
+    if(cual === 'jefe' && !texto){ avisar('Escribe el motivo.'); return; }
+    var yo = segYo(), ahora = new Date().toISOString();
+    btn.disabled = true;
+    segActualizar(id, function(nube){
+      var hist = (nube.historial || []).concat([segEntrada(cual === 'jefe' ? 'jefe' : 'tecnico', estado, texto)]);
+      if(cual === 'jefe'){
+        var p = { estadoJefe: estado, motivoJefe: texto, jefePor: { uid: yo.uid, nombre: yo.nombre }, jefeAt: ahora, historial: hist, updatedAt: ahora };
+        if(estado === 'abierta' && nube.estadoTec === 'lista') p.estadoTec = '';   // reabierta: vuelve a quedar pendiente
+        return p;
+      }
+      if(nube.estadoJefe === 'cerrada' && !isJefe()) return null;
+      return { estadoTec: estado, justificacion: estado === 'no_lista' ? texto : '', tecPor: { uid: yo.uid, nombre: yo.nombre }, tecAt: ahora, historial: hist, updatedAt: ahora };
+    }).then(function(){ segBanner('Cambio guardado.'); return segMostrarLista(); })
+      .catch(function(err){
+        registrarError('seguimiento: cambiar', err); avisar(segMsgError(err)); btn.disabled = false;
+        if(err && (err.code === 'locked' || err.code === 'not-found' || err.code === 'permission-denied')) segMostrarLista();   // mostrar como quedo en la nube
+      });
+  }
+
+  segEl('seg-lista').addEventListener('click', function(e){
+    var b = e.target.closest('button'); if(!b) return;
+    var card = b.closest('[data-seg]'); if(!card) return;
+    if(b.hasAttribute('data-seg-abrir')){
+      var cual = b.getAttribute('data-seg-abrir');
+      var obj = cual === 'hist' ? card.querySelector('.seg-hist') : card.querySelector('[data-form="' + cual + '"]');
+      if(obj) obj.hidden = !obj.hidden;
+    } else if(b.hasAttribute('data-seg-cerrar-form')){
+      b.closest('.seg-form').hidden = true;
+    } else if(b.hasAttribute('data-seg-guardar')){
+      segGuardarForm(card, b.getAttribute('data-seg-guardar'), b);
+    }
+  });
+  segEl('seg-filtros').addEventListener('click', function(e){
+    var b = e.target.closest('button[data-f]'); if(!b) return;
+    segFiltro = b.getAttribute('data-f'); segPintar();
+  });
+  segEl('seg-agregar').addEventListener('click', segAbrirNueva);
+  segEl('seg-cancelar').addEventListener('click', function(){ segEl('seg-nueva').hidden = true; });
+  segEl('seg-guardar-nuevas').addEventListener('click', segGuardarNuevas);
+  segEl('seg-back-btn').addEventListener('click', function(){ showView('dashboard'); });   // showView actualiza el aviso del panel
+  segEl('dash-card-seguimiento').addEventListener('click', segEntrar);
+
+  function segEntrar(){
+    showView('seguimiento');
+    segEl('seg-nueva').hidden = true; segBanner('');
+    segMostrarLista();
+  }
+
+  // Aviso en el panel: cuantas novedades siguen pendientes (abiertas y sin marcar como listas)
+  function segActualizarBadge(){
+    var tag = segEl('dash-seg-badge'); if(!tag) return;
+    if(!segNubeLista()){ tag.hidden = true; return; }
+    withTimeout(fbDb.collection('seguimientos').where('estadoJefe', '==', 'abierta').get(), 8000).then(function(snap){
+      var n = 0; snap.forEach(function(d){ if(segPendiente(d.data())) n++; });
+      tag.hidden = n === 0; tag.textContent = n + (n === 1 ? ' pendiente' : ' pendientes');
+    }).catch(function(err){ registrarError('aviso de seguimiento', err); });
+  }
+  function segIniciarSesion(){ segLista = []; segActualizarBadge(); }
+  function segReiniciar(){
+    segLista = [];
+    var v = segEl('view-seguimiento'); if(v) v.hidden = true;
+    var t = segEl('dash-seg-badge'); if(t) t.hidden = true;
+  }
+  // Cada lectura de la nube cuenta (plan gratuito: 50.000 lecturas al dia): el aviso del panel se refresca cada 5 min (y al
+  // volver al panel); la lista abierta, cada 2 min, solo si nadie esta escribiendo ni mirando un historial en ella.
+  cadaSegundos(300, segActualizarBadge);
+  cadaSegundos(120, function(){
+    if(segEl('view-seguimiento').hidden || !segEl('seg-nueva').hidden) return;
+    if(document.querySelector('#seg-lista .seg-form:not([hidden]), #seg-lista .seg-hist:not([hidden])')) return;
+    segMostrarLista();
+  });
+
+
+  // =====================================================================
+  //  ANALISIS Y GESTION — pestana SOLO del jefe supervisor (proyecto de titulo, autorizado por la jefatura).
+  //  Todo se calcula con lo que los tecnicos ya registran (pautas, novedades del turno, seguimiento); no cambia nada
+  //  de lo que ven ellos. Muestra, por mes: indicadores de gestion, registro de avisos, alertas por rango,
+  //  desbalance y carga de transformadores y graficos de tendencia. Los limites y datos de los equipos (kVA,
+  //  tension nominal) los configura el jefe en config/analisis, que solo el puede leer y escribir (reglas de Firestore).
+  // =====================================================================
+  var anaMes = null, anaCfg = null, anaCargando = 0;
+
+  // Limites que se pueden revisar. Los valores sugeridos son un punto de partida: el jefe los ajusta y anota su fuente.
+  var ANA_LIMITES = [
+    { k: 'tension', nombre: 'Tensión de transformadores (V)', unidad: 'V' },
+    { k: 'desbalance', nombre: 'Desbalance de corriente (%)', unidad: '%', soloMax: true },
+    { k: 'carga', nombre: 'Carga de transformadores (%)', unidad: '%', soloMax: true },
+    { k: 'bateria', nombre: 'Voltaje baterías generadores (V)', unidad: 'V' },
+    { k: 'voltajeGen', nombre: 'Voltaje generadores en funcionamiento (V)', unidad: 'V' },
+    { k: 'frecuencia', nombre: 'Frecuencia generadores (Hz)', unidad: 'Hz' },
+    { k: 'tempMotor', nombre: 'Temperatura del motor (°C)', unidad: '°C' },
+    { k: 'presionAceite', nombre: 'Presión de aceite', unidad: '' }
+  ];
+  var ANA_CFG_BASE = {
+    // Placas de los transformadores: Schneider Trihal 1250 kVA, 23000/380 V, Dyn11, 1899,2 A en BT (SN 1456069 y 1456070, año 2020)
+    vNominal: 380, kvaT1: 1250, kvaT2: 1250,
+    lim: {
+      tension: { min: 351.5, max: 408.5, fuente: 'Sugerido: 380 V ± 7,5 % (rango de tensión en baja tensión). Verificar norma vigente.' },
+      desbalance: { min: null, max: 10, fuente: 'Sugerido: criterio de mantenimiento (por definir).' },
+      carga: { min: null, max: 80, fuente: 'Sugerido: criterio de mantenimiento (por definir). Corriente nominal BT según placa: 1899,2 A.' },
+      bateria: { min: 25.2, max: 28.8, fuente: 'Sugerido: baterías de plomo de 24 V (12 celdas), 2,1 a 2,4 V por celda. Verificar manual del fabricante.' },
+      voltajeGen: { min: null, max: null, fuente: 'Por definir según manual del fabricante.' },
+      frecuencia: { min: 49.5, max: 50.5, fuente: 'Sugerido: 50 Hz ± 1 %. Verificar manual del fabricante.' },
+      tempMotor: { min: null, max: null, fuente: 'Por definir según manual del fabricante.' },
+      presionAceite: { min: null, max: null, fuente: 'Por definir según manual del fabricante.' }
+    }
+  };
+
+  function anaEl(id){ return document.getElementById(id); }
+  function anaNum(v){ if(v === null || v === undefined || v === '') return null; var n = parseFloat(String(v).replace(',', '.')); return isFinite(n) ? n : null; }
+  function anaFmt(n, dec){ return n === null || n === undefined || !isFinite(n) ? '—' : n.toLocaleString('es-CL', { maximumFractionDigits: dec === undefined ? 1 : dec }); }
+  function anaPct(a, b){ return b ? anaFmt(a * 100 / b, 0) + ' %' : '—'; }
+  function anaNota(msg){ var el = anaEl('ana-nota'); el.textContent = msg || ''; el.style.display = msg ? '' : 'none'; }
+  function anaHora(d){ return rpgDosDig(d.getHours()) + ':' + rpgDosDig(d.getMinutes()); }
+  function anaFechaLocal(d){ return d.getFullYear() + '-' + rpgDosDig(d.getMonth() + 1) + '-' + rpgDosDig(d.getDate()); }
+  function anaEnHora(fecha, h, m){ var p = fecha.split('-'); return new Date(+p[0], +p[1] - 1, +p[2], h, m || 0, 0); }
+  function anaCfgCompleta(c){
+    var base = JSON.parse(JSON.stringify(ANA_CFG_BASE));
+    if(!c) return base;
+    ['vNominal', 'kvaT1', 'kvaT2'].forEach(function(k){ if(c[k] !== undefined) base[k] = c[k]; });
+    Object.keys(base.lim).forEach(function(k){ if(c.lim && c.lim[k]) base.lim[k] = Object.assign(base.lim[k], c.lim[k]); });
+    return base;
+  }
+
+  // ---------- carga del mes ----------
+  function anaActualizarMes(){
+    var hoy = rpgMesActual();
+    anaEl('ana-mes').textContent = rpgNombreMes(anaMes.y, anaMes.m);
+    anaEl('ana-mes-sig').disabled = (anaMes.y > hoy.y) || (anaMes.y === hoy.y && anaMes.m >= hoy.m);
+  }
+  function anaCargar(){
+    if(!isJefe()) return;
+    anaMes = anaMes || rpgMesActual();
+    anaActualizarMes();
+    if(!fbReady || !fbDb || !currentUser){ anaNota('Se necesita conexión a la nube para calcular el análisis.'); return; }
+    anaNota('Calculando…');
+    var yo = ++anaCargando, mes = anaMes, r = rpgRangoMes(mes.y, mes.m), antes = infAddDays(r.ini, -1);
+    function rango(col, campo, ini){ return withTimeout(fbDb.collection(col).where(campo, '>=', ini).where(campo, '<=', r.fin).get(), 15000); }
+    Promise.all([
+      rango('checklists', 'date', r.ini),
+      rango('checklistsGeneradores', 'date', r.ini),
+      rango('informes', 'fechaInicio', antes),
+      withTimeout(fbDb.collection('seguimientos').orderBy('createdAt', 'desc').limit(500).get(), 15000).catch(function(err){ registrarError('analisis: seguimientos', err); return null; }),
+      withTimeout(fbDb.collection('config').doc('analisis').get(), 8000).catch(function(err){ registrarError('analisis: config', err); return null; })
+    ]).then(function(res){
+      if(yo !== anaCargando) return;
+      function lista(snap){ var a = []; if(snap) snap.forEach(function(d){ a.push(d.data()); }); return a; }
+      anaCfg = anaCfgCompleta(res[4] && res[4].exists ? res[4].data() : null);
+      // Solo pautas completas: en la nube quedaron borradores antiguos de prueba ('draft', sin datos) que no cuentan como hechas
+      function completas(a){ return a.filter(function(x){ return x.status === 'completo'; }); }
+      var datos = { mes: mes, r: r, pautas: completas(lista(res[0])), gens: completas(lista(res[1])), informes: lista(res[2]), segs: lista(res[3]) };
+      anaNota(res[3] ? '' : 'No se pudo leer el seguimiento de novedades (puede faltar publicar las reglas de la nube).');
+      anaPintar(datos);
+    }).catch(function(err){
+      if(yo !== anaCargando) return;
+      registrarError('analisis: cargar', err);
+      anaNota('No se pudo calcular el análisis. Revisa tu conexión.');
+    });
+  }
+
+  // Dias del mes que ya pasaron (o el de hoy), para no contar como "faltantes" los dias futuros
+  function anaDias(r){
+    var dias = [], hoy = todayStr(), d = r.ini;
+    while(d <= r.fin && d <= hoy){ dias.push(d); d = infAddDays(d, 1); }
+    return dias;
+  }
+  // Hora en que una pauta quedo completa: exacta (completoAt) o aproximada (ultimo cambio, si fue ese mismo dia)
+  function anaTermino(doc){
+    if(!doc) return null;
+    if(doc.completoAt){ var c = new Date(doc.completoAt); if(!isNaN(c)) return { d: c, exacto: true }; }
+    if(doc.updatedAt){ var u = new Date(doc.updatedAt); if(!isNaN(u) && anaFechaLocal(u) === doc.date) return { d: u, exacto: false }; }
+    return { d: null, exacto: false };
+  }
+  function anaMinutosLlenado(doc){
+    if(!doc || !doc.inicioAt || !doc.completoAt) return null;
+    var m = (new Date(doc.completoAt) - new Date(doc.inicioAt)) / 60000;
+    return isFinite(m) && m >= 0 && m <= 720 ? m : null;
+  }
+  function anaPromedio(a){ return a.length ? a.reduce(function(s, x){ return s + x; }, 0) / a.length : null; }
+  function anaMediana(a){ if(!a.length) return null; var b = a.slice().sort(function(x, y){ return x - y; }), k = Math.floor(b.length / 2); return b.length % 2 ? b[k] : (b[k - 1] + b[k]) / 2; }
+
+  function anaIndicadoresPauta(nombre, docs, dias){
+    var porDia = {}; docs.forEach(function(d){ porDia[d.date] = d; });
+    var hechas = 0, conHora = 0, aTiempo = 0, mins = [];
+    dias.forEach(function(f){
+      var doc = porDia[f]; if(!doc) return;
+      hechas++;
+      var t = anaTermino(doc);
+      if(t && t.d && t.exacto){ conHora++; if(t.d <= anaEnHora(f, 8, 30)) aTiempo++; }
+      var m = anaMinutosLlenado(doc); if(m !== null) mins.push(m);
+    });
+    return '<tr><th class="ana-grupo" colspan="2">' + esc(nombre) + '</th></tr>'
+      + '<tr><td>Días con pauta guardada</td><td>' + hechas + ' de ' + dias.length + ' (' + anaPct(hechas, dias.length) + ')</td></tr>'
+      + '<tr><td>Hechas a tiempo (08:00–08:30)</td><td>' + (conHora ? aTiempo + ' de ' + conHora + ' con hora registrada (' + anaPct(aTiempo, conHora) + ')' : 'Sin hora registrada en este mes') + '</td></tr>'
+      + '<tr><td>Tiempo de llenado</td><td>' + (mins.length ? 'promedio ' + anaFmt(anaPromedio(mins), 0) + ' min · mediana ' + anaFmt(anaMediana(mins), 0) + ' min (' + mins.length + (mins.length === 1 ? ' pauta)' : ' pautas)') : 'Sin dato en este mes') + '</td></tr>';
+  }
+  function anaPintarIndicadores(d){
+    var dias = anaDias(d.r);
+    var inf = {}; d.informes.forEach(function(i){ inf[i.id] = i; });
+    var esperados = 0, hechos = 0, finales = 0;
+    dias.forEach(function(f){ ['dia', 'noche'].forEach(function(t){
+      if(t === 'noche' && f === todayStr() && new Date().getHours() < 20) return;   // el turno noche de hoy aun no empieza
+      esperados++; var i = inf[f + '_' + t]; if(i){ hechos++; if(i.estado === 'final') finales++; }
+    }); });
+    var segs = d.segs, abiertas = segs.filter(function(s){ return s.estadoJefe !== 'cerrada'; });
+    var delMes = segs.filter(function(s){ return s.fechaOrigen >= d.r.ini && s.fechaOrigen <= d.r.fin; });
+    var cierres = segs.filter(function(s){ return s.estadoJefe === 'cerrada' && s.jefeAt && s.createdAt && s.jefeAt.slice(0, 7) === d.r.ini.slice(0, 7); })
+      .map(function(s){ return (new Date(s.jefeAt) - new Date(s.createdAt)) / 86400000; }).filter(function(x){ return isFinite(x) && x >= 0; });
+    var viejas = abiertas.filter(function(s){ return (new Date() - new Date(s.createdAt)) / 86400000 > 7; });
+    anaEl('ana-indicadores').innerHTML =
+      anaIndicadoresPauta('Pauta de Chequeo Diario', d.pautas, dias)
+      + anaIndicadoresPauta('Pauta Diaria de Generadores', d.gens, dias)
+      + '<tr><th class="ana-grupo" colspan="2">Novedades del Turno</th></tr>'
+      + '<tr><td>Informes de turno hechos</td><td>' + hechos + ' de ' + esperados + ' turnos (' + anaPct(hechos, esperados) + ')</td></tr>'
+      + '<tr><td>Guardados como final</td><td>' + finales + ' de ' + hechos + ' (' + anaPct(finales, hechos) + ')</td></tr>'
+      + '<tr><th class="ana-grupo" colspan="2">Seguimiento de Novedades</th></tr>'
+      + '<tr><td>Agregadas este mes</td><td>' + delMes.length + '</td></tr>'
+      + '<tr><td>Abiertas ahora (todas las fechas)</td><td>' + abiertas.length + (viejas.length ? ' · ' + viejas.length + ' con más de 7 días' : '') + '</td></tr>'
+      + '<tr><td>Tiempo de cierre (cerradas este mes)</td><td>' + (cierres.length ? 'promedio ' + anaFmt(anaPromedio(cierres), 1) + ' días (' + cierres.length + (cierres.length === 1 ? ' novedad)' : ' novedades)') : 'Sin cierres este mes') + '</td></tr>';
+  }
+
+  // ---------- registro de avisos ----------
+  function anaCeldaAviso(hecho, aviso, ahora, txtHora, exacto){
+    if(hecho){
+      if(!txtHora) return '<td class="ana-ok">✔</td>';
+      var tarde = hecho > aviso;
+      return '<td class="' + (tarde ? 'ana-tarde' : 'ana-ok') + '">' + (tarde ? '⚠ ' : '✔ ') + (exacto ? '' : '~') + txtHora + '</td>';
+    }
+    if(ahora < aviso) return '<td>—</td>';
+    // El turno de hoy todavia puede hacerse: el aviso esta activo ahora mismo
+    if(anaFechaLocal(ahora) === anaFechaLocal(aviso)) return '<td class="ana-tarde">⚠ Pendiente (aviso activo)</td>';
+    return '<td class="ana-no">✖ No se hizo</td>';
+  }
+  function anaPintarAvisos(d){
+    var dias = anaDias(d.r).slice().reverse(), ahora = new Date();
+    var pautas = {}, gens = {}, inf = {};
+    d.pautas.forEach(function(x){ pautas[x.date] = x; }); d.gens.forEach(function(x){ gens[x.date] = x; }); d.informes.forEach(function(x){ inf[x.id] = x; });
+    function pauta(doc, f){
+      var aviso = anaEnHora(f, 9);
+      if(!doc) return anaCeldaAviso(null, aviso, ahora);
+      var t = anaTermino(doc);
+      if(!t || !t.d) return '<td class="ana-ok">✔ (sin hora)</td>';
+      return anaCeldaAviso(t.d, aviso, ahora, anaHora(t.d), t.exacto);
+    }
+    function informe(doc, aviso){
+      if(!doc) return anaCeldaAviso(null, aviso, ahora);
+      var c = new Date(doc.createdAt || '');
+      return isNaN(c) ? '<td class="ana-ok">✔</td>' : anaCeldaAviso(c, aviso, ahora, (anaFechaLocal(c) !== anaFechaLocal(aviso) ? rpgFechaCorta(anaFechaLocal(c)).slice(0, 5) + ' ' : '') + anaHora(c), true);
+    }
+    anaEl('ana-avisos').innerHTML = dias.length ? dias.map(function(f){
+      var ayer = infAddDays(f, -1);
+      return '<tr><td>' + esc(rpgFechaCorta(f)) + '</td>' + pauta(pautas[f], f) + pauta(gens[f], f)
+        + informe(inf[ayer + '_noche'], anaEnHora(f, 7)) + informe(inf[f + '_dia'], anaEnHora(f, 19)) + '</tr>';
+    }).join('') : '<tr><td colspan="5" class="empty">Sin días en este mes.</td></tr>';
+  }
+
+  // ---------- transformadores y alertas ----------
+  function anaFases(doc, item, t){
+    var v = (doc && doc.values && doc.values[item]) || {};
+    var f = ['r', 's', 't'].map(function(p){ return anaNum(v[t + p]); });
+    return f.every(function(x){ return x !== null; }) ? f : null;
+  }
+  function anaDesbalance(f){ var p = (f[0] + f[1] + f[2]) / 3; return p > 0 ? Math.max.apply(null, f.map(function(x){ return Math.abs(x - p); })) * 100 / p : null; }
+  function anaCargaPct(f, kva){
+    var vn = anaNum(anaCfg.vNominal), k = anaNum(kva);
+    if(!f || !vn || !k) return null;
+    var iNom = k * 1000 / (Math.sqrt(3) * vn);
+    return Math.max.apply(null, f) * 100 / iNom;
+  }
+  function anaFuera(k, v){
+    var l = anaCfg.lim[k]; if(!l || v === null) return false;
+    var mn = anaNum(l.min), mx = anaNum(l.max);
+    return (mn !== null && v < mn) || (mx !== null && v > mx);
+  }
+  function anaLimTxt(k){
+    var l = anaCfg.lim[k], mn = anaNum(l.min), mx = anaNum(l.max);
+    return mn !== null && mx !== null ? anaFmt(mn) + ' a ' + anaFmt(mx) : (mx !== null ? 'máx. ' + anaFmt(mx) : 'mín. ' + anaFmt(mn));
+  }
+  function anaPintarTrafos(d){
+    var docs = d.pautas.slice().sort(function(a, b){ return a.date < b.date ? -1 : 1; });
+    function celdas(doc, t){
+      var i = anaFases(doc, 'elec_carga', t), v = anaFases(doc, 'elec_voltaje', t);
+      var des = i ? anaDesbalance(i) : null, car = anaCargaPct(i, t === 't1' ? anaCfg.kvaT1 : anaCfg.kvaT2);
+      var vp = v ? (v[0] + v[1] + v[2]) / 3 : null;
+      function c(val, k, suf){ return '<td' + (anaFuera(k, val) ? ' class="ana-fuera"' : '') + '>' + (val === null ? '—' : anaFmt(val) + (suf || '')) + '</td>'; }
+      return '<td>' + (i ? anaFmt((i[0] + i[1] + i[2]) / 3) : '—') + '</td>' + c(des, 'desbalance', ' %') + c(car, 'carga', ' %') + '<td' + (v && v.some(function(x){ return anaFuera('tension', x); }) ? ' class="ana-fuera"' : '') + '>' + anaFmt(vp) + '</td>';
+    }
+    anaEl('ana-trafos').innerHTML = docs.length ? docs.map(function(doc){
+      return '<tr><td>' + esc(rpgFechaCorta(doc.date)) + '</td>' + celdas(doc, 't1') + celdas(doc, 't2') + '</tr>';
+    }).join('') : '<tr><td colspan="9" class="empty">No hay pautas guardadas en este mes.</td></tr>';
+  }
+  function anaPintarAlertas(d){
+    var out = [];
+    function revisar(fecha, k, nombre, v){ if(anaFuera(k, v)) out.push({ fecha: fecha, nombre: nombre, valor: v, k: k }); }
+    d.pautas.forEach(function(doc){
+      ['t1', 't2'].forEach(function(t){
+        var T = t === 't1' ? 'Trafo 1' : 'Trafo 2';
+        var v = anaFases(doc, 'elec_voltaje', t) || [];
+        v.forEach(function(x, n){ revisar(doc.date, 'tension', 'Tensión ' + T + ' fase ' + 'RST'[n], x); });
+        var i = anaFases(doc, 'elec_carga', t);
+        if(i){ revisar(doc.date, 'desbalance', 'Desbalance de corriente ' + T, anaDesbalance(i)); revisar(doc.date, 'carga', 'Carga ' + T, anaCargaPct(i, t === 't1' ? anaCfg.kvaT1 : anaCfg.kvaT2)); }
+      });
+    });
+    var GEN = [['gd_voltaje_baterias', 'bateria', 'Voltaje baterías'], ['gd_voltaje', 'voltajeGen', 'Voltaje'], ['gd_frecuencia', 'frecuencia', 'Frecuencia'], ['gd_temp_motor', 'tempMotor', 'Temperatura del motor'], ['gd_presion_aceite', 'presionAceite', 'Presión de aceite']];
+    d.gens.forEach(function(doc){
+      GEN.forEach(function(g){ ['g1', 'g2'].forEach(function(n){
+        var v = anaNum(((doc.values || {})[g[0]] || {})[n]);
+        // Voltaje, frecuencia, temperatura y presion solo se miden si el grupo entra en funcionamiento: un 0 es "no funcionó"
+        if(v === 0 && g[1] !== 'bateria') return;
+        revisar(doc.date, g[1], g[2] + ' ' + n.toUpperCase(), v);
+      }); });
+    });
+    out.sort(function(a, b){ return a.fecha < b.fecha ? 1 : -1; });
+    anaEl('ana-alertas').innerHTML = out.length
+      ? '<div class="rpg-tabla-wrap"><table class="rpg-detalle ana-tabla"><thead><tr><th>Fecha</th><th>Lectura</th><th>Valor</th><th>Límite</th></tr></thead><tbody>'
+        + out.map(function(a){ var u = ANA_LIMITES.filter(function(x){ return x.k === a.k; })[0].unidad; return '<tr><td>' + esc(rpgFechaCorta(a.fecha)) + '</td><td>' + esc(a.nombre) + '</td><td class="ana-fuera">' + anaFmt(a.valor) + ' ' + esc(u) + '</td><td>' + esc(anaLimTxt(a.k)) + ' ' + esc(u) + '</td></tr>'; }).join('')
+        + '</tbody></table></div>'
+      : '<div class="empty">Ninguna lectura del mes quedó fuera de los límites configurados.</div>';
+  }
+
+  // ---------- graficos (SVG, sin librerias) ----------
+  function anaGrafico(titulo, series, unidad, lim, ultimoDia){
+    var todos = []; series.forEach(function(s){ s.puntos.forEach(function(p){ todos.push(p.v); }); });
+    if(!todos.length) return '<div class="ana-graf"><h3>' + esc(titulo) + '</h3><div class="empty">Sin lecturas este mes.</div></div>';
+    var mn = lim && anaNum(lim.min), mx = lim && anaNum(lim.max);
+    var min = Math.min.apply(null, todos), max = Math.max.apply(null, todos);
+    // Las lineas de limite se dibujan solo si caen cerca de las lecturas (si no, aplastarian el grafico)
+    var margen = Math.max(1, (max - min) * 0.5);
+    if(mn !== null && mn !== undefined && mn >= min - margen) min = Math.min(min, mn); else mn = null;
+    if(mx !== null && mx !== undefined && mx <= max + margen) max = Math.max(max, mx); else mx = null;
+    if(max === min){ max += 1; min -= 1; }
+    var W = 520, H = 190, PI = 46, PD = 10, PA = 22;
+    function x(dia){ return PI + ((dia - 1) * (W - PI - PD)) / Math.max(1, ultimoDia - 1); }
+    function y(v){ return H - PA - ((v - min) * (H - 2 * PA)) / (max - min); }
+    var lineas = series.map(function(s, n){
+      if(!s.puntos.length) return '';
+      var d = s.puntos.map(function(p, i){ return (i ? 'L' : 'M') + x(p.dia).toFixed(1) + ',' + y(p.v).toFixed(1); }).join(' ');
+      return '<path d="' + d + '" class="ana-linea ana-s' + n + '"/>' + s.puntos.map(function(p){ return '<circle cx="' + x(p.dia).toFixed(1) + '" cy="' + y(p.v).toFixed(1) + '" r="2.5" class="ana-p' + n + '"><title>Día ' + p.dia + ' · ' + esc(s.nombre) + ': ' + anaFmt(p.v) + ' ' + esc(unidad) + '</title></circle>'; }).join('');
+    }).join('');
+    var limites = [mn, mx].filter(function(v){ return v !== null && v !== undefined; }).map(function(v){ return '<line x1="' + PI + '" x2="' + (W - PD) + '" y1="' + y(v).toFixed(1) + '" y2="' + y(v).toFixed(1) + '" class="ana-limite"/>'; }).join('');
+    var ejes = [1, Math.ceil(ultimoDia / 2), ultimoDia].map(function(dia){ return '<text x="' + x(dia).toFixed(1) + '" y="' + (H - 6) + '" class="rpg-eje" text-anchor="middle">' + dia + '</text>'; }).join('');
+    return '<div class="ana-graf"><h3>' + esc(titulo) + '</h3>'
+      + '<div class="ana-leyenda">' + series.map(function(s, n){ return '<span><i class="ana-c' + n + '"></i>' + esc(s.nombre) + '</span>'; }).join('') + (limites ? '<span><i class="ana-cl"></i>Límite</span>' : '') + '</div>'
+      + '<svg viewBox="0 0 ' + W + ' ' + H + '" class="rpg-svg" role="img" aria-label="' + esc(titulo) + '">'
+      + '<text x="4" y="' + (PA - 6) + '" class="rpg-eje">' + anaFmt(max) + '</text><text x="4" y="' + (H - PA + 4) + '" class="rpg-eje">' + anaFmt(min) + '</text>'
+      + limites + lineas + ejes + '</svg></div>';
+  }
+  function anaSerie(docs, nombre, leer){
+    var pts = [];
+    docs.forEach(function(doc){ var v = leer(doc); if(v !== null) pts.push({ dia: parseInt(doc.date.slice(8, 10), 10), v: v }); });
+    pts.sort(function(a, b){ return a.dia - b.dia; });
+    return { nombre: nombre, puntos: pts };
+  }
+  function anaPintarGraficos(d){
+    var ud = new Date(d.mes.y, d.mes.m, 0).getDate();
+    function fase(item, t, n){ return function(doc){ var f = anaFases(doc, item, t); if(f) return f[n]; var v = (doc.values && doc.values[item]) || {}; return anaNum(v[t + 'rst'[n]]); }; }
+    function gen(item, g){ return function(doc){ return anaNum(((doc.values || {})[item] || {})[g]); }; }
+    function tres(item, t){ return ['R', 'S', 'T'].map(function(F, n){ return anaSerie(d.pautas, 'Fase ' + F, fase(item, t, n)); }); }
+    anaEl('ana-graficos').innerHTML =
+      anaGrafico('Corriente Trafo 1 (A)', tres('elec_carga', 't1'), 'A', null, ud)
+      + anaGrafico('Corriente Trafo 2 (A)', tres('elec_carga', 't2'), 'A', null, ud)
+      + anaGrafico('Tensión Trafo 1 (V)', tres('elec_voltaje', 't1'), 'V', anaCfg.lim.tension, ud)
+      + anaGrafico('Tensión Trafo 2 (V)', tres('elec_voltaje', 't2'), 'V', anaCfg.lim.tension, ud)
+      + anaGrafico('Voltaje baterías generadores (V)', [anaSerie(d.gens, 'G1', gen('gd_voltaje_baterias', 'g1')), anaSerie(d.gens, 'G2', gen('gd_voltaje_baterias', 'g2'))], 'V', anaCfg.lim.bateria, ud)
+      + anaGrafico('Horómetro generadores (hrs)', [anaSerie(d.gens, 'G1', gen('gd_horometro', 'g1')), anaSerie(d.gens, 'G2', gen('gd_horometro', 'g2'))], 'hrs', null, ud);
+  }
+
+  // ---------- configuracion (solo jefe) ----------
+  function anaPintarConfig(){
+    var c = anaCfg;
+    function inp(campo, val, ph){ return '<input type="number" step="any" inputmode="decimal" data-cfg="' + campo + '" value="' + (val === null || val === undefined ? '' : esc(val)) + '" placeholder="' + (ph || '') + '"/>'; }
+    var h = '<div class="ana-cfg"><div class="ana-cfg-h">Dato</div><div class="ana-cfg-h">Mínimo</div><div class="ana-cfg-h">Máximo</div><div class="ana-cfg-h">Fuente</div>'
+      + '<div class="ana-cfg-sep">Datos de los equipos</div>'
+      + '<div class="ana-cfg-nom">Tensión nominal (V)</div>' + inp('vNominal', c.vNominal) + '<div></div><div class="ana-cfg-fuente inf-note">Para calcular la corriente nominal de los transformadores.</div>'
+      + '<div class="ana-cfg-nom">Potencia Trafo 1 (kVA)</div>' + inp('kvaT1', c.kvaT1) + '<div></div><div class="ana-cfg-fuente inf-note">Placa: Schneider Trihal 1250 kVA, 23000/380 V, Dyn11 (2020).</div>'
+      + '<div class="ana-cfg-nom">Potencia Trafo 2 (kVA)</div>' + inp('kvaT2', c.kvaT2) + '<div></div><div class="ana-cfg-fuente inf-note">Placa: Schneider Trihal 1250 kVA, 23000/380 V, Dyn11 (2020).</div>'
+      + '<div class="ana-cfg-sep">Límites de alerta</div>';
+    ANA_LIMITES.forEach(function(l){
+      var v = c.lim[l.k];
+      h += '<div class="ana-cfg-nom">' + esc(l.nombre) + '</div>'
+        + (l.soloMax ? '<div></div>' : inp('lim.' + l.k + '.min', v.min, 'mín.'))
+        + inp('lim.' + l.k + '.max', v.max, 'máx.')
+        + '<div class="ana-cfg-fuente"><input type="text" data-cfg="lim.' + l.k + '.fuente" value="' + esc(v.fuente || '') + '" placeholder="Norma, pliego RIC o manual"/></div>';
+    });
+    anaEl('ana-config').innerHTML = h + '</div>';
+  }
+  function anaGuardarConfig(){
+    if(!isJefe()) return;
+    var c = anaCfgCompleta(anaCfg);
+    anaEl('ana-config').querySelectorAll('[data-cfg]').forEach(function(inp){
+      var ruta = inp.getAttribute('data-cfg').split('.'), val = inp.type === 'text' ? inp.value.trim() : anaNum(inp.value);
+      if(ruta.length === 1) c[ruta[0]] = val; else c.lim[ruta[1]][ruta[2]] = val;
+    });
+    c.updatedAt = new Date().toISOString(); c.updatedBy = (currentUser && currentUser.email) || '';
+    var btn = anaEl('ana-config-guardar'); btn.disabled = true;
+    anaEl('ana-config-estado').textContent = 'Guardando…';
+    withTimeout(fbDb.collection('config').doc('analisis').set(sinIndefinidos(c)), 8000).then(function(){
+      anaEl('ana-config-estado').textContent = 'Límites guardados.';
+      anaCargar();
+    }).catch(function(err){
+      registrarError('analisis: guardar config', err);
+      anaEl('ana-config-estado').textContent = '';
+      avisar((err && err.code) === 'permission-denied' ? 'La nube no aceptó guardar los límites (faltan publicar las reglas de Firestore o no tienes permiso).' : 'No se pudieron guardar los límites. Revisa tu conexión.');
+    }).then(function(){ btn.disabled = false; });
+  }
+
+  function anaPintar(d){
+    anaPintarIndicadores(d);
+    anaPintarAvisos(d);
+    anaPintarAlertas(d);
+    anaPintarTrafos(d);
+    anaPintarGraficos(d);
+    anaPintarConfig();
+  }
+
+  anaEl('ana-mes-ant').addEventListener('click', function(){ anaMes = { y: anaMes.m === 1 ? anaMes.y - 1 : anaMes.y, m: anaMes.m === 1 ? 12 : anaMes.m - 1 }; anaCargar(); });
+  anaEl('ana-mes-sig').addEventListener('click', function(){ anaMes = { y: anaMes.m === 12 ? anaMes.y + 1 : anaMes.y, m: anaMes.m === 12 ? 1 : anaMes.m + 1 }; anaCargar(); });
+  anaEl('ana-config-guardar').addEventListener('click', anaGuardarConfig);
+  anaEl('ana-back-btn').addEventListener('click', function(){ showView('dashboard'); });
+  anaEl('dash-card-analisis').addEventListener('click', function(){ if(!isJefe()) return; showView('analisis'); anaCargar(); });
+
+  function anaIniciarSesion(){ anaEl('dash-card-analisis').hidden = !isJefe(); }
+  function anaReiniciar(){
+    anaMes = null; anaCfg = null; anaCargando++;
+    anaEl('dash-card-analisis').hidden = true;
+    anaEl('view-analisis').hidden = true;
+    ['ana-indicadores', 'ana-avisos', 'ana-alertas', 'ana-trafos', 'ana-graficos', 'ana-config'].forEach(function(id){ anaEl(id).innerHTML = ''; });
+  }
 
 
   // ---------- lifecycle ----------
