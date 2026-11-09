@@ -9,9 +9,9 @@
      guardados (p. ej. el estado "Stop" de un generador podia mostrarse como "Detener"). -->
 <meta name="google" content="notranslate">
 <!-- Politica de seguridad de contenido: la genera build.ps1 (incluye los hashes de los scripts en linea). -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-+D6phZmeAHYjNTA09GH7aY63KOtAl1T+y5h3n/7k1R4=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=' https://www.gstatic.com/firebasejs/10.14.1/; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://zonadeguerreros.github.io; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-V9YvcytGiJsRW2UKPK+qOQUmhfxA/vBIIdnZxkqXeR8=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=' https://www.gstatic.com/firebasejs/10.14.1/; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://zonadeguerreros.github.io; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'none'; form-action 'none'">
 <title>Pauta de Chequeo Diario</title>
-<meta name="app-version" content="2026-11-06.1955-ffd95ba1">
+<meta name="app-version" content="2026-11-09.1624-77c3c7e3">
 <style>
   @font-face{
     font-family:"Roboto";
@@ -2443,7 +2443,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   }
 
   // ---------- version y aviso de actualizacion ----------
-  // Cada version publicada lleva un identificador (2026-11-06.1955-ffd95ba1, lo genera compilar.js). Se compara contra la version
+  // Cada version publicada lleva un identificador (2026-11-09.1624-77c3c7e3, lo genera compilar.js). Se compara contra la version
   // publicada de la web (mismo origen para todos: PC, celular o navegador) leyendo su etiqueta <meta name="app-version">.
   // Es una lectura publica de una pagina de solo texto: no requiere Firebase ni maneja datos del usuario.
   var APP_VERSION = (document.querySelector('meta[name="app-version"]') || {}).content || '';
@@ -7459,8 +7459,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       { id:'gd_drenar_agua', label:'Drenar agua y sedimentos del tanque combustible', type:'check', fields:[{key:'g1',label:'G1',kind:'check'},{key:'g2',label:'G2',kind:'check'}] },
       { id:'gd_insp_maquina', label:'Inspeccionar alrededor de la máquina', type:'check', fields:[{key:'g1',label:'G1',kind:'check'},{key:'g2',label:'G2',kind:'check'}] },
       { id:'gd_nivel_estanque', label:'Nivel de petróleo en estanque subbase', type:'check', fields:[{key:'g1',label:'G1',kind:'select',options:GD_FRACCIONES},{key:'g2',label:'G2',kind:'select',options:GD_FRACCIONES}] },
-      // Estanque enterrado: uno solo, compartido entre G1 y G2 (no hay un nivel por generador).
-      { id:'gd_nivel_enterrado', label:'Petróleo en reserva — estanque enterrado', type:'check', fields:[{key:'nivel',label:'Nivel',kind:'number',unit:'%',yellow:true}] },
+      // Estanque enterrado: uno solo, compartido entre G1 y G2 (no hay un nivel por generador). Se anota en litros, igual que
+      // en la pauta de chequeo diario (antes decia %, y la mitad de los registros se anotaba igual en litros).
+      { id:'gd_nivel_enterrado', label:'Petróleo en reserva — estanque enterrado', type:'check', fields:[{key:'nivel',label:'Nivel',kind:'number',unit:'Lt',yellow:true}] },
       { id:'gd_horometro', label:'Horómetro', type:'check', fields:[{key:'g1',label:'G1',kind:'number',unit:'hrs',yellow:true},{key:'g2',label:'G2',kind:'number',unit:'hrs',yellow:true}] }
     ]},
     { id:'gd_funcionamiento', title:'Solo si el grupo entra en funcionamiento', items:[
