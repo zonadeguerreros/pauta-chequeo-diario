@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://www.gstatic.com/firebasejs/10.14.1/; style-src 'unsafe-inline'; connect-src https://firestore.googleapis.com http://127.0.0.1:8085; img-src data:; base-uri 'none'; form-action 'none'">
+<meta name="robots" content="noindex">
+<title>Encuesta del piloto</title>
+<!-- Encuesta de cierre del piloto (proyecto de titulo TPE401). Publica, sin iniciar sesion y anonima:
+     cada respuesta se guarda como encuesta/T1, T2, T3... en orden de llegada (ver firestore.rules).
+     Para probarla contra el emulador local: abrirla desde localhost con ?emulador=1 -->
+<style>
+  :root {
+    --fondo: #f3f5f8; --tarjeta: #ffffff; --texto: #1b2a41; --suave: #55657a; --borde: #d5dce6;
+    --acento: #f2a541; --acento-texto: #1b2a41; --marino: #1b2a41; --marino-texto: #ffffff;
+    --ok: #2e7d5b; --error: #c0392b; --foco: #3a6ea5;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --fondo: #10161f; --tarjeta: #18212d; --texto: #e7edf5; --suave: #a3b1c2; --borde: #2c3a4c;
+      --acento: #f2a541; --acento-texto: #1b2a41; --marino: #24354d; --marino-texto: #ffffff;
+      --ok: #5cc395; --error: #f08070; --foco: #8fb6e3;
+      color-scheme: dark;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--fondo); color: var(--texto);
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    padding: env(safe-area-inset-top, 0px) max(16px, env(safe-area-inset-right, 0px)) env(safe-area-inset-bottom, 0px) max(16px, env(safe-area-inset-left, 0px));
+  }
+  main { max-width: 640px; margin: 0 auto; padding-block: 24px 48px; display: grid; gap: 16px; }
+  header { display: grid; gap: 6px; }
+  .ceja { font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--suave); font-weight: 600; }
+  h1 { margin: 0; font-size: clamp(24px, 6vw, 30px); line-height: 1.2; text-wrap: balance; }
+  .intro { margin: 0; color: var(--suave); }
+  .escala { display: flex; justify-content: space-between; font-size: 13px; color: var(--suave); padding-inline: 4px; }
+  fieldset { margin: 0; border: 1px solid var(--borde); border-radius: 12px; background: var(--tarjeta); padding: 16px; display: grid; gap: 12px; }
+  legend { float: left; width: 100%; padding: 0; font-weight: 600; font-size: 17px; display: flex; gap: 10px; }
+  legend .n { color: var(--suave); font-variant-numeric: tabular-nums; min-width: 1.4em; }
+  .opciones { clear: both; display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .opciones input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .opciones label {
+    display: grid; place-items: center; min-height: 48px; border: 1.5px solid var(--borde); border-radius: 10px;
+    font-weight: 700; font-size: 18px; cursor: pointer; user-select: none; background: var(--fondo); transition: background .12s, border-color .12s;
+  }
+  .opciones input:checked + label { background: var(--acento); border-color: var(--acento); color: var(--acento-texto); }
+  .opciones input:focus-visible + label { outline: 3px solid var(--foco); outline-offset: 2px; }
+  .extremos { display: flex; justify-content: space-between; font-size: 12px; color: var(--suave); }
+  textarea {
+    width: 100%; min-height: 110px; resize: vertical; border: 1.5px solid var(--borde); border-radius: 10px; padding: 10px 12px;
+    font: inherit; color: var(--texto); background: var(--fondo);
+  }
+  textarea:focus-visible { outline: 3px solid var(--foco); outline-offset: 1px; }
+  .cuenta { font-size: 12px; color: var(--suave); text-align: right; }
+  .barra { position: sticky; bottom: 0; padding-block: 12px calc(12px + env(safe-area-inset-bottom, 0px)); background: var(--fondo); display: grid; gap: 8px; }
+  button {
+    font: inherit; font-weight: 700; border: 0; border-radius: 10px; min-height: 52px; padding: 0 20px; cursor: pointer;
+    background: var(--marino); color: var(--marino-texto);
+  }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  button:focus-visible { outline: 3px solid var(--foco); outline-offset: 2px; }
+  .progreso { font-size: 14px; color: var(--suave); text-align: center; font-variant-numeric: tabular-nums; }
+  .error { color: var(--error); font-weight: 600; text-align: center; margin: 0; }
+  .gracias { text-align: center; display: grid; gap: 12px; padding: 32px 16px; background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 12px; }
+  .gracias .codigo { font-size: 44px; font-weight: 800; color: var(--ok); font-variant-numeric: tabular-nums; }
+  .gracias h2 { margin: 0; font-size: 24px; }
+  .gracias p { margin: 0; color: var(--suave); }
+  .enlace { background: none; color: var(--foco); text-decoration: underline; min-height: 44px; font-weight: 600; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="ceja">Área Eléctrica · Encuesta anónima</div>
+    <h1>¿Cómo te ha funcionado la plataforma?</h1>
+    <p class="intro">Son 8 afirmaciones y toma unos 3 minutos. No pide nombre ni cuenta: tu respuesta se guarda solo con un número de orden. Marca de 1 a 5 qué tan de acuerdo estás.</p>
+  </header>
+
+  <form id="formulario" novalidate>
+    <div style="display:grid; gap:12px">
+      <div class="escala" aria-hidden="true"><span>1 = muy en desacuerdo</span><span>5 = muy de acuerdo</span></div>
+      <div id="preguntas" style="display:grid; gap:12px"></div>
+      <fieldset>
+        <legend><span class="n">9</span><span>¿Qué cambiarías o agregarías? <span style="font-weight:400; color:var(--suave)">(opcional)</span></span></legend>
+        <textarea id="comentario" maxlength="1000" aria-label="Comentario opcional" placeholder="Escribe aquí si quieres"></textarea>
+        <div class="cuenta"><span id="largo">0</span> / 1000</div>
+      </fieldset>
+    </div>
+    <div class="barra">
+      <p class="error" id="error" hidden></p>
+      <button type="submit" id="enviar" disabled>Enviar respuestas</button>
+      <div class="progreso" id="progreso">0 de 8 respondidas</div>
+    </div>
+  </form>
+
+  <section class="gracias" id="gracias" hidden>
+    <div class="codigo" id="codigo">T1</div>
+    <h2>¡Gracias! Tu respuesta quedó guardada</h2>
+    <p>Puedes cerrar esta página.</p>
+    <button type="button" class="enlace" id="otra">Otra persona va a responder en este equipo</button>
+  </section>
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js" integrity="sha384-ZaR6mWzmJtrRibZ1Vm7SoHFr8OXjyAuGAXalGDKqbxFT18oi/z+oZLIRFkpeNor1" crossorigin="anonymous"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js" integrity="sha384-Ke0FJhH7LyRqDxZ0wt+/OXV38yfQVu7g9VPEEGjYmB4RVOY/ta04uecRhsMwT7V3" crossorigin="anonymous"></script>
+<script>
+(function () {
+  'use strict';
+  var AFIRMACIONES = [
+    'La plataforma es fácil de usar desde el celular.',
+    'Llenar la pauta en la plataforma es más rápido que en papel.',
+    'Los avisos me ayudan a no olvidar la pauta o el informe.',
+    'Los avisos aparecen en un buen momento del turno.',
+    'El Seguimiento de Novedades me ayuda a saber si un problema se resolvió.',
+    'Con la plataforma tengo respaldo de mi trabajo.',
+    'Prefiero registrar en la plataforma antes que en papel.',
+    'En general, la plataforma es útil para mi trabajo.'
+  ];
+  var CLAVE = 'encuestaPiloto.enviada';
+  var $ = function (id) { return document.getElementById(id); };
+
+  // Preguntas
+  var cont = $('preguntas');
+  AFIRMACIONES.forEach(function (texto, i) {
+    var n = i + 1;
+    var fs = document.createElement('fieldset');
+    var lg = document.createElement('legend');
+    var num = document.createElement('span'); num.className = 'n'; num.textContent = n;
+    var tx = document.createElement('span'); tx.textContent = texto;
+    lg.appendChild(num); lg.appendChild(tx); fs.appendChild(lg);
+    var op = document.createElement('div'); op.className = 'opciones';
+    for (var v = 1; v <= 5; v++) {
+      var id = 'r' + n + '_' + v;
+      var inp = document.createElement('input'); inp.type = 'radio'; inp.name = 'r' + n; inp.value = v; inp.id = id;
+      var lb = document.createElement('label'); lb.htmlFor = id; lb.textContent = v;
+      lb.setAttribute('aria-label', v + (v === 1 ? ', muy en desacuerdo' : v === 5 ? ', muy de acuerdo' : ''));
+      op.appendChild(inp); op.appendChild(lb);
+    }
+    fs.appendChild(op);
+    var ex = document.createElement('div'); ex.className = 'extremos'; ex.setAttribute('aria-hidden', 'true');
+    ex.innerHTML = '<span>Muy en desacuerdo</span><span>Muy de acuerdo</span>';
+    fs.appendChild(ex);
+    cont.appendChild(fs);
+  });
+
+  function respuestas() {
+    var r = {}, n = 0;
+    for (var i = 1; i <= AFIRMACIONES.length; i++) {
+      var m = document.querySelector('input[name="r' + i + '"]:checked');
+      if (m) { r['r' + i] = parseInt(m.value, 10); n++; }
+    }
+    return { datos: r, contestadas: n };
+  }
+  function actualizar() {
+    var c = respuestas().contestadas;
+    $('progreso').textContent = c + ' de ' + AFIRMACIONES.length + ' respondidas';
+    $('enviar').disabled = c < AFIRMACIONES.length || enviando;
+  }
+  $('formulario').addEventListener('change', actualizar);
+  $('comentario').addEventListener('input', function () { $('largo').textContent = this.value.length; });
+
+  function mostrarGracias(codigo) {
+    $('codigo').textContent = codigo;
+    $('formulario').hidden = true; $('gracias').hidden = false;
+    window.scrollTo(0, 0);
+  }
+  try { var previa = localStorage.getItem(CLAVE); if (previa) mostrarGracias(previa); } catch (e) {}
+  $('otra').addEventListener('click', function () {
+    try { localStorage.removeItem(CLAVE); } catch (e) {}
+    $('formulario').reset(); $('largo').textContent = '0'; $('error').hidden = true;
+    $('gracias').hidden = true; $('formulario').hidden = false; actualizar(); window.scrollTo(0, 0);
+  });
+
+  // Firebase (solo Firestore; sin inicio de sesion)
+  var db = null;
+  try {
+    firebase.initializeApp({ apiKey: 'AIzaSyBNUYY7p0eyqunTGuWEM6AwlMzTPV76uKE', authDomain: 'control-electrico-hospital.firebaseapp.com', projectId: 'control-electrico-hospital' });
+    db = firebase.firestore();
+    var local = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+    if (local && /[?&]emulador=1/.test(location.search)) db.useEmulator('127.0.0.1', 8085);
+  } catch (e) { db = null; }
+
+  var enviando = false;
+  function error(t) { var el = $('error'); el.textContent = t; el.hidden = false; }
+
+  $('formulario').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var r = respuestas();
+    if (r.contestadas < AFIRMACIONES.length || enviando) return;
+    if (!db) { error('No se pudo conectar. Revisa tu conexión a internet y recarga la página.'); return; }
+    enviando = true; $('enviar').textContent = 'Enviando…'; $('error').hidden = true; actualizar();
+    var datos = r.datos;
+    datos.comentario = $('comentario').value.trim().slice(0, 1000);
+    datos.fecha = firebase.firestore.FieldValue.serverTimestamp();
+    var contador = db.doc('config/encuesta');
+    var plazo = new Promise(function (_, rechazar) { setTimeout(function () { rechazar(new Error('tiempo')); }, 20000); });
+    Promise.race([db.runTransaction(function (t) {
+      return t.get(contador).then(function (s) {
+        var n = (s.exists ? s.data().n : 0) + 1;
+        if (n > 30) throw new Error('lleno');
+        t.set(db.doc('encuesta/T' + n), datos);
+        if (s.exists) t.update(contador, { n: n }); else t.set(contador, { n: n });
+        return 'T' + n;
+      });
+    }), plazo]).then(function (codigo) {
+      try { localStorage.setItem(CLAVE, codigo); } catch (e) {}
+      mostrarGracias(codigo);
+    }).catch(function (e) {
+      if (e && e.message === 'lleno') error('La encuesta ya está cerrada: se completaron todas las respuestas.');
+      else if (e && e.message === 'tiempo') error('No hubo respuesta del servidor. Revisa tu conexión y vuelve a tocar «Enviar respuestas».');
+      else error('No se pudo guardar. Revisa tu conexión y vuelve a tocar «Enviar respuestas».');
+    }).then(function () {
+      enviando = false; $('enviar').textContent = 'Enviar respuestas'; actualizar();
+    });
+  });
+  actualizar();
+})();
+</script>
+</body>
+</html>
