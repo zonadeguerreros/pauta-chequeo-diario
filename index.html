@@ -9,9 +9,9 @@
      guardados (p. ej. el estado "Stop" de un generador podia mostrarse como "Detener"). -->
 <meta name="google" content="notranslate">
 <!-- Politica de seguridad de contenido: la genera build.ps1 (incluye los hashes de los scripts en linea). -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-V9YvcytGiJsRW2UKPK+qOQUmhfxA/vBIIdnZxkqXeR8=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=' https://www.gstatic.com/firebasejs/10.14.1/; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://zonadeguerreros.github.io; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-V+kQPFmX1jXA2Jk0rG6HbFNCNZ1eESLeUrl/9nHN7cY=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-mMzxeqEMILsTAXYmGPzJtqs6Tn8mtgcdZNC0EVTfOHU=' https://www.gstatic.com/firebasejs/10.14.1/; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://zonadeguerreros.github.io; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'none'; form-action 'none'">
 <title>Pauta de Chequeo Diario</title>
-<meta name="app-version" content="2026-11-09.1624-77c3c7e3">
+<meta name="app-version" content="2026-11-19.2009-8a0dfefb">
 <style>
   @font-face{
     font-family:"Roboto";
@@ -1347,8 +1347,10 @@
       <div class="inf-note">Descarga una copia de todo lo guardado en la nube (pautas, informes con sus fotos, solicitudes, cuentas y configuración) en un archivo JSON. Guárdalo en un lugar seguro; sirve para recuperar la información si algo sale mal.</div>
       <div class="inf-new-row">
         <button type="button" class="btn" id="cu-respaldo-btn">⬇ Descargar respaldo completo</button>
+        <button type="button" class="btn" id="cu-respaldo-carpeta" hidden>📁 Abrir carpeta de respaldos</button>
       </div>
       <div class="inf-note" id="cu-respaldo-msg"></div>
+      <div class="inf-note" id="cu-respaldo-auto" hidden></div>
     </div>
     <div class="inf-bar"><div class="inf-title">Pendientes de aprobación</div></div>
     <div id="cu-pendientes"></div>
@@ -2443,7 +2445,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   }
 
   // ---------- version y aviso de actualizacion ----------
-  // Cada version publicada lleva un identificador (2026-11-09.1624-77c3c7e3, lo genera compilar.js). Se compara contra la version
+  // Cada version publicada lleva un identificador (2026-11-19.2009-8a0dfefb, lo genera compilar.js). Se compara contra la version
   // publicada de la web (mismo origen para todos: PC, celular o navegador) leyendo su etiqueta <meta name="app-version">.
   // Es una lectura publica de una pagina de solo texto: no requiere Firebase ni maneja datos del usuario.
   var APP_VERSION = (document.querySelector('meta[name="app-version"]') || {}).content || '';
@@ -6821,6 +6823,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       aviIniciarSesion();
       segIniciarSesion();
       cuActualizarBadge();
+      cuIniciarRespaldoAuto();
     });
   }
   function cuMostrarPendiente(sinPerfil){
@@ -6860,6 +6863,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       + '</div>';
   }
   function cuCargar(){
+    cuAutoMostrar();
     cuMostrarFuncionarios();
     cuMostrarMateriales();
     cuMostrarInventario();
@@ -7084,6 +7088,49 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
         return { generadoEn: new Date().toISOString(), generadoPor: (currentUser && currentUser.email) || '', version: (typeof APP_VERSION !== 'undefined' ? APP_VERSION : ''), datos: partes };
       });
   }
+  // ---------- respaldo automatico diario (solo programa de PC, con la sesion del jefe abierta) ----------
+  // Pensado para el PC servidor interno del hospital: una vez al dia guarda el mismo respaldo completo en
+  // Documentos\Respaldos Plataforma Electrica (Python, app.py). Revisa al entrar y luego cada hora; si falla, reintenta a la hora.
+  var CU_AUTO_DEMORA = 15000, CU_AUTO_CADA = 3600000;
+  var cuAutoTimer = null, cuAutoCorriendo = false, cuAutoEstado = '';
+  function cuAutoMostrar(txt){
+    if(txt != null) cuAutoEstado = txt;
+    var n = cuEl('cu-respaldo-auto'), b = cuEl('cu-respaldo-carpeta');
+    if(n){ n.hidden = !ES_PC; n.textContent = cuAutoEstado || 'Respaldo automático: se revisa al entrar y cada hora (uno por día, con la sesión del jefe abierta en este PC).'; }
+    if(b) b.hidden = !ES_PC;
+  }
+  function cuRespaldoAutomatico(){
+    if(!ES_PC || cuAutoCorriendo || !isJefe() || !currentUser || !fbReady || !fbDb) return Promise.resolve();
+    cuAutoCorriendo = true;
+    return esperarApiEscritorio().then(function(api){
+      if(!api || !api.info_respaldo || !api.guardar_respaldo) return null;
+      var hoy = todayStr();
+      return Promise.resolve(api.info_respaldo()).then(function(info){
+        if(info && info.ok && info.ultimaFecha === hoy){ cuAutoMostrar('Respaldo automático: el de hoy ya está guardado en ' + info.carpeta + '.'); return null; }
+        return cuRespaldoCompleto(function(){}).then(function(resp){
+          if(!isJefe() || !currentUser) return null;   // se cerro la sesion mientras se leia la nube
+          return Promise.resolve(api.guardar_respaldo(hoy, JSON.stringify(resp))).then(function(r){
+            if(!r || !r.ok) throw new Error((r && r.error) || 'no se pudo guardar el archivo');
+            var hora = new Date().toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
+            cuAutoMostrar('Respaldo automático: guardado hoy a las ' + hora + ' en ' + r.path + '.');
+          });
+        });
+      });
+    }).catch(function(err){
+      registrarError('respaldo automatico', err);
+      cuAutoMostrar('Respaldo automático: no se pudo hacer ahora (se reintenta en una hora). Revisa la conexión a internet.');
+    }).then(function(){ cuAutoCorriendo = false; });
+  }
+  function cuIniciarRespaldoAuto(){
+    if(!ES_PC || !isJefe()) return;
+    setTimeout(cuRespaldoAutomatico, CU_AUTO_DEMORA);
+    if(!cuAutoTimer) cuAutoTimer = setInterval(cuRespaldoAutomatico, CU_AUTO_CADA);
+  }
+  cuEl('cu-respaldo-carpeta').addEventListener('click', function(){
+    esperarApiEscritorio().then(function(api){ if(api && api.abrir_carpeta_respaldos) return api.abrir_carpeta_respaldos(); })
+      .catch(function(err){ registrarError('abrir carpeta de respaldos', err); });
+  });
+
   cuEl('cu-respaldo-btn').addEventListener('click', function(){
     if(!isJefe()) return;
     var btn = cuEl('cu-respaldo-btn'), msg = cuEl('cu-respaldo-msg'), orig = btn.textContent;
